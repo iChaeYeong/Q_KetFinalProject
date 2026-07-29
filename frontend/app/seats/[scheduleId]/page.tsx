@@ -7,6 +7,10 @@
 //     (Server Component → props 로 seats 전달 → Client Component 에서 selection 처리)
 "use client";
 
+// 좌석 선택화면으로 대기열을 통과한 사용자가 도착하는 페이지
+// 공연장 좌석 배치도를 그리드로 그려서 보여주고 VIP/R/S 등급별 색상을 다르게 표시
+// 좌석 선점 기능이 들어갈 화면
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import type { Seat } from "@/lib/data/types";

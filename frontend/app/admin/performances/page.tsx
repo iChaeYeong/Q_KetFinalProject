@@ -1,5 +1,7 @@
 "use client";
 
+// 등록된 공연목록을 관리자가 보고 수정, 삭제하는 화면
+
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -276,9 +278,9 @@ export default function AdminPerformancesPage() {
 
               {/* 회차 목록 */}
               <div className="adminFormSection">
-                <label className="adminLabel" style={{ display: "block", marginBottom: 10 }}>회차 목록</label>
+                <label className="adminLabel" style={{ display: "block", marginBottom: "var(--space-2-5)" }}>회차 목록</label>
                 {(editingPerf.rounds ?? []).length === 0 && (
-                  <p style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 10 }}>등록된 회차가 없습니다.</p>
+                  <p style={{ fontSize: "var(--font-md)", color: "var(--text-3)", marginBottom: "var(--space-2-5)" }}>등록된 회차가 없습니다.</p>
                 )}
                 {(editingPerf.rounds ?? []).map((r, idx) => {
                   const roundLocked = new Date(r.openTime) <= new Date();
@@ -286,10 +288,10 @@ export default function AdminPerformancesPage() {
                     <div key={r.roundId} className="adminRoundCard">
                       <div className="adminRoundCardHeader">
                         <span className="adminRoundNum">{idx + 1}회차</span>
-                        {roundLocked && <span style={{ fontSize: 11, color: "var(--error)" }}>🔒 오픈됨 — 수정 불가</span>}
+                        {roundLocked && <span style={{ fontSize: "var(--font-sm)", color: "var(--error)" }}>🔒 오픈됨 — 수정 불가</span>}
                         <button
                           className="btnDanger"
-                          style={{ marginLeft: "auto", padding: "4px 10px", fontSize: 12 }}
+                          style={{ marginLeft: "auto", padding: "var(--space-1) var(--space-2-5)", fontSize: "var(--font-base)" }}
                           onClick={() => handleDeleteRound(r.roundId)}
                           disabled={roundLocked}
                           title={roundLocked ? "오픈된 회차는 삭제할 수 없습니다." : ""}
@@ -330,7 +332,7 @@ export default function AdminPerformancesPage() {
                 })}
 
                 {/* 회차 추가 */}
-                <div className="adminRoundRow" style={{ marginTop: 8 }}>
+                <div className="adminRoundRow" style={{ marginTop: "var(--space-2)" }}>
                   <div className="adminFormRow" style={{ flex: 1, marginBottom: 0 }}>
                     <label className="adminLabel">공연 시간</label>
                     <input className="adminInput" type="datetime-local" value={newRound.roundTime}

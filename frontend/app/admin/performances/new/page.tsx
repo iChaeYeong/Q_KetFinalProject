@@ -1,5 +1,8 @@
 "use client";
 
+// 관리자가 새 공연을 등록하는 폼 페이지
+// 공연명, 공연장, 포스터 이미지 업로드, 회차(날짜/시간) 추가
+
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";

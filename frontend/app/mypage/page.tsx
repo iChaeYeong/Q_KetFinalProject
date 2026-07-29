@@ -81,12 +81,12 @@ export default function MyPage() {
 
             <hr className="divider" />
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 13, color: "var(--text-2)", display: "flex", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+              <div style={{ fontSize: "var(--font-md)", color: "var(--text-2)", display: "flex", justifyContent: "space-between" }}>
                 <span>예매 내역</span>
                 <span style={{ color: "var(--text)", fontWeight: 700 }}>{reservations.length}건</span>
               </div>
-              <div style={{ fontSize: 13, color: "var(--text-2)", display: "flex", justifyContent: "space-between" }}>
+              <div style={{ fontSize: "var(--font-md)", color: "var(--text-2)", display: "flex", justifyContent: "space-between" }}>
                 <span>완료된 예매</span>
                 <span style={{ color: "var(--success)", fontWeight: 700 }}>
                   {reservations.filter(r => r.reservedStatus === "RESERVED").length}건
@@ -97,7 +97,7 @@ export default function MyPage() {
 
           {/* 예매 내역 */}
           <div>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", marginBottom: 16, letterSpacing: "-0.02em" }}>
+            <h2 style={{ fontSize: "var(--font-xl)", fontWeight: 700, color: "var(--text)", marginBottom: "var(--space-4)", letterSpacing: "-0.02em" }}>
               예매 내역
             </h2>
 
@@ -105,11 +105,11 @@ export default function MyPage() {
 
             {!loading && reservations.length === 0 && (
               <div className="emptyMsg">
-                <p style={{ fontSize: 32, marginBottom: 12 }}>🎫</p>
+                <p style={{ fontSize: "var(--font-2xl)", marginBottom: "var(--space-3)" }}>🎫</p>
                 <p>예매 내역이 없습니다.</p>
                 <button
                   className="btnPrimary"
-                  style={{ marginTop: 16 }}
+                  style={{ marginTop: "var(--space-4)" }}
                   onClick={() => router.push("/")}
                 >
                   공연 보러 가기
@@ -127,7 +127,7 @@ export default function MyPage() {
                       <span>💺 {r.seatRow}행 {r.seatColume}번</span>
                       <span>🎟 {r.grade}</span>
                     </div>
-                    <div style={{ marginTop: 8 }}>
+                    <div style={{ marginTop: "var(--space-2)" }}>
                       <span className={STATUS_CLASS[r.reservedStatus] ?? "badge badgeClosed"}>
                         {STATUS_LABEL[r.reservedStatus] ?? r.reservedStatus}
                       </span>
