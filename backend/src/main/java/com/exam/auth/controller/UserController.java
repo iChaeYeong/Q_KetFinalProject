@@ -1,9 +1,9 @@
-package com.exam.common.controller;
+package com.exam.auth.controller;
 
-import com.exam.common.dto.UserDTO;
+import com.exam.auth.dto.UserDTO;
+import com.exam.auth.service.UserService;
 import com.exam.common.exception.BusinessException;
 import com.exam.common.exception.ErrorCode;
-import com.exam.common.service.UserService;
 import com.exam.common.util.WebUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;

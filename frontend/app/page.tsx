@@ -3,7 +3,7 @@
 // 데이터는 async/await 로 직접 fetch, 네비게이션은 <Link> 사용
 
 import BookButton from "@/components/BookButton";
-import { BASE_URL } from "@/lib/api/client";
+import { BASE_URL, unwrap } from "@/lib/api/client";
 
 // 백엔드 PerformanceDTO 와 일치
 type Round = {
@@ -36,7 +36,9 @@ const STATUS_CLASS: Record<string, string> = {
 export default async function EventsPage() {
   //events api 호출
   const res = await fetch(`${BASE_URL}/api/events`, { cache: "no-store" });
-  const performances: Performance[] = await res.json();
+  // GET /api/events는 GlobalResponseAdvice가 { success, message, data, timestamp }로 감싸서 내려주므로
+  // apiFetch를 안 거치는 이 직접 fetch()에서도 unwrap으로 data만 꺼내야 함
+  const performances: Performance[] = unwrap(await res.json()) as Performance[];
   console.log(JSON.stringify(performances, null, 2));
 
   return (

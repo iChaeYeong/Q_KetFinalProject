@@ -1,8 +1,10 @@
 package com.exam.reservation.controller;
 
-import com.exam.common.dto.UserDTO;
+import com.exam.auth.dto.UserDTO;
+import com.exam.common.util.WebUtil;
 import com.exam.reservation.dto.ReservationDTO;
 import com.exam.reservation.service.ReservationService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +30,8 @@ public class ReservationController {
      *  return   :   Map<String, Object>
      ************************************/
     @PostMapping
-    public Map<String, Object> reserve(@RequestBody Map<String, Object> body, HttpSession session) {
+    public Map<String, Object> reserve(@RequestBody Map<String, Object> body, HttpSession session,
+                                       HttpServletRequest request) {
         UserDTO loginUser = (UserDTO) session.getAttribute("loginUser");
         if (loginUser == null) {
             return Map.of("success", false, "message", "로그인이 필요합니다.");
@@ -37,7 +40,8 @@ public class ReservationController {
         Long roundId = toLong(body.get("roundId"));
         Long reservationId = toLong(body.get("reservationId"));
         String queueToken = (String) body.get("queueToken");
-        return reservationService.reserve(loginUser.getUserId(), reservationId, roundId, seatId, queueToken);
+        return reservationService.reserve(loginUser.getUserId(), reservationId, roundId, seatId, queueToken,
+                WebUtil.getClientIp(request));
     }
 
     private Long toLong(Object value) {
@@ -72,11 +76,12 @@ public class ReservationController {
      *  return   : Map<String, Object>
      ************************************/
     @DeleteMapping("/{reservationId}")
-    public Map<String, Object> cancel(@PathVariable Long reservationId, HttpSession session) {
+    public Map<String, Object> cancel(@PathVariable Long reservationId, HttpSession session,
+                                      HttpServletRequest request) {
         UserDTO loginUser = (UserDTO) session.getAttribute("loginUser");
         if (loginUser == null) {
             return Map.of("success", false, "message", "로그인이 필요합니다.");
         }
-        return reservationService.cancel(reservationId, loginUser.getUserId());
+        return reservationService.cancel(reservationId, loginUser.getUserId(), WebUtil.getClientIp(request));
     }
 }

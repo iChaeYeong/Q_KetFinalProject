@@ -1,6 +1,6 @@
-package com.exam.common.service;
+package com.exam.auth.service;
 
-import com.exam.common.dto.UserDTO;
+import com.exam.auth.dto.UserDTO;
 
 public interface UserService {
     UserDTO login(String userId, String pwd);

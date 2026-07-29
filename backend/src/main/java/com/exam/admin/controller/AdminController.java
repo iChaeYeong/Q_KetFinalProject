@@ -1,88 +1,26 @@
-package com.exam.common.controller;
+package com.exam.admin.controller;
 
-import com.exam.common.dto.UserDTO;
+import com.exam.auth.dto.UserDTO;
+import com.exam.auth.mapper.UserMapper;
 import com.exam.common.exception.BusinessException;
 import com.exam.common.exception.ErrorCode;
-import com.exam.common.mapper.UserMapper;
 import com.exam.common.util.WebUtil;
-import com.exam.reservation.dto.PerformanceDTO;
-import com.exam.reservation.dto.RoundDTO;
-import com.exam.reservation.dto.VenueDTO;
-import com.exam.reservation.mapper.PerformanceMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-
-import java.util.UUID;
 
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
+// 사용자/역할 관리 전용. 
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
 
     private final UserMapper userMapper;
-    private final PerformanceMapper performanceMapper;
-    private final S3Client s3Client;
 
-    @Value("${cloud.aws.s3.bucket:qket-posters}")
-    private String bucket;
-
-    @Value("${cloud.aws.region.static:ap-northeast-2}")
-    private String region;
-
-    @Value("${cloud.aws.cloudfront.domain:}")
-    private String cloudfrontDomain;
-
-    public AdminController(UserMapper userMapper, PerformanceMapper performanceMapper, S3Client s3Client) {
+    public AdminController(UserMapper userMapper) {
         this.userMapper = userMapper;
-        this.performanceMapper = performanceMapper;
-        this.s3Client = s3Client;
-    }
-
-    /***********************************
-     *  URL      :   "/upload"
-     *  이름      :   포스터 이미지 업로드
-     *  기능      :   포스터 이미지 S3 업로드
-     *  method   :   Post
-     *  param    :   MultipartFile, HttpSession
-     *  return   :   ResponseEntity<?>
-     ************************************/
-    // 포스터 이미지 S3 업로드 — 매니저(2) 이상
-    @PostMapping(value = "/upload", consumes = "multipart/form-data")
-    public Map<String, Object> uploadPoster(@RequestParam("file") MultipartFile file, HttpSession session) {
-        if (!isManagerOrAdmin(getLoginUser(session)))
-            throw new BusinessException(ErrorCode.FORBIDDEN);
-        try {
-            String ext = file.getOriginalFilename() != null
-                    ? file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf('.'))
-                    : ".jpg";
-            String key = "posters/" + UUID.randomUUID() + ext;
-            s3Client.putObject(
-                    PutObjectRequest.builder()
-                            .bucket(bucket)
-                            .key(key)
-                            .contentType(file.getContentType())
-                            .build(),
-                    software.amazon.awssdk.core.sync.RequestBody.fromInputStream(file.getInputStream(), file.getSize())
-            );
-            String baseUrl = (cloudfrontDomain != null && !cloudfrontDomain.isBlank())
-                    ? "https://" + cloudfrontDomain
-                    : "https://" + bucket + ".s3." + region + ".amazonaws.com";
-            String url = baseUrl + "/" + key;
-            return Map.of("success", true, "url", url);
-        } catch (Exception e) {
-            log.error("포스터 업로드 실패", e);
-            throw new BusinessException(ErrorCode.UPLOAD_FAILED);
-        }
     }
 
     private UserDTO getLoginUser(HttpSession session) {
@@ -93,17 +31,11 @@ public class AdminController {
         return user != null && Long.valueOf(3L).equals(user.getRoleId());
     }
 
-    private boolean isManagerOrAdmin(UserDTO user) {
-        return user != null && (Long.valueOf(2L).equals(user.getRoleId()) || Long.valueOf(3L).equals(user.getRoleId()));
-    }
-
     /***********************************
-     *  URL      :   "/roles"
-     *  이름      :   역할 목록 조회
-     *  기능      :   역할 목록보기
-     *  method   :   Get
-     *  param    :   HttpSession
-     *  return   :   ResponseEntity<?>
+     * URL : "/roles"
+     * 이름 : 역할 목록 조회
+     * 기능 : 역할 목록보기
+     * method : Get
      ************************************/
     // 역할 목록 — 관리자(3)만
     @GetMapping("/roles")
@@ -114,12 +46,10 @@ public class AdminController {
     }
 
     /***********************************
-     *  URL      :   "/users"
-     *  이름      :   사용자 목록 조회
-     *  기능      :   사용자 목록 조회하기
-     *  method   :   Get
-     *  param    :   HttpSession
-     *  return   :   ResponseEntity<?>
+     * URL : "/users"
+     * 이름 : 사용자 목록 조회
+     * 기능 : 사용자 목록 조회하기
+     * method : Get
      ************************************/
     // 사용자 목록 조회 — 관리자(3)만
     @GetMapping("/users")
@@ -130,19 +60,17 @@ public class AdminController {
     }
 
     /***********************************
-     *  URL      :   "/users/{userId}"
-     *  이름      :   사용자 정보 수정
-     *  기능      :   관리자가 사용자의 상태 및 권한을 수정
-     *  method   :   Patch
-     *  param    :   String, UserDTO, HttpSession
-     *  return   :   ResponseEntity<?>
+     * URL : "/users/{userId}"
+     * 이름 : 사용자 정보 수정
+     * 기능 : 관리자가 사용자의 상태 및 권한을 수정
+     * method : Patch
      ************************************/
     // 사용자 상태/권한 수정 — 관리자(3)만
     @PatchMapping("/users/{userId}")
     public Map<String, Object> updateUser(@PathVariable String userId,
-                                        @RequestBody UserDTO body,
-                                        HttpSession session,
-                                        HttpServletRequest request) {
+            @RequestBody UserDTO body,
+            HttpSession session,
+            HttpServletRequest request) {
         UserDTO loginUser = getLoginUser(session);
         if (!isAdmin(loginUser))
             throw new BusinessException(ErrorCode.ADMIN_ONLY);
@@ -154,17 +82,15 @@ public class AdminController {
     }
 
     /***********************************
-     *  URL      :   "/users/batch"
-     *  이름      :   사용자 정보 일괄 수정
-     *  기능      :   관리자가 사용자 상태 및 권한 일괄 수정
-     *  method   :   Patch
-     *  param    :   List<UserDTO>, HttpSession
-     *  return   :   ResponseEntity<?>
+     * URL : "/users/batch"
+     * 이름 : 사용자 정보 일괄 수정
+     * 기능 : 관리자가 사용자 상태 및 권한 일괄 수정
+     * method : Patch
      ************************************/
     // 사용자 상태/권한 일괄 수정 — 관리자(3)만
     @PatchMapping("/users/batch")
     public Map<String, Object> batchUpdateUsers(@RequestBody List<UserDTO> users, HttpSession session,
-                                              HttpServletRequest request) {
+            HttpServletRequest request) {
         UserDTO loginUser = getLoginUser(session);
         if (!isAdmin(loginUser))
             throw new BusinessException(ErrorCode.ADMIN_ONLY);
@@ -175,192 +101,5 @@ public class AdminController {
             userMapper.updateUser(user);
         }
         return Map.of("success", true);
-    }
-
-    /***********************************
-     *  URL      :   "/venues"
-     *  이름      :   공연장 목록 조회
-     *  기능      :   공연장 목록 조회
-     *  method   :   Get
-     *  param    :   HttpSession
-     *  return   :   ResponseEntity<?>
-     ************************************/
-    // 공연장 목록 — 매니저(2) 이상
-    @GetMapping("/venues")
-    public List<VenueDTO> getVenues(HttpSession session) {
-        if (!isManagerOrAdmin(getLoginUser(session)))
-            throw new BusinessException(ErrorCode.FORBIDDEN);
-        return performanceMapper.findAllVenues();
-    }
-
-    /***********************************
-     *  URL      :   "/events"
-     *  이름      :   공연 등록
-     *  기능      :   새로운 공연과 회차를 등록
-     *  method   :   Post
-     *  param    :   PerformanceDTO, HttpSession
-     *  return   :   ResponseEntity<?>
-     ************************************/
-    // 공연 추가 (회차 포함) — 매니저(2) 이상
-    @Transactional
-    @PostMapping("/events")
-    public Map<String, Object> createPerformance(@RequestBody PerformanceDTO dto, HttpSession session,
-                                               HttpServletRequest request) {
-        UserDTO loginUser = getLoginUser(session);
-        if (!isManagerOrAdmin(loginUser))
-            throw new BusinessException(ErrorCode.FORBIDDEN);
-        String actorId = loginUser.getUserId();
-        String clientIp = WebUtil.getClientIp(request);
-        dto.setInsId(actorId);
-        dto.setInsIp(clientIp);
-        performanceMapper.insert(dto);
-        if (dto.getRounds() != null) {
-            for (RoundDTO round : dto.getRounds()) {
-                round.setPerformanceId(dto.getPerformanceId());
-                round.setInsId(actorId);
-                round.setInsIp(clientIp);
-                performanceMapper.insertRound(round);
-                performanceMapper.initReservationSlots(round.getRoundId(), dto.getPerformanceId(), actorId, clientIp);
-            }
-        }
-        return Map.of("success", true, "performanceId", dto.getPerformanceId());
-    }
-
-    /***********************************
-     *  URL      :   "/events/{performanceId}"
-     *  이름      :   공연 및 회차 수정
-     *  기능      :   공연 수정 (제목, 포스터, 회차 포함)
-     *  method   :   Put
-     *  param    :   Long, PerformanceDTO, HttpSession
-     *  return   :   ResponseEntity<?>
-     ************************************/
-    // 공연 수정 (제목, 포스터, 회차 포함) — 매니저(2) 이상
-    @Transactional
-    @PutMapping("/events/{performanceId}")
-    public Map<String, Object> updatePerformance(@PathVariable Long performanceId,
-                                               @RequestBody PerformanceDTO dto,
-                                               HttpSession session,
-                                               HttpServletRequest request) {
-        UserDTO loginUser = getLoginUser(session);
-        if (!isManagerOrAdmin(loginUser))
-            throw new BusinessException(ErrorCode.FORBIDDEN);
-        String actorId = loginUser.getUserId();
-        String clientIp = WebUtil.getClientIp(request);
-        dto.setPerformanceId(performanceId);
-        dto.setUptId(actorId);
-        dto.setUptIp(clientIp);
-        performanceMapper.updatePerformance(dto);
-        if (dto.getRounds() != null) {
-            for (RoundDTO round : dto.getRounds()) {
-                if (!performanceMapper.hasPassedRoundById(round.getRoundId())) {
-                    round.setUptId(actorId);
-                    round.setUptIp(clientIp);
-                    performanceMapper.updateRound(round);
-                }
-            }
-        }
-        return Map.of("success", true);
-    }
-
-    /***********************************
-     *  URL      :   "/events/{performanceId}"
-     *  이름      :   공연 삭제
-     *  기능      :   공연 삭제 — 오픈된 회차 있으면 거부
-     *  method   :   Delete
-     *  param    :   Long, HttpSession
-     *  return   :   ResponseEntity<?>
-     ************************************/
-    // 공연 삭제 — 오픈된 회차 있으면 거부 — 매니저(2) 이상
-    @Transactional
-    @DeleteMapping("/events/{performanceId}")
-    public Map<String, Object> deletePerformance(@PathVariable Long performanceId, HttpSession session) {
-        if (!isManagerOrAdmin(getLoginUser(session)))
-            throw new BusinessException(ErrorCode.FORBIDDEN);
-        if (performanceMapper.hasPassedRound(performanceId))
-            throw new BusinessException(ErrorCode.ROUND_ALREADY_OPEN, "예매 오픈된 회차가 있어 삭제할 수 없습니다.");
-        performanceMapper.deleteReservationHistoryByPerformanceId(performanceId);
-        performanceMapper.deleteReservationsByPerformanceId(performanceId);
-        performanceMapper.deleteRoundsByPerformanceId(performanceId);
-        performanceMapper.deletePerformance(performanceId);
-        return Map.of("success", true);
-    }
-
-    /***********************************
-     *  URL      :   "/events/{performanceId}/rounds/{roundId}"
-     *  이름      :   회차 수정
-     *  기능      :   회차 수정 — 오픈 시간 지나면 거부
-     *  method   :   Put
-     *  param    :   Long, Long, RoundDTO, HttpSession
-     *  return   :   ResponseEntity<?>
-     ************************************/
-    // 회차 수정 — 오픈 시간 지나면 거부 — 매니저(2) 이상
-    @PutMapping("/events/{performanceId}/rounds/{roundId}")
-    public Map<String, Object> updateRound(@PathVariable Long performanceId,
-                                         @PathVariable Long roundId,
-                                         @RequestBody RoundDTO dto,
-                                         HttpSession session,
-                                         HttpServletRequest request) {
-        UserDTO loginUser = getLoginUser(session);
-        if (!isManagerOrAdmin(loginUser))
-            throw new BusinessException(ErrorCode.FORBIDDEN);
-        if (performanceMapper.hasPassedRoundById(roundId))
-            throw new BusinessException(ErrorCode.ROUND_ALREADY_OPEN, "예매 오픈된 회차는 수정할 수 없습니다.");
-        dto.setRoundId(roundId);
-        dto.setUptId(loginUser.getUserId());
-        dto.setUptIp(WebUtil.getClientIp(request));
-        performanceMapper.updateRound(dto);
-        return Map.of("success", true);
-    }
-
-    /***********************************
-     *  URL      :   "/events/{performanceId}/rounds/{roundId}"
-     *  이름      :   공연 회차 삭제
-     *  기능      :   회차 삭제 — 오픈 시간 지나면 거부
-     *  method   :   Put
-     *  param    :   Long, Long, HttpSession
-     *  return   :   ResponseEntity<?>
-     ************************************/
-    // 회차 삭제 — 오픈 시간 지나면 거부 — 매니저(2) 이상
-    @Transactional
-    @DeleteMapping("/events/{performanceId}/rounds/{roundId}")
-    public Map<String, Object> deleteRound(@PathVariable Long performanceId,
-                                         @PathVariable Long roundId,
-                                         HttpSession session) {
-        if (!isManagerOrAdmin(getLoginUser(session)))
-            throw new BusinessException(ErrorCode.FORBIDDEN);
-        if (performanceMapper.hasPassedRoundById(roundId))
-            throw new BusinessException(ErrorCode.ROUND_ALREADY_OPEN, "예매 오픈된 회차는 삭제할 수 없습니다.");
-        performanceMapper.deleteReservationHistoryByRoundId(roundId);
-        performanceMapper.deleteReservationsByRoundId(roundId);
-        performanceMapper.deleteRound(roundId);
-        return Map.of("success", true);
-    }
-
-    /***********************************
-     *  URL      :   "/events/{performanceId}/rounds"
-     *  이름      :   공연 회차 추가
-     *  기능      :   회차 추가 + 예약 슬롯 초기화
-     *  method   :   Post
-     *  param    :   Long, RoundDTO, HttpSession
-     *  return   :   ResponseEntity<?>
-     ************************************/
-    // 회차 추가 + 예약 슬롯 초기화 — 매니저(2) 이상
-    @Transactional
-    @PostMapping("/events/{performanceId}/rounds")
-    public Map<String, Object> addRound(@PathVariable Long performanceId,
-                                      @RequestBody RoundDTO dto,
-                                      HttpSession session,
-                                      HttpServletRequest request) {
-        UserDTO loginUser = getLoginUser(session);
-        if (!isManagerOrAdmin(loginUser))
-            throw new BusinessException(ErrorCode.FORBIDDEN);
-        String actorId = loginUser.getUserId();
-        String clientIp = WebUtil.getClientIp(request);
-        dto.setPerformanceId(performanceId);
-        dto.setInsId(actorId);
-        dto.setInsIp(clientIp);
-        performanceMapper.insertRound(dto);
-        performanceMapper.initReservationSlots(dto.getRoundId(), performanceId, actorId, clientIp);
-        return Map.of("success", true, "roundId", dto.getRoundId());
     }
 }

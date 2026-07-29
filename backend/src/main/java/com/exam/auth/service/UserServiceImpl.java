@@ -1,7 +1,7 @@
-package com.exam.common.service;
+package com.exam.auth.service;
 
-import com.exam.common.dto.UserDTO;
-import com.exam.common.mapper.UserMapper;
+import com.exam.auth.dto.UserDTO;
+import com.exam.auth.mapper.UserMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

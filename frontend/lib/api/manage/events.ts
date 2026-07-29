@@ -2,17 +2,17 @@ import { apiFetch } from "../client";
 import type { Venue } from "@/lib/data/types";
 
 // ============================================================
-// GET /api/admin/venues
-// 백엔드: AdminController.java → getVenues()  (매니저(roleId 2) 이상)
+// GET /api/manage/venues
+// 백엔드: AdminPerformanceController.java → getVenues()  (매니저(roleId 2) 이상)
 // 기능: 공연장 목록 조회 — 공연 등록 폼의 "공연장 선택" select 옵션으로 사용
 //
 // 응답 JSON (Venue[]): [{ "venueId": 1, "venueName": "고척스카이돔" }]
 // ============================================================
-export const getVenues = () => apiFetch<Venue[]>("/admin/venues");
+export const getVenues = () => apiFetch<Venue[]>("/manage/venues");
 
 // ============================================================
-// POST /api/admin/events
-// 백엔드: AdminController.java → createPerformance()  (매니저 이상)
+// POST /api/manage/events
+// 백엔드: AdminPerformanceController.java → createPerformance()  (매니저 이상)
 // 기능: 공연 신규 등록 (제목, 공연장, 포스터, 회차 목록을 한 번에 생성)
 //
 // 사용 예시:
@@ -39,14 +39,14 @@ export const createPerformance = (data: {
   posterUrl?: string;
   rounds: { roundTime: string; openTime: string }[];
 }) =>
-  apiFetch<{ success: boolean; performanceId: number }>("/admin/events", {
+  apiFetch<{ success: boolean; performanceId: number }>("/manage/events", {
     method: "POST",
     body: data,
   });
 
 // ============================================================
-// POST /api/admin/events/{performanceId}/rounds
-// 백엔드: AdminController.java → addRound()  (매니저 이상)
+// POST /api/manage/events/{performanceId}/rounds
+// 백엔드: AdminPerformanceController.java → addRound()  (매니저 이상)
 // 기능: 기존 공연에 회차 하나 추가
 //
 // 요청 JSON: { "roundTime": "2026-08-16 19:00:00", "openTime": "2026-08-02 10:00:00" }
@@ -57,13 +57,13 @@ export const addRound = (
   data: { roundTime: string; openTime: string }
 ) =>
   apiFetch<{ success: boolean; roundId: number }>(
-    `/admin/events/${performanceId}/rounds`,
+    `/manage/events/${performanceId}/rounds`,
     { method: "POST", body: data }
   );
 
 // ============================================================
-// PUT /api/admin/events/{performanceId}
-// 백엔드: AdminController.java → updatePerformance()  (매니저 이상)
+// PUT /api/manage/events/{performanceId}
+// 백엔드: AdminPerformanceController.java → updatePerformance()  (매니저 이상)
 // 기능: 공연 정보 수정 (제목/포스터/회차 일괄 수정) — 필드는 선택적, 보낸 것만 반영됨
 // ⚠️ 이미 예매 오픈 시간이 지난 회차는 백엔드가 수정을 무시함 (hasPassedRoundById 체크)
 //
@@ -80,14 +80,14 @@ export const updatePerformance = (
     rounds?: { roundId: number; roundTime: string; openTime: string }[];
   }
 ) =>
-  apiFetch<{ success: boolean }>(`/admin/events/${performanceId}`, {
+  apiFetch<{ success: boolean }>(`/manage/events/${performanceId}`, {
     method: "PUT",
     body: data,
   });
 
 // ============================================================
-// DELETE /api/admin/events/{performanceId}
-// 백엔드: AdminController.java → deletePerformance()  (매니저 이상)
+// DELETE /api/manage/events/{performanceId}
+// 백엔드: AdminPerformanceController.java → deletePerformance()  (매니저 이상)
 // 기능: 공연 삭제
 // ⚠️ 오픈된(예매 시작된) 회차가 하나라도 있으면 백엔드가 400 에러로 거부함
 //    → apiFetch가 자동으로 Error throw, catch(e) { alert(e.message) } 로 이유 보여주면 됨
@@ -98,13 +98,13 @@ export const deletePerformance = (
   performanceId: number
 ) =>
   apiFetch<{ success: boolean }>(
-    `/admin/events/${performanceId}`,
+    `/manage/events/${performanceId}`,
     { method: "DELETE" }
   );
 
 // ============================================================
-// DELETE /api/admin/events/{performanceId}/rounds/{roundId}
-// 백엔드: AdminController.java → deleteRound()  (매니저 이상)
+// DELETE /api/manage/events/{performanceId}/rounds/{roundId}
+// 백엔드: AdminPerformanceController.java → deleteRound()  (매니저 이상)
 // 기능: 특정 회차 삭제 — 오픈 시간 지난 회차는 400으로 거부됨
 //
 // 응답 JSON: { "success": true }
@@ -114,13 +114,13 @@ export const deleteRound = (
   roundId: number
 ) =>
   apiFetch<{ success: boolean }>(
-    `/admin/events/${performanceId}/rounds/${roundId}`,
+    `/manage/events/${performanceId}/rounds/${roundId}`,
     { method: "DELETE" }
   );
 
 // ============================================================
-// PUT /api/admin/events/{performanceId}/rounds/{roundId}
-// 백엔드: AdminController.java → updateRound()  (매니저 이상)
+// PUT /api/manage/events/{performanceId}/rounds/{roundId}
+// 백엔드: AdminPerformanceController.java → updateRound()  (매니저 이상)
 // 기능: 회차 시간 수정 (공연 시간 / 예매 오픈 시간) — 오픈 시간 지난 회차는 400으로 거부됨
 //
 // 요청 JSON: { "roundTime": "2026-08-16 19:00:00", "openTime": "2026-08-02 10:00:00" }
@@ -132,6 +132,6 @@ export const updateRound = (
   data: { roundTime: string; openTime: string }
 ) =>
   apiFetch<{ success: boolean }>(
-    `/admin/events/${performanceId}/rounds/${roundId}`,
+    `/manage/events/${performanceId}/rounds/${roundId}`,
     { method: "PUT", body: data }
   );

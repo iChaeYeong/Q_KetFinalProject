@@ -1,7 +1,8 @@
-package com.exam.common.mapper;
+package com.exam.auth.mapper;
 
-import com.exam.common.dto.UserDTO;
+import com.exam.auth.dto.UserDTO;
 import org.apache.ibatis.annotations.Mapper;
+
 import java.util.List;
 import java.util.Map;
 

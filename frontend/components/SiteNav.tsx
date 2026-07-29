@@ -1,14 +1,31 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { logout } from "@/lib/api/auth";
+import { getMyMenus } from "@/lib/api/common";
+import type { MenuTreeNode } from "@/lib/data/types";
 import { useAuth } from "@/context/AuthContext";
 
 export default function SiteNav() {
   const router = useRouter();
   const pathname = usePathname();
   const { userSession, setUserSession, isLoading } = useAuth();
+  const [menus, setMenus] = useState<MenuTreeNode[]>([]);
+
+  // 로그인한 사용자의 role이 접근 가능한 메뉴를 DB(PROGRAMS/ROLE_PROGRAMS/MENUS)에서 가져옴.
+  // "공연" 홈 링크는 비로그인 상태에서도 보여야 해서 아래 JSX에 그대로 하드코딩 유지 —
+  // 여기서 가져온 목록에서는 중복 노출을 막기 위해 urlPath === "/" 인 항목만 걸러냄
+  useEffect(() => {
+    if (!userSession) {
+      setMenus([]);
+      return;
+    }
+    getMyMenus()
+      .then(setMenus)
+      .catch(() => setMenus([]));
+  }, [userSession]);
 
   // [TODO-NAV-LOGOUT] 로그아웃
   const handleLogout = async () => {
@@ -28,19 +45,70 @@ export default function SiteNav() {
             </Link>
             {userSession ? (
               <>
-                <Link href="/mypage" className={pathname === "/mypage" ? "siteNavLink siteNavLinkActive" : "siteNavLink"}>
-                  마이페이지
-                </Link>
-                {(userSession.roleId === 2 || userSession.roleId === 3) && (
-                  <Link href="/admin/performances" className={pathname.startsWith("/admin/performances") ? "siteNavLink siteNavLinkActive" : "siteNavLink"}>
-                    공연 관리
-                  </Link>
-                )}
-                {userSession.roleId === 3 && (
-                  <Link href="/admin/users" className={pathname.startsWith("/admin/users") ? "siteNavLink siteNavLinkActive" : "siteNavLink"}>
-                    사용자 관리
-                  </Link>
-                )}
+                {menus
+                  .filter((menu) => menu.urlPath !== "/")
+                  .map((menu) => {
+                    const isActive = menu.urlPath !== null && pathname.startsWith(menu.urlPath);
+                    const hasChildren = menu.children.length > 0;
+
+                    // 하위메뉴 없는 항목은 기존처럼 단순 링크
+                    if (!hasChildren) {
+                      if (menu.urlPath === null) return null; // 연결 페이지도, 하위메뉴도 없으면 보여줄 게 없음
+                      return (
+                        <Link
+                          key={menu.menuId}
+                          href={menu.urlPath}
+                          className={isActive ? "siteNavLink siteNavLinkActive" : "siteNavLink"}
+                        >
+                          {menu.menuNm}
+                        </Link>
+                      );
+                    }
+
+                    // 하위메뉴가 있으면 마우스 호버 시 아래로 드롭다운 노출 (CSS :hover, siteNavItem:hover .siteNavDropdown)
+                    const isGroupActive = isActive || menu.children.some((c) => c.urlPath !== null && pathname.startsWith(c.urlPath));
+                    // urlPath가 없는 "그룹 전용" 메뉴는 클릭해서 갈 페이지가 없으므로 Link가 아니라
+                    // 호버 트리거 역할만 하는 span으로 렌더링 (드롭다운은 동일하게 뜸)
+                    const trigger =
+                      menu.urlPath === null ? (
+                        <span className={isGroupActive ? "siteNavLink siteNavLinkActive" : "siteNavLink"}>
+                          {menu.menuNm}
+                          <span className="siteNavCaret" />
+                        </span>
+                      ) : (
+                        <Link
+                          href={menu.urlPath}
+                          className={isGroupActive ? "siteNavLink siteNavLinkActive" : "siteNavLink"}
+                        >
+                          {menu.menuNm}
+                          <span className="siteNavCaret" />
+                        </Link>
+                      );
+
+                    return (
+                      <div key={menu.menuId} className="siteNavItem">
+                        {trigger}
+                        <div className="siteNavDropdown">
+                          {menu.children
+                            .slice()
+                            .sort((a, b) => a.sortOrder - b.sortOrder)
+                            .map((child) => (
+                              <Link
+                                key={child.menuId}
+                                href={child.urlPath ?? "#"}
+                                className={
+                                  child.urlPath !== null && pathname.startsWith(child.urlPath)
+                                    ? "siteNavDropdownLink siteNavDropdownLinkActive"
+                                    : "siteNavDropdownLink"
+                                }
+                              >
+                                {child.menuNm}
+                              </Link>
+                            ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 <span className="siteNavUser">{userSession.userNm}님</span>
                 <button className="siteNavLink siteNavLogout" onClick={handleLogout}>
                   로그아웃

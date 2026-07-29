@@ -14,7 +14,8 @@ public interface PerformanceMapper {
     List<VenueDTO> findAllVenues();
     int insert(PerformanceDTO performanceDTO);
     int insertRound(RoundDTO roundDTO);
-    int initReservationSlots(@Param("roundId") Long roundId, @Param("performanceId") Long performanceId);
+    int initReservationSlots(@Param("roundId") Long roundId, @Param("performanceId") Long performanceId,
+                              @Param("insId") String insId, @Param("insIp") String insIp);
 
     boolean hasPassedRound(Long performanceId);
     boolean hasPassedRoundById(Long roundId);

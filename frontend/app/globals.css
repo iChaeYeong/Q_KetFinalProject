@@ -129,6 +129,70 @@ a {
   background: var(--error-bg);
 }
 
+.siteNavItem {
+  position: relative;
+}
+
+.siteNavCaret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 5px;
+  vertical-align: middle;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: 0.55;
+}
+
+.siteNavDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  min-width: 160px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.14s ease, transform 0.14s ease, visibility 0.14s;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  z-index: 110;
+}
+
+.siteNavItem:hover .siteNavDropdown,
+.siteNavItem:focus-within .siteNavDropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.siteNavDropdownLink {
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: color 0.12s, background 0.12s;
+}
+
+.siteNavDropdownLink:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.siteNavDropdownLinkActive {
+  color: var(--text) !important;
+  background: rgba(255, 255, 255, 0.08);
+}
+
 /* ── PAGE LAYOUT ── */
 .pageWrap {
   max-width: 1200px;
@@ -955,7 +1019,8 @@ a {
 .adminRowDirty td { background: rgba(139, 92, 246, 0.06); }
 .adminRowDirty:hover td { background: rgba(139, 92, 246, 0.1) !important; }
 
-.adminSelect.dirty {
+.adminSelect.dirty,
+.adminInput.dirty {
   border-color: var(--primary);
   background: rgba(139, 92, 246, 0.12);
   color: var(--primary);

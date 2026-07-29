@@ -1,7 +1,8 @@
-package com.exam.common.dto;
+package com.exam.auth.dto;
 
 import lombok.Data;
 import org.apache.ibatis.type.Alias;
+
 import java.io.Serializable;
 
 @Data
