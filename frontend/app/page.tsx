@@ -34,9 +34,10 @@ const STATUS_CLASS: Record<string, string> = {
 
 
 export default async function EventsPage() {
-  ///events api 호출
+  //events api 호출
   const res = await fetch(`${BASE_URL}/api/events`, { cache: "no-store" });
   const performances: Performance[] = await res.json();
+  console.log(JSON.stringify(performances, null, 2));
 
   return (
     <div className="pageWrap">
@@ -44,7 +45,6 @@ export default async function EventsPage() {
         <h1 className="pageTitle">공연 목록</h1>
         <p className="pageSubtitle">예매하고 싶은 공연을 선택하세요.</p>
       </div>
-
       {performances.length === 0 && (
         <p className="loadingMsg">등록된 공연이 없습니다.</p>
       )}

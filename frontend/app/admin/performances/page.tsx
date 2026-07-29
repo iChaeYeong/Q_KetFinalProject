@@ -8,8 +8,8 @@ import {
   updatePerformance,
   deletePerformance,
   deleteRound,
-  uploadPoster,
 } from "@/lib/api/admin";
+import { uploadImage } from "@/lib/api/common";
 import type { Performance, PerformanceRound } from "@/lib/data/types";
 
 const toMysqlDatetime = (v: string) => {
@@ -89,7 +89,7 @@ export default function AdminPerformancesPage() {
     setEditPreview(URL.createObjectURL(file));
     setEditUploading(true);
     try {
-      const url = await uploadPoster(file);
+      const url = await uploadImage(file);
       setEditPosterUrl(url);
     } catch (err: any) {
       setEditMsg({ text: err?.message ?? "이미지 업로드 실패", ok: false });

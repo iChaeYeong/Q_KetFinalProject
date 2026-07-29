@@ -13,6 +13,10 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:1234}
+    hikari:
+      # 기본값(10)은 부하테스트 시 동시 요청이 몰리면 금방 병목이 되어서 상향 조정
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: 5
 
   sql:
     init:
@@ -32,10 +36,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,prometheus
+
   endpoint:
     health:
       show-details: never
+
+  metrics:
+    tags:
+      application: qket-backend
 # AWS S3
 cloud:
   aws:
@@ -43,6 +52,8 @@ cloud:
       bucket: ${S3_BUCKET:qket-posters}
     region:
       static: ${AWS_REGION:ap-northeast-2}
+    cloudfront:
+      domain: ${CLOUDFRONT_DOMAIN:}
 
 # mybatis
 mybatis:
