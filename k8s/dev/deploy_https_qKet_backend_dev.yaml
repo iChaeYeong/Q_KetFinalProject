@@ -1,0 +1,55 @@
+# =========================================================
+# dev Backend Deployment
+# =========================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qket-backend
+  namespace: qket-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qket-backend
+  template:
+    metadata:
+      labels:
+        app: qket-backend
+    spec:
+      containers:
+        - name: qket-backend
+          # GitHub Actions에서 sed 로 치환
+          image: BACKEND_IMAGE
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: db-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: aws-secrets
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qket-backend-service
+  namespace: qket-dev
+spec:
+  type: ClusterIP
+  selector:
+    app: qket-backend
+  ports:
+    - port: 80
+      targetPort: 8080

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  # TODO: namespace 추가
+  # namespace: qket
+  # 참고: prod 환경에서는 클러스터 내 Redis 대신 ElastiCache 사용 권장
+  #       ElastiCache 사용 시 이 Deployment는 불필요하고 backend env의 SPRING_DATA_REDIS_HOST만 변경
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  # TODO: namespace 추가 (Deployment와 동일)
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    app: redis
