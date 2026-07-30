@@ -220,4 +220,29 @@ CREATE TABLE IF NOT EXISTS MENUS (
     FOREIGN KEY (parent_menu_id) REFERENCES MENUS (menu_id)
 );
 
+-- PAYMENTS: 토스페이먼츠 결제 승인 내역. reservation_id 는 결제 승인 성공 후 확정된 예매 슬롯을 가리킴
+-- (결제 실패/취소 시엔 행 자체가 안 생김 — 승인 성공 건만 기록)
+CREATE TABLE IF NOT EXISTS PAYMENTS (
+    payment_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    reservation_id BIGINT NOT NULL,
+    user_id VARCHAR(50) NOT NULL,
+    order_id VARCHAR(100) NOT NULL,
+    payment_key VARCHAR(200) NOT NULL,
+    amount BIGINT NOT NULL,
+    pay_status VARCHAR(50) NOT NULL,
+    approved_at DATETIME NULL,
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (reservation_id) REFERENCES RESERVATIONS (reservation_id),
+    FOREIGN KEY (user_id) REFERENCES USERS (user_id),
+    UNIQUE KEY uk_payments_order_id (order_id),
+    UNIQUE KEY uk_payments_payment_key (payment_key)
+);
+
 SHOW TABLES;

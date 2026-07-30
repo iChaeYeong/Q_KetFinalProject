@@ -19,11 +19,9 @@
 
     <select id="findById" resultType="SeatDTO" parameterType="Long">
         SELECT seat_id     AS seatId,
-               round_id    AS roundId,
                seat_row    AS seatRow,
                seat_colume AS seatColume,
-               grade,
-               status
+               grade
         FROM SEATS
         WHERE seat_id = #{seatId}
     </select>
