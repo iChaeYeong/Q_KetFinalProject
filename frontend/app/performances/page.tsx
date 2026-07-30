@@ -1,5 +1,7 @@
 "use client";
 
+// 등록된 공연목록을 관리자가 보고 수정, 삭제하는 화면
+
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -12,6 +14,11 @@ import {
 import { uploadImage } from "@/lib/api/common";
 import { getEvents } from "@/lib/api/events";
 import type { Performance, PerformanceRound } from "@/lib/data/types";
+import Button from "@/components/ui/Button";
+import PageHeader from "@/components/ui/PageHeader";
+import FormField from "@/components/ui/FormField";
+import Input from "@/components/ui/Input";
+import StatusMessage from "@/components/ui/StatusMessage";
 
 const toMysqlDatetime = (v: string) => {
   if (!v) return v;
@@ -178,23 +185,22 @@ export default function AdminPerformancesPage() {
   };
 
   if (isLoading || loading)
-    return <div className="pageWrap"><p className="loadingMsg">불러오는 중...</p></div>;
+    return <div className="pageWrap"><StatusMessage variant="loading">불러오는 중...</StatusMessage></div>;
 
   const locked = editingPerf ? isLocked(editingPerf) : false;
 
   return (
-    <div className="pageWrap">
-      <div className="adminPageHeader">
-        <div>
-          <h1 className="pageTitle">공연 관리</h1>
-          <p className="pageSubtitle">공연을 수정하거나 삭제합니다.</p>
-        </div>
-        <button className="btnPrimary" onClick={() => router.push("/performances/new")}>
+    <PageHeader
+      variant="admin"
+      title="공연 관리"
+      subtitle="공연을 수정하거나 삭제합니다."
+      actions={
+        <Button variant="primary" onClick={() => router.push("/performances/new")}>
           + 공연 추가
-        </button>
-      </div>
-
-      {performances.length === 0 && <p className="loadingMsg">등록된 공연이 없습니다.</p>}
+        </Button>
+      }
+    >
+      {performances.length === 0 && <StatusMessage variant="loading">등록된 공연이 없습니다.</StatusMessage>}
 
       <div className="adminPerfGrid">
         {performances.map(perf => {
@@ -221,15 +227,15 @@ export default function AdminPerformancesPage() {
                 })}
               </div>
               <div className="adminPerfActions">
-                <button className="btnSecondary" onClick={() => openEdit(perf)}>수정</button>
-                <button
-                  className="btnDanger"
+                <Button variant="secondary" onClick={() => openEdit(perf)}>수정</Button>
+                <Button
+                  variant="danger"
                   onClick={() => handleDeletePerformance(perf)}
                   disabled={locked}
                   title={locked ? "예매 오픈된 회차가 있어 삭제할 수 없습니다." : ""}
                 >
                   삭제
-                </button>
+                </Button>
               </div>
             </div>
           );
@@ -247,19 +253,17 @@ export default function AdminPerformancesPage() {
 
             <div className="adminModalBody">
               {/* 제목 */}
-              <div className="adminFormRow">
-                <label className="adminLabel">공연 제목 <span className="adminRequired">*</span></label>
-                <input
+              <FormField variant="admin" label="공연 제목" required>
+                <Input
+                  variant="admin"
                   ref={editTitleRef}
-                  className="adminInput"
                   value={editTitle}
                   onChange={e => setEditTitle(e.target.value)}
                 />
-              </div>
+              </FormField>
 
               {/* 포스터 */}
-              <div className="adminFormRow">
-                <label className="adminLabel">포스터 이미지</label>
+              <FormField variant="admin" label="포스터 이미지">
                 <div className="adminPosterWrap">
                   {editPreview && (
                     <div className="adminPosterPreview">
@@ -272,13 +276,13 @@ export default function AdminPerformancesPage() {
                     {editPreview ? "이미지 변경" : "이미지 선택"}
                   </label>
                 </div>
-              </div>
+              </FormField>
 
               {/* 회차 목록 */}
               <div className="adminFormSection">
-                <label className="adminLabel" style={{ display: "block", marginBottom: 10 }}>회차 목록</label>
+                <label className="adminLabel" style={{ display: "block", marginBottom: "var(--space-2-5)" }}>회차 목록</label>
                 {(editingPerf.rounds ?? []).length === 0 && (
-                  <p style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 10 }}>등록된 회차가 없습니다.</p>
+                  <p style={{ fontSize: "var(--font-md)", color: "var(--text-3)", marginBottom: "var(--space-2-5)" }}>등록된 회차가 없습니다.</p>
                 )}
                 {(editingPerf.rounds ?? []).map((r, idx) => {
                   const roundLocked = new Date(r.openTime) <= new Date();
@@ -286,22 +290,21 @@ export default function AdminPerformancesPage() {
                     <div key={r.roundId} className="adminRoundCard">
                       <div className="adminRoundCardHeader">
                         <span className="adminRoundNum">{idx + 1}회차</span>
-                        {roundLocked && <span style={{ fontSize: 11, color: "var(--error)" }}>🔒 오픈됨 — 수정 불가</span>}
-                        <button
-                          className="btnDanger"
-                          style={{ marginLeft: "auto", padding: "4px 10px", fontSize: 12 }}
+                        {roundLocked && <span style={{ fontSize: "var(--font-sm)", color: "var(--error)" }}>🔒 오픈됨 — 수정 불가</span>}
+                        <Button
+                          variant="danger"
+                          style={{ marginLeft: "auto", padding: "var(--space-1) var(--space-2-5)", fontSize: "var(--font-base)" }}
                           onClick={() => handleDeleteRound(r.roundId)}
                           disabled={roundLocked}
                           title={roundLocked ? "오픈된 회차는 삭제할 수 없습니다." : ""}
                         >
                           삭제
-                        </button>
+                        </Button>
                       </div>
                       <div className="adminRoundCardBody">
-                        <div className="adminFormRow" style={{ marginBottom: 0 }}>
-                          <label className="adminLabel">공연 시간</label>
-                          <input
-                            className="adminInput"
+                        <FormField variant="admin" label="공연 시간" style={{ marginBottom: 0 }}>
+                          <Input
+                            variant="admin"
                             type="datetime-local"
                             disabled={roundLocked}
                             value={roundEdits[r.roundId]?.roundTime ?? ""}
@@ -310,11 +313,10 @@ export default function AdminPerformancesPage() {
                               [r.roundId]: { ...prev[r.roundId], roundTime: e.target.value },
                             }))}
                           />
-                        </div>
-                        <div className="adminFormRow" style={{ marginBottom: 0 }}>
-                          <label className="adminLabel">예매 오픈</label>
-                          <input
-                            className="adminInput"
+                        </FormField>
+                        <FormField variant="admin" label="예매 오픈" style={{ marginBottom: 0 }}>
+                          <Input
+                            variant="admin"
                             type="datetime-local"
                             disabled={roundLocked}
                             value={roundEdits[r.roundId]?.openTime ?? ""}
@@ -323,43 +325,43 @@ export default function AdminPerformancesPage() {
                               [r.roundId]: { ...prev[r.roundId], openTime: e.target.value },
                             }))}
                           />
-                        </div>
+                        </FormField>
                       </div>
                     </div>
                   );
                 })}
 
                 {/* 회차 추가 */}
-                <div className="adminRoundRow" style={{ marginTop: 8 }}>
-                  <div className="adminFormRow" style={{ flex: 1, marginBottom: 0 }}>
-                    <label className="adminLabel">공연 시간</label>
-                    <input className="adminInput" type="datetime-local" value={newRound.roundTime}
+                <div className="adminRoundRow" style={{ marginTop: "var(--space-2)" }}>
+                  <FormField variant="admin" label="공연 시간" style={{ flex: 1, marginBottom: 0 }}>
+                    <Input variant="admin" type="datetime-local" value={newRound.roundTime}
                       onChange={e => setNewRound(r => ({ ...r, roundTime: e.target.value }))} />
-                  </div>
-                  <div className="adminFormRow" style={{ flex: 1, marginBottom: 0 }}>
-                    <label className="adminLabel">예매 오픈</label>
-                    <input className="adminInput" type="datetime-local" value={newRound.openTime}
+                  </FormField>
+                  <FormField variant="admin" label="예매 오픈" style={{ flex: 1, marginBottom: 0 }}>
+                    <Input variant="admin" type="datetime-local" value={newRound.openTime}
                       onChange={e => setNewRound(r => ({ ...r, openTime: e.target.value }))} />
-                  </div>
-                  <button className="btnSecondary" style={{ alignSelf: "flex-end" }}
+                  </FormField>
+                  <Button variant="secondary" style={{ alignSelf: "flex-end" }}
                     onClick={handleAddRound} disabled={addingRound}>
                     {addingRound ? "추가 중..." : "+ 회차"}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
-              {editMsg && <p className={editMsg.ok ? "successMsg" : "errorMsg"}>{editMsg.text}</p>}
+              {editMsg && (
+                <StatusMessage variant={editMsg.ok ? "success" : "error"}>{editMsg.text}</StatusMessage>
+              )}
             </div>
 
             <div className="adminModalFooter">
-              <button className="btnSecondary" onClick={closeEdit}>닫기</button>
-              <button className="btnPrimary" onClick={handleEditSave} disabled={editSaving || editUploading}>
+              <Button variant="secondary" onClick={closeEdit}>닫기</Button>
+              <Button variant="primary" onClick={handleEditSave} disabled={editSaving || editUploading}>
                 {editSaving ? "저장 중..." : "저장"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </PageHeader>
   );
 }

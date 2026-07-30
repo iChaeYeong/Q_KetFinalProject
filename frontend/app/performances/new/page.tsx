@@ -1,10 +1,18 @@
 "use client";
 
+// 관리자가 새 공연을 등록하는 폼 페이지
+// 공연명, 공연장, 포스터 이미지 업로드, 회차(날짜/시간) 추가
+
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getVenues, createPerformance, type Venue } from "@/lib/api/manage";
 import { uploadImage } from "@/lib/api/common";
+import Button from "@/components/ui/Button";
+import PageHeader from "@/components/ui/PageHeader";
+import FormField from "@/components/ui/FormField";
+import Input from "@/components/ui/Input";
+import StatusMessage from "@/components/ui/StatusMessage";
 
 type Round = { roundTime: string; openTime: string };
 type NewPerformance = { pTitle: string; venueId: number; posterUrl: string };
@@ -121,39 +129,36 @@ export default function AdminPerformancesPage() {
   };
 
   if (isLoading || loading)
-    return <div className="pageWrap"><p className="loadingMsg">불러오는 중...</p></div>;
+    return <div className="pageWrap"><StatusMessage variant="loading">불러오는 중...</StatusMessage></div>;
 
   return (
-    <div className="pageWrap">
-      <div className="adminPageHeader">
-        <div>
-          <h1 className="pageTitle">공연 추가</h1>
-          <p className="pageSubtitle">새 공연과 회차를 등록합니다.</p>
-        </div>
-        <button className="btnSecondary" onClick={() => router.push("/performances")}>
+    <PageHeader
+      variant="admin"
+      title="공연 추가"
+      subtitle="새 공연과 회차를 등록합니다."
+      actions={
+        <Button variant="secondary" onClick={() => router.push("/performances")}>
           ← 목록으로
-        </button>
-      </div>
-
+        </Button>
+      }
+    >
       <div className="adminCard">
         <h2 className="adminCardTitle">공연 추가</h2>
         <form className="adminForm" onSubmit={handleSubmit}>
 
           {/* 제목 */}
-          <div className="adminFormRow">
-            <label className="adminLabel">공연 제목 <span className="adminRequired">*</span></label>
-            <input
+          <FormField variant="admin" label="공연 제목" required>
+            <Input
+              variant="admin"
               ref={titleRef}
-              className="adminInput"
               placeholder="공연 제목을 입력하세요"
               value={perfForm.pTitle}
               onChange={e => setPerfForm(f => ({ ...f, pTitle: e.target.value }))}
             />
-          </div>
+          </FormField>
 
           {/* 공연장 */}
-          <div className="adminFormRow">
-            <label className="adminLabel">공연장 <span className="adminRequired">*</span></label>
+          <FormField variant="admin" label="공연장" required>
             <select
               className="adminInput"
               value={perfForm.venueId}
@@ -163,11 +168,10 @@ export default function AdminPerformancesPage() {
                 <option key={v.venueId} value={v.venueId}>{v.venueName}</option>
               ))}
             </select>
-          </div>
+          </FormField>
 
           {/* 포스터 이미지 */}
-          <div className="adminFormRow">
-            <label className="adminLabel">포스터 이미지</label>
+          <FormField variant="admin" label="포스터 이미지">
             <div className="adminPosterWrap">
               {previewUrl && (
                 <div className="adminPosterPreview">
@@ -188,59 +192,57 @@ export default function AdminPerformancesPage() {
                 <span className="adminUploadDone">✓ 업로드 완료</span>
               )}
             </div>
-          </div>
+          </FormField>
 
           {/* 회차 */}
           <div className="adminFormSection">
             <div className="adminFormSectionHeader">
               <span className="adminLabel">회차 목록 <span className="adminRequired">*</span></span>
-              <button type="button" className="btnSecondary" onClick={handleAddRoundRow}>+ 회차 추가</button>
+              <Button type="button" variant="secondary" onClick={handleAddRoundRow}>+ 회차 추가</Button>
             </div>
             {perfRounds.map((round, i) => (
               <div key={i} className="adminRoundRow">
-                <div className="adminFormRow" style={{ flex: 1, marginBottom: 0 }}>
-                  <label className="adminLabel">{i + 1}회차 공연 시간 <span className="adminRequired">*</span></label>
-                  <input
-                    className="adminInput"
+                <FormField variant="admin" label={`${i + 1}회차 공연 시간`} required style={{ flex: 1, marginBottom: 0 }}>
+                  <Input
+                    variant="admin"
                     type="datetime-local"
                     value={round.roundTime}
                     ref={el => { if (roundRefs.current[i]) roundRefs.current[i].roundTime = el; }}
                     onChange={e => handleRoundChange(i, "roundTime", e.target.value)}
                   />
-                </div>
-                <div className="adminFormRow" style={{ flex: 1, marginBottom: 0 }}>
-                  <label className="adminLabel">예매 오픈 시간 <span className="adminRequired">*</span></label>
-                  <input
-                    className="adminInput"
+                </FormField>
+                <FormField variant="admin" label="예매 오픈 시간" required style={{ flex: 1, marginBottom: 0 }}>
+                  <Input
+                    variant="admin"
                     type="datetime-local"
                     value={round.openTime}
                     ref={el => { if (roundRefs.current[i]) roundRefs.current[i].openTime = el; }}
                     onChange={e => handleRoundChange(i, "openTime", e.target.value)}
                   />
-                </div>
+                </FormField>
                 {perfRounds.length > 1 && (
-                  <button
+                  <Button
                     type="button"
-                    className="btnDanger"
+                    variant="danger"
                     style={{ alignSelf: "flex-end" }}
                     onClick={() => handleRemoveRoundRow(i)}
                   >
                     삭제
-                  </button>
+                  </Button>
                 )}
               </div>
             ))}
           </div>
 
           {msg && (
-            <p className={msg.ok ? "successMsg" : "errorMsg"}>{msg.text}</p>
+            <StatusMessage variant={msg.ok ? "success" : "error"}>{msg.text}</StatusMessage>
           )}
 
-          <button className="btnPrimary" type="submit" disabled={saving || uploading}>
+          <Button variant="primary" type="submit" disabled={saving || uploading}>
             {saving ? "등록 중..." : "공연 등록"}
-          </button>
+          </Button>
         </form>
       </div>
-    </div>
+    </PageHeader>
   );
 }
