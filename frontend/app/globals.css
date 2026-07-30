@@ -636,6 +636,47 @@ a {
   color: var(--text-3);
 }
 
+/* ── QUEUE MODAL (팝업형 대기열) ── */
+.queueModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.queueModal {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  padding: 48px 40px;
+  text-align: center;
+}
+
+.queueModalClose {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: inherit;
+}
+
+.queueModalClose:hover { background: var(--surface2); }
+
 /* ── SEAT MAP ── */
 .seatLayout {
   display: flex;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import QueueModal from "@/components/QueueModal";
 
 type Props = {
   roundId: number;
@@ -23,6 +24,7 @@ export default function BookButton({ roundId, openTime, roundTime, title }: Prop
   const { userSession } = useAuth();
 
   const [state, setState] = useState<ButtonState>("Before");
+  const [showQueue, setShowQueue] = useState(false);
 
   useEffect(() => {
     const open = new Date(openTime).getTime();
@@ -84,23 +86,32 @@ if (now >= round) {
     <span className="badge badgeClosed">예매 마감</span>
   );
 
-  // [BOOK-OPEN] 오픈 이후 — 로그인 확인 후 대기열 페이지로 이동
+  // [BOOK-OPEN] 오픈 이후 — 로그인 확인 후 대기열 팝업 오픈 (부모 페이지는 팝업 뒤에서 잠김)
   const handleBook = () => {
     if (!userSession) {
       alert("로그인 후 이용해주세요.");
       router.push("/login");
       return;
     }
-    router.push(`/queue?scheduleId=${roundId}&title=${encodeURIComponent(title)}`);
+    setShowQueue(true);
   };
 
   return (
-    <button
-      className="btnPrimary"
-      style={{ padding: "4px 12px", fontSize: 12 }}
-      onClick={handleBook}
-    >
-      예매하기
-    </button>
+    <>
+      <button
+        className="btnPrimary"
+        style={{ padding: "4px 12px", fontSize: 12 }}
+        onClick={handleBook}
+      >
+        예매하기
+      </button>
+      {showQueue && (
+        <QueueModal
+          scheduleId={roundId}
+          title={title}
+          onClose={() => setShowQueue(false)}
+        />
+      )}
+    </>
   );
 }
