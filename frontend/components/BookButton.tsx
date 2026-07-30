@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/ui/Button";
+import Badge from "@/components/ui/Badge";
 
 type Props = {
   roundId: number;
@@ -57,7 +58,7 @@ if (now >= round) {
   // [BOOK-HIDDEN] 10분 전보다 이전 — 오픈 시간 안내
   if (state === "Before") return (
     <div style={{ textAlign: "right" }}>
-      <span className="badge badgeClosed">예매 전</span>
+      <Badge variant="closed">예매 전</Badge>
       <p style={{ fontSize: "var(--font-xs)", color: "var(--text-3)", marginTop: "var(--space-0-5)" }}>오픈 {openLabel}</p>
     </div>
   );
@@ -85,7 +86,7 @@ if (now >= round) {
   }
 
   if (state === "closed") return (
-    <span className="badge badgeClosed">예매 마감</span>
+    <Badge variant="closed">예매 마감</Badge>
   );
 
   // [BOOK-OPEN] 오픈 이후 — 로그인 확인 후 대기열 페이지로 이동

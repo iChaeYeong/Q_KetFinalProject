@@ -3,6 +3,9 @@
 // 데이터는 async/await 로 직접 fetch, 네비게이션은 <Link> 사용
 
 import BookButton from "@/components/BookButton";
+import Badge from "@/components/ui/Badge";
+import PageHeader from "@/components/ui/PageHeader";
+import StatusMessage from "@/components/ui/StatusMessage";
 import { BASE_URL } from "@/lib/api/client";
 
 // 백엔드 PerformanceDTO 와 일치
@@ -39,14 +42,9 @@ export default async function EventsPage() {
   const performances: Performance[] = await res.json();
 
   return (
-    <div className="pageWrap">
-      <div className="pageHeader">
-        <h1 className="pageTitle">공연 목록</h1>
-        <p className="pageSubtitle">예매하고 싶은 공연을 선택하세요.</p>
-      </div>
-
+    <PageHeader title="공연 목록" subtitle="예매하고 싶은 공연을 선택하세요.">
       {performances.length === 0 && (
-        <p className="loadingMsg">등록된 공연이 없습니다.</p>
+        <StatusMessage variant="loading">등록된 공연이 없습니다.</StatusMessage>
       )}
 
       <div className="eventGrid">
@@ -79,7 +77,7 @@ export default async function EventsPage() {
                         title={performance.pTitle}
                       />
                     ) : (
-                      <span className="badge badgeSoldout">매진</span>
+                      <Badge variant="soldout">매진</Badge>
                     )}
                   </div>
                 ))}
@@ -88,6 +86,6 @@ export default async function EventsPage() {
           </div>
         ))}
       </div>
-    </div>
+    </PageHeader>
   );
 }

@@ -10,6 +10,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import type { Reservation } from "@/lib/data/types";
+import Button from "@/components/ui/Button";
+import Badge from "@/components/ui/Badge";
+import PageHeader from "@/components/ui/PageHeader";
+import StatusMessage from "@/components/ui/StatusMessage";
 import { getMyReservations, cancelReservation } from "@/lib/api/reservations"
 
 // 예매 상태 표시 라벨
@@ -17,10 +21,10 @@ const STATUS_LABEL: Record<string, string> = {
   RESERVED: "예매 완료",
   CANCELLED: "취소됨",
 };
-// 예매 상태 배지 CSS 클래스
-const STATUS_CLASS: Record<string, string> = {
-  RESERVED: "badge badgeOpen",
-  CANCELLED: "badge badgeClosed",
+// 예매 상태별 Badge variant
+const STATUS_VARIANT: Record<string, "open" | "closed"> = {
+  RESERVED: "open",
+  CANCELLED: "closed",
 };
 
 
@@ -63,12 +67,7 @@ export default function MyPage() {
 
   return (
     <>
-      <div className="pageWrap">
-        <div className="pageHeader">
-          <h1 className="pageTitle">마이페이지</h1>
-          <p className="pageSubtitle">계정 정보와 예매 내역을 확인합니다.</p>
-        </div>
-
+      <PageHeader title="마이페이지" subtitle="계정 정보와 예매 내역을 확인합니다.">
         <div className="mypageGrid">
           {/* 프로필 카드 */}
           <div className="profileCard">
@@ -101,19 +100,19 @@ export default function MyPage() {
               예매 내역
             </h2>
 
-            {loading && <p className="loadingMsg">불러오는 중...</p>}
+            {loading && <StatusMessage variant="loading">불러오는 중...</StatusMessage>}
 
             {!loading && reservations.length === 0 && (
               <div className="emptyMsg">
                 <p style={{ fontSize: "var(--font-2xl)", marginBottom: "var(--space-3)" }}>🎫</p>
                 <p>예매 내역이 없습니다.</p>
-                <button
-                  className="btnPrimary"
+                <Button
+                  variant="primary"
                   style={{ marginTop: "var(--space-4)" }}
                   onClick={() => router.push("/")}
                 >
                   공연 보러 가기
-                </button>
+                </Button>
               </div>
             )}
 
@@ -128,27 +127,27 @@ export default function MyPage() {
                       <span>🎟 {r.grade}</span>
                     </div>
                     <div style={{ marginTop: "var(--space-2)" }}>
-                      <span className={STATUS_CLASS[r.reservedStatus] ?? "badge badgeClosed"}>
+                      <Badge variant={STATUS_VARIANT[r.reservedStatus] ?? "closed"}>
                         {STATUS_LABEL[r.reservedStatus] ?? r.reservedStatus}
-                      </span>
+                      </Badge>
                     </div>
                   </div>
 
                   {r.reservedStatus === "RESERVED" && (
-                    <button
-                      className="btnDanger"
+                    <Button
+                      variant="danger"
                       onClick={() => handleCancel(r.reservationId)}
                       disabled={cancelling === r.reservationId}
                     >
                       {cancelling === r.reservationId ? "처리 중..." : "취소"}
-                    </button>
+                    </Button>
                   )}
                 </div>
               ))}
             </div>
           </div>
         </div>
-      </div>
+      </PageHeader>
     </>
   );
 }

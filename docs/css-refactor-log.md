@@ -43,40 +43,104 @@ styles/
 
 ---
 
-## 3단계 — JSX 컴포넌트화 (진행 중)
+## 3단계 — JSX 컴포넌트화 (Button, Badge 완료)
 
-같은 패턴 반복되는거 컴포넌트화 하는중..
-버튼부분만 하나 만들었고 코드에도 변경해놨습니다.
-아래 완료파트에 두개만 일단 했고 진행예정에 있는 파일들 내용 다 바꾸고 로드맵대로 하면될거같아요.
-버튼까지는 손으로 코딩했는데 이후 작업까지 손으로 하려면 너무 오래걸릴거같아서 Ai써서 바꾸는게 좋을거같아요.
+반복되는 UI 패턴을 재사용 컴포넌트로 추출. 값/디자인은 그대로, className만 컴포넌트 호출로 교체.
 
-### 완료
-- `frontend/components/ui/Button.tsx` 생성. 
-- `components/BookButton.tsx` 적용 완료
+### Button — 완료
+`<button className="btnPrimary/btnSecondary/btnDanger">` → `<Button variant="...">`
 
-### 진행 예정 (진호가 직접 작업 중)
-아래 파일들에서 `<button className="btnPrimary/btnSecondary/btnDanger">` → `<Button variant="...">` 로 교체 필요:
+- `frontend/components/ui/Button.tsx` 생성. `variant`(primary/secondary/ghost/danger) + `fullWidth` prop으로 button.css의 4종 스타일 처리.
+- 아래 8개 파일 전부 교체 완료:
 
-- [ ] `app/(auth)/signup/page.tsx`
-- [ ] `app/(auth)/login/page.tsx`
-- [ ] `app/mypage/page.tsx`
-- [ ] `app/admin/performances/page.tsx`
-- [ ] `app/admin/performances/new/page.tsx`
-- [ ] `app/admin/users/page.tsx`
-- [ ] `app/seats/[scheduleId]/page.tsx`
+- [x] `components/BookButton.tsx`
+- [x] `app/(auth)/signup/page.tsx`
+- [x] `app/(auth)/login/page.tsx`
+- [x] `app/mypage/page.tsx` (2곳: "공연 보러 가기", "취소")
+- [x] `app/admin/performances/page.tsx` (7곳: 추가/수정/삭제/회차삭제/회차추가/닫기/저장)
+- [x] `app/admin/performances/new/page.tsx` (4곳: 목록으로/회차추가/회차삭제/공연등록)
+- [x] `app/admin/users/page.tsx` (저장)
+- [x] `app/seats/[scheduleId]/page.tsx` (예매하기)
 
-변경 방식: className 문자열만 컴포넌트 호출로 바꾸는 것 — CSS 값/디자인은 그대로.
+건드리지 않은 버튼: `admin/performances/page.tsx`의 모달 닫기(X) 버튼(`adminModalClose`)과 `seats` 페이지의 개별 좌석 버튼(`seat` 클래스) — 이 둘은 Button의 4가지 variant에 해당하지 않는 별도 스타일이라 원래 코드 그대로 둠.
 
-### 컴포넌트화 로드맵 (Button 다음 순서, 실제 코드 반복 빈도 기준)
+### Badge — 완료
+`<span className="badge badge종류">` → `<Badge variant="...">`
+
+- `frontend/components/ui/Badge.tsx` 생성. `variant`(open/closed/soldout/vip/r/s)로 badge.css의 6종 색상 처리.
+- 아래 4개 파일, 총 6곳 교체 완료:
+
+- [x] `components/BookButton.tsx` (2곳: "예매 전", "예매 마감" — 둘 다 `closed`)
+- [x] `app/page.tsx` (1곳: "매진" — `soldout`)
+- [x] `app/seats/[scheduleId]/page.tsx` (2곳: 좌석 구역 등급 표시, 선택한 좌석 등급 표시 — 좌석 grade 값(VIP/R/S)을 소문자로 변환해서 variant로 사용)
+- [x] `app/mypage/page.tsx` (1곳: 예매 상태 뱃지 — 기존 `STATUS_CLASS` 문자열 매핑을 `STATUS_VARIANT`로 교체)
+
+### 컴포넌트화 로드맵 (실제 코드 반복 빈도 기준)
 
 | 순서 | 컴포넌트 | 대상 className | 반복 횟수 | 비고 |
 |---|---|---|---|---|
-| 1 | Button | `btnPrimary`/`btnSecondary`/`btnGhost`/`btnDanger` | 20+ | (진행 중) |
-| 2 | Badge | `badge` + `badgeOpen`/`badgeClosed`/`badgeSoldout`/`badgeVip`/`badgeR`/`badgeS` | `app/page.tsx`, `app/seats/[scheduleId]/page.tsx` 2곳 | seats 페이지는 `` `badge badge${grade}` `` 조건문까지 있어서 컴포넌트로 빼면 코드 제일 깔끔해짐 |
-| 3 | FormField / Input | `field`+`fieldLabel`+`fieldInput`(로그인/회원가입), `adminFormRow`+`adminLabel`+`adminInput`(관리자 폼) | 7~13회 | 반복 빈도 제일 높음. "라벨+입력창" 세트를 하나로 묶기 |
-| 4 | PageHeader | `pageWrap`+`pageTitle`+`pageSubtitle`+`pageHeader` | 6~8회 | 거의 모든 페이지 최상단에 동일 구조로 반복 |
-| 5 | StatusMessage | `loadingMsg`, `errorMsg` | 3~7회 | "로딩 중"/"에러" 안내 문구 |
+| 1 | Button | `btnPrimary`/`btnSecondary`/`btnGhost`/`btnDanger` | 20+ | 완료 |
+| 2 | Badge | `badge` + `badgeOpen`/`badgeClosed`/`badgeSoldout`/`badgeVip`/`badgeR`/`badgeS` | 6곳 | 완료 |
+| 3 | FormField / Input | `field`+`fieldLabel`+`fieldInput`(로그인/회원가입), `adminFormRow`+`adminLabel`+`adminInput`(관리자 폼) | 7~13회 | 완료 |
+| 4 | PageHeader | `pageWrap`+`pageTitle`+`pageSubtitle`+`pageHeader` | 6~8회 | 완료 |
+| 5 | StatusMessage | `loadingMsg`, `errorMsg` | 3~7회 | 완료 |
 | 낮음 | 기타 | `seatLegendItem`/`seatLegendDot`(좌석 범례), `adminPosterWrap` 등 포스터 업로드 영역 | 2~4회 | 반복 적어서 급하지 않음, 여유 있을 때 |
+
+### FormField / Input — 완료
+
+`<div className="field/adminFormRow"><label className="fieldLabel/adminLabel">...</label><input className="fieldInput/adminInput" .../></div>` → `<FormField variant="auth|admin" label="..." required?><Input variant="auth|admin" .../></FormField>`
+
+- `frontend/components/ui/FormField.tsx` 생성. `variant`(auth/admin) + `label` + `required` prop으로 라벨+래퍼 div 처리. children으로 실제 입력 요소(Input, select 등)를 그대로 받음.
+- `frontend/components/ui/Input.tsx` 생성. `variant`(auth/admin)로 fieldInput/adminInput 처리. `forwardRef` 지원(관리자 폼 유효성 검사 실패 시 focus 이동에 필요).
+- select 태그(공연장 선택 등)는 Input 대상이 아니라서 className="adminInput" 그대로 유지, FormField로 라벨/래퍼만 감쌈.
+- 아래 4개 파일 전부 교체 완료:
+
+- [x] `app/(auth)/login/page.tsx` (2곳: 아이디, 비밀번호)
+- [x] `app/(auth)/signup/page.tsx` (5곳: 아이디/이름/이메일/비밀번호/비밀번호 확인)
+- [x] `app/admin/performances/page.tsx` (수정 모달: 제목/포스터/회차별 시간 2개×N/회차 추가 시간 2개)
+- [x] `app/admin/performances/new/page.tsx` (제목/공연장/포스터/회차별 시간 2개×N)
+
+건드리지 않은 부분: `adminFormSectionHeader` 안의 "회차 목록 *" 라벨(래퍼 div 없이 flex 헤더의 일부라 FormField 구조와 안 맞음), 회차 목록 섹션 제목 라벨(`adminLabel` 단독 사용) — 둘 다 원래 코드 그대로 둠.
+
+### PageHeader — 완료
+
+`<div className="pageWrap(Wide)"><div className="pageHeader/adminPageHeader">...</div>...나머지 페이지...</div>` → `<PageHeader title="..." subtitle="..." variant="default|admin" wide? actions?>...나머지 페이지...</PageHeader>`
+
+- `frontend/components/ui/PageHeader.tsx` 생성. 페이지 최상위 wrapper(`pageWrap`/`pageWrapWide`)까지 함께 감싸서 `children`으로 나머지 내용을 받음. `variant="admin"`이면 `adminPageHeader` 레이아웃 + `actions` slot(우측 버튼/영역, 래핑 여부는 호출부 재량) 사용.
+- 아래 6개 파일 전부 교체 완료:
+
+- [x] `app/page.tsx` (공연 목록, default)
+- [x] `app/mypage/page.tsx` (default)
+- [x] `app/seats/[scheduleId]/page.tsx` (default, `wide`)
+- [x] `app/admin/users/page.tsx` (admin, actions에 상태 메시지+저장 버튼)
+- [x] `app/admin/performances/page.tsx` (admin, actions에 "+ 공연 추가" 버튼)
+- [x] `app/admin/performances/new/page.tsx` (admin, actions에 "← 목록으로" 버튼)
+
+건드리지 않은 부분: 각 파일의 데이터 로딩 중 조기 return(`{isLoading && return <div className="pageWrap">...}`) — 제목 없이 로딩 문구만 있는 상태라 PageHeader 구조와 안 맞아서 `pageWrap` div는 그대로 두고 안의 문구만 StatusMessage로 교체.
+
+### StatusMessage — 완료
+
+`<p className="loadingMsg/errorMsg/successMsg">...</p>` → `<StatusMessage variant="loading|error|success">...</StatusMessage>`
+
+- `frontend/components/ui/StatusMessage.tsx` 생성. `variant`(loading/error/success)로 loadingMsg/errorMsg/successMsg 3종 처리. 기본 태그는 `<p>`, 인라인 배치가 필요한 자리(버튼 옆 등)는 `as="span"`으로 교체 가능.
+- 로드맵에는 loadingMsg/errorMsg만 적혀있었지만, 기존 코드에 `msg.ok ? "successMsg" : "errorMsg"` 식 삼항연산자로 두 클래스가 항상 짝지어 쓰이고 있어서 successMsg도 같은 컴포넌트의 variant로 포함— CSS 값 변경 없이 동일 패턴 재사용.
+- 아래 8개 파일, 총 12곳 교체 완료:
+
+- [x] `app/(auth)/login/page.tsx` (에러 1곳)
+- [x] `app/(auth)/signup/page.tsx` (에러 1곳)
+- [x] `app/queue/page.tsx` (에러 1곳)
+- [x] `app/page.tsx` (로딩/빈 목록 1곳)
+- [x] `app/mypage/page.tsx` (로딩 1곳)
+- [x] `app/seats/[scheduleId]/page.tsx` (로딩 1곳, 성공 1곳)
+- [x] `app/admin/users/page.tsx` (로딩 1곳, 저장 성공/실패 1곳 — `as="span"`)
+- [x] `app/admin/performances/page.tsx` (로딩 2곳, 저장 성공/실패 1곳)
+- [x] `app/admin/performances/new/page.tsx` (로딩 1곳, 등록 성공/실패 1곳)
+
+### 검증
+
+- `npx tsc --noEmit` 통과 (타입 에러 0건)
+- 실행 중인 dev 서버(localhost:3000)에서 로그인/회원가입/공연 목록 페이지 실제 렌더링 확인 — `document.querySelectorAll` 로 렌더된 DOM의 className이 기존 값(`fieldInput`, `field`, `pageHeader`/`pageTitle`/`pageSubtitle` 등)과 완전히 동일함을 확인. 콘솔 에러 없음.
+- 관리자 페이지는 로그인 세션이 없어 실제 화면 클릭 테스트는 못 했고, 타입체크 + 코드 리뷰로만 검증함. 실제 로그인 후 한 번 확인 권장.
 
 ---
 

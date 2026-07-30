@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { QueueStatus } from "@/lib/data/types";
 import { joinQueue, getQueueStatus, leaveQueue } from "@/lib/api/queues";
+import StatusMessage from "@/components/ui/StatusMessage";
 
 // [TODO-QUEUE-NOTE]
 // 대기열 흐름:
@@ -129,7 +130,7 @@ function QueueContent() {
         <h1 className="queueTitle">대기열</h1>
         <p className="queueEventName">{title}</p>
 
-        {error && <p className="errorMsg">{error}</p>}
+        {error && <StatusMessage variant="error">{error}</StatusMessage>}
 
         {/* 대기열 진입 중 (status 아직 없음) */}
         {!error && !status && (
