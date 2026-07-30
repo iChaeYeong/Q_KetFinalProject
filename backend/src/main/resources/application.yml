@@ -58,5 +58,5 @@ cloud:
 # mybatis
 mybatis:
   mapper-locations: com/exam/**/mapper/*.xml
-  type-aliases-package: com.exam.common.dto, com.exam.reservation.dto
+  type-aliases-package: com.exam.common.dto, com.exam.reservation.dto, com.exam.auth.dto, com.exam.admin.dto
   map-underscore-to-camel-case: true

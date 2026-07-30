@@ -1,6 +1,6 @@
 package com.exam.queue.controller;
 
-import com.exam.common.dto.UserDTO;
+import com.exam.auth.dto.UserDTO;
 import com.exam.queue.dto.QueueJoinRequest;
 import com.exam.queue.dto.QueueJoinResponse;
 import com.exam.queue.dto.QueueStatusResponse;

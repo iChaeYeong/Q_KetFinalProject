@@ -91,17 +91,19 @@ INSERT INTO VENUE (venue_name) VALUES
   ('인천 파라다이스시티 아레나');
 
 -- PERFORMANCES (공연 10개)
-INSERT INTO PERFORMANCES (p_title, venue_id, poster_url) VALUES
-  ('아이유 콘서트 - The Golden Hour',     1, 'https://example.com/poster/iu.jpg'),
-  ('BTS World Tour - Yet To Come',       2, 'https://example.com/poster/bts.jpg'),
-  ('BLACKPINK - Born Pink',              4, 'https://example.com/poster/blackpink.jpg'),
-  ('임영웅 - 영웅시대',                   1, 'https://example.com/poster/lim.jpg'),
-  ('뮤지컬 레미제라블',                   5, 'https://example.com/poster/miserable.jpg'),
-  ('세븐틴 - Be The Sun',                2, 'https://example.com/poster/seventeen.jpg'),
-  ('NewJeans 팬미팅 - Bunnies Camp',     3, 'https://example.com/poster/newjeans.jpg'),
-  ('나훈아 - 테스형!',                    4, 'https://example.com/poster/na.jpg'),
-  ('뮤지컬 오페라의 유령',                5, 'https://example.com/poster/phantom.jpg'),
-  ('태연 - My Voice Concert',            6, 'https://example.com/poster/taeyeon.jpg');
+-- ins_id/ins_ip: 실제 앱에서는 AdminController.createPerformance() 통해 등록한 관리자 정보가 들어감 →
+--   시드 데이터도 그 흐름을 흉내내서 admin01이 등록한 것으로 채움 (ins_ip는 로컬 테스트용 더미값)
+INSERT INTO PERFORMANCES (p_title, venue_id, poster_url, ins_id, ins_ip) VALUES
+  ('아이유 콘서트 - The Golden Hour',     1, 'https://example.com/poster/iu.jpg',         'admin01', '127.0.0.1'),
+  ('BTS World Tour - Yet To Come',       2, 'https://example.com/poster/bts.jpg',        'admin01', '127.0.0.1'),
+  ('BLACKPINK - Born Pink',              4, 'https://example.com/poster/blackpink.jpg',  'admin01', '127.0.0.1'),
+  ('임영웅 - 영웅시대',                   1, 'https://example.com/poster/lim.jpg',        'admin01', '127.0.0.1'),
+  ('뮤지컬 레미제라블',                   5, 'https://example.com/poster/miserable.jpg',  'admin01', '127.0.0.1'),
+  ('세븐틴 - Be The Sun',                2, 'https://example.com/poster/seventeen.jpg',  'admin01', '127.0.0.1'),
+  ('NewJeans 팬미팅 - Bunnies Camp',     3, 'https://example.com/poster/newjeans.jpg',   'admin01', '127.0.0.1'),
+  ('나훈아 - 테스형!',                    4, 'https://example.com/poster/na.jpg',         'admin01', '127.0.0.1'),
+  ('뮤지컬 오페라의 유령',                5, 'https://example.com/poster/phantom.jpg',    'admin01', '127.0.0.1'),
+  ('태연 - My Voice Concert',            6, 'https://example.com/poster/taeyeon.jpg',    'admin01', '127.0.0.1');
 
 -- USERS (password: test1234)
 INSERT INTO USERS (user_id, user_nm, pwd, user_email, role_id, user_status) VALUES
@@ -115,40 +117,42 @@ INSERT INTO USERS (user_id, user_nm, pwd, user_email, role_id, user_status) VALU
   ('testuser06', '테스트유저06', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'testuser06@qket.com', 1, 'SUSPENDED');
 
 -- PERFORMANCE_ROUND
-INSERT INTO PERFORMANCE_ROUND (performance_id, round_time, open_time, round_status) VALUES
+-- [로컬 테스트 편의] open_time을 전부 과거로 당겨서 로컬에서 바로 "예매하기"가 눌리도록 함
+-- (round_time = 실제 공연 일시는 원래 값 그대로 유지 — 화면/데이터상 의미는 안 바뀜)
+INSERT INTO PERFORMANCE_ROUND (performance_id, round_time, open_time, round_status, ins_id, ins_ip) VALUES
   -- 아이유 (venue=1)
-  (1, '2026-08-15 19:00:00', '2026-08-01 10:00:00', 'OPEN'),
-  (1, '2026-08-16 17:00:00', '2026-08-01 10:00:00', 'OPEN'),
+  (1, '2026-08-15 19:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (1, '2026-08-16 17:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
   -- BTS (venue=2)
-  (2, '2026-09-01 19:00:00', '2026-08-15 10:00:00', 'OPEN'),
-  (2, '2026-09-02 19:00:00', '2026-08-15 10:00:00', 'OPEN'),
+  (2, '2026-09-01 19:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (2, '2026-09-02 19:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
   -- BLACKPINK (venue=4)
-  (3, '2026-09-15 19:00:00', '2026-09-01 10:00:00', 'OPEN'),
-  (3, '2026-09-16 19:00:00', '2026-09-01 10:00:00', 'OPEN'),
+  (3, '2026-09-15 19:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (3, '2026-09-16 19:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
   -- 임영웅 (venue=1)
-  (4, '2026-10-01 18:00:00', '2026-09-15 10:00:00', 'OPEN'),
-  (4, '2026-10-02 18:00:00', '2026-09-15 10:00:00', 'OPEN'),
-  (4, '2026-10-03 15:00:00', '2026-09-15 10:00:00', 'OPEN'),
+  (4, '2026-10-01 18:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (4, '2026-10-02 18:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (4, '2026-10-03 15:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
   -- 뮤지컬 레미제라블 (venue=5)
-  (5, '2026-08-20 19:30:00', '2026-08-05 10:00:00', 'OPEN'),
-  (5, '2026-08-21 19:30:00', '2026-08-05 10:00:00', 'OPEN'),
-  (5, '2026-08-22 14:00:00', '2026-08-05 10:00:00', 'OPEN'),
+  (5, '2026-08-20 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (5, '2026-08-21 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (5, '2026-08-22 14:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
   -- 세븐틴 (venue=2)
-  (6, '2026-09-05 18:00:00', '2026-08-20 10:00:00', 'OPEN'),
-  (6, '2026-09-06 15:00:00', '2026-08-20 10:00:00', 'OPEN'),
+  (6, '2026-09-05 18:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (6, '2026-09-06 15:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
   -- NewJeans (venue=3)
-  (7, '2026-08-30 17:00:00', '2026-08-10 10:00:00', 'OPEN'),
-  (7, '2026-08-31 17:00:00', '2026-08-10 10:00:00', 'OPEN'),
+  (7, '2026-08-30 17:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (7, '2026-08-31 17:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
   -- 나훈아 (venue=4)
-  (8, '2026-10-10 19:00:00', '2026-09-25 10:00:00', 'OPEN'),
-  (8, '2026-10-11 17:00:00', '2026-09-25 10:00:00', 'OPEN'),
+  (8, '2026-10-10 19:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (8, '2026-10-11 17:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
   -- 뮤지컬 오페라의 유령 (venue=5)
-  (9, '2026-09-10 19:30:00', '2026-08-25 10:00:00', 'OPEN'),
-  (9, '2026-09-11 19:30:00', '2026-08-25 10:00:00', 'OPEN'),
-  (9, '2026-09-12 14:00:00', '2026-08-25 10:00:00', 'OPEN'),
+  (9, '2026-09-10 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (9, '2026-09-11 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (9, '2026-09-12 14:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
   -- 태연 (venue=6)
-  (10, '2026-11-01 19:00:00', '2026-10-15 10:00:00', 'OPEN'),
-  (10, '2026-11-02 17:00:00', '2026-10-15 10:00:00', 'OPEN');
+  (10, '2026-11-01 19:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (10, '2026-11-02 17:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1');
 
 -- =========================
 -- SEATS
@@ -250,8 +254,9 @@ CROSS JOIN
 -- RESERVATIONS
 -- 각 공연의 venue_id와 같은 venue의 좌석 x 해당 공연 회차 조합
 -- =========================
-INSERT INTO RESERVATIONS (user_id, seat_id, round_id, performance_id, reserved_status)
-SELECT NULL, s.seat_id, r.round_id, r.performance_id, 'AVAILABLE'
+-- 실제 앱에서는 회차 등록 시 PerformanceMapper.initReservationSlots() 가 이 슬롯들을 만듦 (행위자 = 회차를 등록한 관리자)
+INSERT INTO RESERVATIONS (user_id, seat_id, round_id, performance_id, reserved_status, ins_id, ins_ip)
+SELECT NULL, s.seat_id, r.round_id, r.performance_id, 'AVAILABLE', 'admin01', '127.0.0.1'
 FROM SEATS s
 CROSS JOIN PERFORMANCE_ROUND r
 INNER JOIN PERFORMANCES p ON r.performance_id = p.performance_id
@@ -261,40 +266,42 @@ WHERE p.venue_id = s.venue_id;
 -- 데모용 예매 데이터
 -- ============================================================
 
+-- upt_id/upt_ip: 실제로는 ReservationServiceImpl.reserve() 가 예매한 본인 아이디로 채움 → 시드도 동일하게 맞춤
+
 -- [TC-04 / TC-06] testuser01: 아이유 1회차 A-1 VIP
-UPDATE RESERVATIONS SET user_id = 'testuser01', reserved_status = 'RESERVED', reserved_at = NOW()
+UPDATE RESERVATIONS SET user_id = 'testuser01', reserved_status = 'RESERVED', reserved_at = NOW(), upt_id = 'testuser01', upt_ip = '127.0.0.1'
 WHERE round_id = 1 AND seat_id = (SELECT seat_id FROM SEATS WHERE venue_id=1 AND seat_row='A' AND seat_colume='1')
   AND user_id IS NULL;
 
 -- [TC-04] testuser01: 임영웅 1회차 B-5 R
-UPDATE RESERVATIONS SET user_id = 'testuser01', reserved_status = 'RESERVED', reserved_at = NOW()
+UPDATE RESERVATIONS SET user_id = 'testuser01', reserved_status = 'RESERVED', reserved_at = NOW(), upt_id = 'testuser01', upt_ip = '127.0.0.1'
 WHERE round_id = 7 AND seat_id = (SELECT seat_id FROM SEATS WHERE venue_id=1 AND seat_row='B' AND seat_colume='5')
   AND user_id IS NULL;
 
 -- [TC-04] testuser01: 뮤지컬 레미제라블 1회차 C-10 R
-UPDATE RESERVATIONS SET user_id = 'testuser01', reserved_status = 'RESERVED', reserved_at = NOW()
+UPDATE RESERVATIONS SET user_id = 'testuser01', reserved_status = 'RESERVED', reserved_at = NOW(), upt_id = 'testuser01', upt_ip = '127.0.0.1'
 WHERE round_id = 10 AND seat_id = (SELECT seat_id FROM SEATS WHERE venue_id=5 AND seat_row='C' AND seat_colume='10')
   AND user_id IS NULL;
 
 -- [TC-06 / TC-07] testuser02: 아이유 1회차 A-2 VIP
-UPDATE RESERVATIONS SET user_id = 'testuser02', reserved_status = 'RESERVED', reserved_at = NOW()
+UPDATE RESERVATIONS SET user_id = 'testuser02', reserved_status = 'RESERVED', reserved_at = NOW(), upt_id = 'testuser02', upt_ip = '127.0.0.1'
 WHERE round_id = 1 AND seat_id = (SELECT seat_id FROM SEATS WHERE venue_id=1 AND seat_row='A' AND seat_colume='2')
   AND user_id IS NULL;
 
 -- [TC-07] testuser02: 아이유 2회차 A-1 VIP (동일 공연 다른 회차)
-UPDATE RESERVATIONS SET user_id = 'testuser02', reserved_status = 'RESERVED', reserved_at = NOW()
+UPDATE RESERVATIONS SET user_id = 'testuser02', reserved_status = 'RESERVED', reserved_at = NOW(), upt_id = 'testuser02', upt_ip = '127.0.0.1'
 WHERE round_id = 2 AND seat_id = (SELECT seat_id FROM SEATS WHERE venue_id=1 AND seat_row='A' AND seat_colume='1')
   AND user_id IS NULL;
 
 -- [TC-09] testuser03: BTS 1회차 A-1 → 예매 후 취소 (RESERVATIONS는 NULL 유지)
 
 -- [TC-08] testuser04: BTS 1회차 A-2 VIP
-UPDATE RESERVATIONS SET user_id = 'testuser04', reserved_status = 'RESERVED', reserved_at = NOW()
+UPDATE RESERVATIONS SET user_id = 'testuser04', reserved_status = 'RESERVED', reserved_at = NOW(), upt_id = 'testuser04', upt_ip = '127.0.0.1'
 WHERE round_id = 3 AND seat_id = (SELECT seat_id FROM SEATS WHERE venue_id=2 AND seat_row='A' AND seat_colume='2')
   AND user_id IS NULL;
 
 -- [TC-08] testuser04: 세븐틴 1회차 D-20 R (다른 공연장, 같은 venue_id=2)
-UPDATE RESERVATIONS SET user_id = 'testuser04', reserved_status = 'RESERVED', reserved_at = NOW()
+UPDATE RESERVATIONS SET user_id = 'testuser04', reserved_status = 'RESERVED', reserved_at = NOW(), upt_id = 'testuser04', upt_ip = '127.0.0.1'
 WHERE round_id = 13 AND seat_id = (SELECT seat_id FROM SEATS WHERE venue_id=2 AND seat_row='D' AND seat_colume='20')
   AND user_id IS NULL;
 
@@ -307,46 +314,91 @@ WHERE round_id = 13 AND seat_id = (SELECT seat_id FROM SEATS WHERE venue_id=2 AN
 -- action='CANCELLED' → RESERVATIONS.user_id=NULL
 -- ============================================================
 
+-- ins_id/ins_ip: 실제로는 ReservationServiceImpl 이 예매/취소한 본인 아이디로 채움 → 시드도 동일하게 맞춤 (user_id 값과 항상 같음)
+
 -- [TC-04] testuser01: 아이유 1회차 A-1 VIP
-INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action)
+INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action, ins_id, ins_ip)
 SELECT 'testuser01', (SELECT seat_id FROM SEATS WHERE venue_id=1 AND seat_row='A' AND seat_colume='1'),
-       1, performance_id, 'RESERVED' FROM PERFORMANCE_ROUND WHERE round_id = 1;
+       1, performance_id, 'RESERVED', 'testuser01', '127.0.0.1' FROM PERFORMANCE_ROUND WHERE round_id = 1;
 
 -- [TC-04] testuser01: 임영웅 1회차 B-5 R
-INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action)
+INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action, ins_id, ins_ip)
 SELECT 'testuser01', (SELECT seat_id FROM SEATS WHERE venue_id=1 AND seat_row='B' AND seat_colume='5'),
-       7, performance_id, 'RESERVED' FROM PERFORMANCE_ROUND WHERE round_id = 7;
+       7, performance_id, 'RESERVED', 'testuser01', '127.0.0.1' FROM PERFORMANCE_ROUND WHERE round_id = 7;
 
 -- [TC-04] testuser01: 뮤지컬 레미제라블 1회차 C-10 R
-INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action)
+INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action, ins_id, ins_ip)
 SELECT 'testuser01', (SELECT seat_id FROM SEATS WHERE venue_id=5 AND seat_row='C' AND seat_colume='10'),
-       10, performance_id, 'RESERVED' FROM PERFORMANCE_ROUND WHERE round_id = 10;
+       10, performance_id, 'RESERVED', 'testuser01', '127.0.0.1' FROM PERFORMANCE_ROUND WHERE round_id = 10;
 
 -- [TC-07] testuser02: 아이유 1회차 A-2 VIP
-INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action)
+INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action, ins_id, ins_ip)
 SELECT 'testuser02', (SELECT seat_id FROM SEATS WHERE venue_id=1 AND seat_row='A' AND seat_colume='2'),
-       1, performance_id, 'RESERVED' FROM PERFORMANCE_ROUND WHERE round_id = 1;
+       1, performance_id, 'RESERVED', 'testuser02', '127.0.0.1' FROM PERFORMANCE_ROUND WHERE round_id = 1;
 
 -- [TC-07] testuser02: 아이유 2회차 A-1 VIP
-INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action)
+INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action, ins_id, ins_ip)
 SELECT 'testuser02', (SELECT seat_id FROM SEATS WHERE venue_id=1 AND seat_row='A' AND seat_colume='1'),
-       2, performance_id, 'RESERVED' FROM PERFORMANCE_ROUND WHERE round_id = 2;
+       2, performance_id, 'RESERVED', 'testuser02', '127.0.0.1' FROM PERFORMANCE_ROUND WHERE round_id = 2;
 
 -- [TC-09] testuser03: BTS 1회차 A-1 → RESERVED 후 CANCELLED (RESERVATIONS는 NULL)
-INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action)
+INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action, ins_id, ins_ip)
 SELECT 'testuser03', (SELECT seat_id FROM SEATS WHERE venue_id=2 AND seat_row='A' AND seat_colume='1'),
-       3, performance_id, 'RESERVED' FROM PERFORMANCE_ROUND WHERE round_id = 3;
+       3, performance_id, 'RESERVED', 'testuser03', '127.0.0.1' FROM PERFORMANCE_ROUND WHERE round_id = 3;
 
-INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action)
+INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action, ins_id, ins_ip)
 SELECT 'testuser03', (SELECT seat_id FROM SEATS WHERE venue_id=2 AND seat_row='A' AND seat_colume='1'),
-       3, performance_id, 'CANCELLED' FROM PERFORMANCE_ROUND WHERE round_id = 3;
+       3, performance_id, 'CANCELLED', 'testuser03', '127.0.0.1' FROM PERFORMANCE_ROUND WHERE round_id = 3;
 
 -- [TC-08] testuser04: BTS 1회차 A-2 VIP
-INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action)
+INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action, ins_id, ins_ip)
 SELECT 'testuser04', (SELECT seat_id FROM SEATS WHERE venue_id=2 AND seat_row='A' AND seat_colume='2'),
-       3, performance_id, 'RESERVED' FROM PERFORMANCE_ROUND WHERE round_id = 3;
+       3, performance_id, 'RESERVED', 'testuser04', '127.0.0.1' FROM PERFORMANCE_ROUND WHERE round_id = 3;
 
 -- [TC-08] testuser04: 세븐틴 1회차 D-20 R
-INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action)
+INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action, ins_id, ins_ip)
 SELECT 'testuser04', (SELECT seat_id FROM SEATS WHERE venue_id=2 AND seat_row='D' AND seat_colume='20'),
-       13, performance_id, 'RESERVED' FROM PERFORMANCE_ROUND WHERE round_id = 13;
+       13, performance_id, 'RESERVED', 'testuser04', '127.0.0.1' FROM PERFORMANCE_ROUND WHERE round_id = 13;
+
+-- ============================================================
+-- PROGRAMS / ROLE_PROGRAMS / MENUS (권한 확장 · 프로그램관리 · 메뉴관리)
+-- 지금 SiteNav.tsx / 각 페이지에 하드코딩돼 있는 role 체크를 DB 기반으로 옮기기 위한 시드
+-- ============================================================
+
+INSERT INTO PROGRAMS (program_nm, url_path, program_type, ins_id, ins_ip) VALUES
+  ('공연 목록',     '/',               'MENU', 'SYSTEM', '127.0.0.1'),
+  ('마이페이지',    '/mypage',         'MENU', 'SYSTEM', '127.0.0.1'),
+  ('공연 관리',     '/performances',   'MENU', 'SYSTEM', '127.0.0.1'),
+  ('공연 등록',     '/performances/new','PAGE', 'SYSTEM', '127.0.0.1'),
+  ('사용자 관리',   '/admin/users',    'MENU', 'SYSTEM', '127.0.0.1'),
+  ('프로그램관리',  '/admin/programs', 'MENU', 'SYSTEM', '127.0.0.1'),
+  ('메뉴관리',      '/admin/menus',    'MENU', 'SYSTEM', '127.0.0.1');
+
+-- ROLE_PROGRAMS: 1=USER, 2=MANAGER, 3=ADMIN
+INSERT INTO ROLE_PROGRAMS (role_id, program_id, ins_id, ins_ip)
+SELECT r.role_id, p.program_id, 'SYSTEM', '127.0.0.1'
+FROM ROLES r CROSS JOIN PROGRAMS p
+WHERE (p.url_path IN ('/', '/mypage'))                                    -- 전체 role 공통
+   OR (p.url_path IN ('/performances', '/performances/new') AND r.role_id IN (2, 3))  -- 매니저/관리자
+   OR (p.url_path IN ('/admin/users', '/admin/programs', '/admin/menus') AND r.role_id = 3);  -- 관리자만
+
+-- MENUS: 현재 SiteNav.tsx 순서 그대로, 등록 페이지는 메뉴 미노출
+INSERT INTO MENUS (program_id, parent_menu_id, menu_nm, sort_order, ins_id, ins_ip)
+SELECT program_id, NULL, '공연', 1, 'SYSTEM', '127.0.0.1' FROM PROGRAMS WHERE url_path = '/';
+INSERT INTO MENUS (program_id, parent_menu_id, menu_nm, sort_order, ins_id, ins_ip)
+SELECT program_id, NULL, '마이페이지', 2, 'SYSTEM', '127.0.0.1' FROM PROGRAMS WHERE url_path = '/mypage';
+INSERT INTO MENUS (program_id, parent_menu_id, menu_nm, sort_order, ins_id, ins_ip)
+SELECT program_id, NULL, '공연 관리', 3, 'SYSTEM', '127.0.0.1' FROM PROGRAMS WHERE url_path = '/performances';
+-- '관리자'는 program_id가 NULL인 "그룹 전용" 메뉴 — 연결된 페이지 없이 하위메뉴만 묶어서
+-- SiteNav에서 마우스 호버 시 드롭다운으로 노출하는 용도 (클릭해서 이동할 자기 자신의 페이지는 없음)
+INSERT INTO MENUS (program_id, parent_menu_id, menu_nm, sort_order, ins_id, ins_ip) VALUES
+  (NULL, NULL, '관리자', 4, 'SYSTEM', '127.0.0.1');
+INSERT INTO MENUS (program_id, parent_menu_id, menu_nm, sort_order, ins_id, ins_ip)
+SELECT p.program_id, m.menu_id, '사용자관리', 1, 'SYSTEM', '127.0.0.1'
+FROM PROGRAMS p, MENUS m WHERE p.url_path = '/admin/users' AND m.menu_nm = '관리자';
+INSERT INTO MENUS (program_id, parent_menu_id, menu_nm, sort_order, ins_id, ins_ip)
+SELECT p.program_id, m.menu_id, '프로그램관리', 2, 'SYSTEM', '127.0.0.1'
+FROM PROGRAMS p, MENUS m WHERE p.url_path = '/admin/programs' AND m.menu_nm = '관리자';
+INSERT INTO MENUS (program_id, parent_menu_id, menu_nm, sort_order, ins_id, ins_ip)
+SELECT p.program_id, m.menu_id, '메뉴관리', 3, 'SYSTEM', '127.0.0.1'
+FROM PROGRAMS p, MENUS m WHERE p.url_path = '/admin/menus' AND m.menu_nm = '관리자';
