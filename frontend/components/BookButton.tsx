@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
+import QueueModal from "@/components/QueueModal";
 
 type Props = {
   roundId: number;
@@ -27,6 +28,7 @@ export default function BookButton({ roundId, openTime, roundTime, title }: Prop
   const { userSession } = useAuth();
 
   const [state, setState] = useState<ButtonState>("Before");
+  const [showQueue, setShowQueue] = useState(false);
 
   useEffect(() => {
     const open = new Date(openTime).getTime();
@@ -89,24 +91,33 @@ if (now >= round) {
     <Badge variant="closed">예매 마감</Badge>
   );
 
-  // [BOOK-OPEN] 오픈 이후 — 로그인 확인 후 대기열 페이지로 이동
+  // [BOOK-OPEN] 오픈 이후 — 로그인 확인 후 대기열 팝업 오픈 (부모 페이지는 팝업 뒤에서 잠김)
   const handleBook = () => {
     if (!userSession) {
       alert("로그인 후 이용해주세요.");
       router.push("/login");
       return;
     }
-    router.push(`/queue?scheduleId=${roundId}&title=${encodeURIComponent(title)}`);
+    setShowQueue(true);
   };
 
   return (
-      // <Button 안에   variant = primary로 변경
-    <Button
-      variant="primary"
-      style={{ padding: "var(--space-1) var(--space-3)", fontSize: "var(--font-base)" }}
-      onClick={handleBook}
-    >
-      예매하기
-    </Button>
+    <>
+      {/* <Button 안에   variant = primary로 변경 */}
+      <Button
+        variant="primary"
+        style={{ padding: "var(--space-1) var(--space-3)", fontSize: "var(--font-base)" }}
+        onClick={handleBook}
+      >
+        예매하기
+      </Button>
+      {showQueue && (
+        <QueueModal
+          scheduleId={roundId}
+          title={title}
+          onClose={() => setShowQueue(false)}
+        />
+      )}
+    </>
   );
 }
