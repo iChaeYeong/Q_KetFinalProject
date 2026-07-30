@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import type { Seat } from "@/lib/data/types";
 import { getSeats } from "@/lib/api/seats"
-import { createReservation } from "@/lib/api/reservations"
+// import { createReservation } from "@/lib/api/reservations" 7/29 임시주석처리
 
 
 // 등급 표시 라벨
@@ -35,8 +35,8 @@ export default function SeatsPage() {
 
   // UI 상태
   const [loading, setLoading] = useState(true);
-  const [booking, setBooking] = useState(false);
-  const [success, setSuccess] = useState(false);
+  // const [booking, setBooking] = useState(false); 7/29 
+  // const [success, setSuccess] = useState(false); 7/29
 
   useEffect(() => {
     getSeats(Number(scheduleId))
@@ -83,31 +83,50 @@ export default function SeatsPage() {
   // 5. 실패 시 setError(응답.message)
   // 6. catch 블록에서 setError("서버에 연결할 수 없습니다.")
   // 7. finally 에서 setBooking(false)
-  const handleReserve = async () => {
-    if (!selected) return; //아무것도 선택하지 않고 예매 시
+  // const handleReserve = async () => {
+  //   if (!selected) return; //아무것도 선택하지 않고 예매 시
 
-    setBooking(true);
-    try {
-      const result = await createReservation(selected.reservationId, Number(scheduleId), selected.seatId, queueToken);
-      if (result.success) {
-        setSuccess(true);
-        // push 대신 replace: 좌석 페이지를 히스토리에서 교체해야
-        // 마이페이지에서 뒤로가기를 눌러도 예매 끝난 좌석 화면(스냅샷)으로 안 돌아감
-        setTimeout(() => router.replace("/mypage"), 2000);
-      } else {
-        alert(result.message ?? "예매에 실패했습니다.");
-        setSelected(null);
-        getSeats(Number(scheduleId)).then(setSeats).catch(() => { });
-      }
-    } catch (e: any) {
-      alert(e?.message ?? "서버에 연결할 수 없습니다.");
-      setSelected(null);
-      getSeats(Number(scheduleId)).then(setSeats).catch(() => { });
-    } finally {
-      setBooking(false);
+  //   setBooking(true);
+  //   try {
+  //     const result = await createReservation(selected.reservationId, Number(scheduleId), selected.seatId, queueToken);
+  //     if (result.success) {
+  //       setSuccess(true);
+  //       // push 대신 replace: 좌석 페이지를 히스토리에서 교체해야
+  //       // 마이페이지에서 뒤로가기를 눌러도 예매 끝난 좌석 화면(스냅샷)으로 안 돌아감
+  //       setTimeout(() => router.replace("/mypage"), 2000);
+  //     } else {
+  //       alert(result.message ?? "예매에 실패했습니다.");
+  //       setSelected(null);
+  //       getSeats(Number(scheduleId)).then(setSeats).catch(() => { });
+  //     }
+  //   } catch (e: any) {
+  //     alert(e?.message ?? "서버에 연결할 수 없습니다.");
+  //     setSelected(null);
+  //     getSeats(Number(scheduleId)).then(setSeats).catch(() => { });
+  //   } finally {
+  //     setBooking(false);
+  //   }
+
+
+  // }; 7/29 86~108 임시 주석처리 (handleReserve)
+
+  const handleReserve = () => { // 7/29 handleReserve 함수 교체 113~130
+    if (!selected) return;
+
+    const params = new URLSearchParams({
+      reservationId: String(selected.reservationId),
+      roundId: String(scheduleId),
+      seatId: String(selected.seatId),
+      seatRow: selected.seatRow,
+      seatColume: selected.seatColume,
+      grade: selected.grade,
+    });
+
+    if (queueToken) {
+      params.set("queueToken", queueToken);
     }
 
-
+    router.push(`/payments/checkout?${params.toString()}`);
   };
 
   // 좌석 버튼 CSS 클래스 결정
@@ -274,36 +293,39 @@ export default function SeatsPage() {
                 <>
                   <div className="seatPanelRow">
                     <span className="seatPanelLabel">좌석</span>
-                    <span className="seatPanelValue">{selected.seatRow}{selected.seatColume}</span>
+                    <span className="seatPanelValue">
+                      {selected.seatRow}{selected.seatColume}
+                    </span>
                   </div>
+
                   <div className="seatPanelRow">
                     <span className="seatPanelLabel">등급</span>
                     <span className="seatPanelValue">
-                      <span className={`badge badge${selected.grade === "VIP" ? "Vip" : selected.grade}`}>
+                      <span
+                        className={`badge badge${selected.grade === "VIP" ? "Vip" : selected.grade
+                          }`}
+                      >
                         {GRADE_LABEL[selected.grade]}
                       </span>
                     </span>
                   </div>
+
                   <div className="seatPanelRow">
                     <span className="seatPanelLabel">가격</span>
-                    <span className="seatPanelValue">{GRADE_PRICE[selected.grade]}</span>
+                    <span className="seatPanelValue">
+                      {GRADE_PRICE[selected.grade]}
+                    </span>
                   </div>
+
                   <hr className="seatPanelDivider" />
 
-                  {success ? (
-                    <p className="successMsg">예매 완료! 마이페이지로 이동합니다.</p>
-                  ) : (
-                    <>
-                      <button
-                        className="btnPrimary"
-                        style={{ width: "100%" }}
-                        onClick={handleReserve}
-                        disabled={booking}
-                      >
-                        {booking ? "예매 중..." : "예매하기"}
-                      </button>
-                    </>
-                  )}
+                  <button
+                    className="btnPrimary"
+                    style={{ width: "100%" }}
+                    onClick={handleReserve}
+                  >
+                    결제 수단 선택
+                  </button>
                 </>
               )}
             </div>
