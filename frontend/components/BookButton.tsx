@@ -1,8 +1,11 @@
 "use client";
 
+// 버튼 tsx import 추가
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import Button from "@/components/ui/Button";
+import Badge from "@/components/ui/Badge";
 
 type Props = {
   roundId: number;
@@ -16,6 +19,7 @@ type Props = {
 // pending - 10분 전 ~ 오픈시간 (버튼 보이지만 클릭 시 alert)
 // open    - 오픈시간 이후 (버튼 활성화, /queue 이동)
 // close   - 공연시간 이후 (버튼 비활성화)
+
 type ButtonState = "Before" | "pending" | "open" | "closed";
 
 export default function BookButton({ roundId, openTime, roundTime, title }: Props) {
@@ -54,18 +58,19 @@ if (now >= round) {
   // [BOOK-HIDDEN] 10분 전보다 이전 — 오픈 시간 안내
   if (state === "Before") return (
     <div style={{ textAlign: "right" }}>
-      <span className="badge badgeClosed">예매 전</span>
-      <p style={{ fontSize: 10, color: "var(--text-3)", marginTop: 3 }}>오픈 {openLabel}</p>
+      <Badge variant="closed">예매 전</Badge>
+      <p style={{ fontSize: "var(--font-xs)", color: "var(--text-3)", marginTop: "var(--space-0-5)" }}>오픈 {openLabel}</p>
     </div>
   );
 
   // [BOOK-PENDING] 10분 전 ~ 오픈 전 — 클릭 시 alert + 오픈 시간 안내
+  // <Button 안에   variant = primary로 변경
   if (state === "pending") {
     return (
       <div style={{ textAlign: "right" }}>
-        <button
-          className="btnPrimary"
-          style={{ padding: "4px 12px", fontSize: 12 }}
+        <Button
+          variant="primary"
+          style={{ padding: "var(--space-1) var(--space-3)", fontSize: "var(--font-base)" }}
           onClick={() => {
             const now = new Date().toLocaleString("ko-KR");
             alert(`예매 오픈 전입니다.\n현재 시각: ${now}\n오픈 시각: ${new Date(openTime).toLocaleString("ko-KR")}`);
@@ -74,14 +79,14 @@ if (now >= round) {
           }}
         >
           예매하기
-        </button>
-        <p style={{ fontSize: 10, color: "var(--text-3)", marginTop: 3 }}>오픈 {openLabel}</p>
+        </Button>
+        <p style={{ fontSize: "var(--font-xs)", color: "var(--text-3)", marginTop: "var(--space-0-5)" }}>오픈 {openLabel}</p>
       </div>
     );
   }
 
   if (state === "closed") return (
-    <span className="badge badgeClosed">예매 마감</span>
+    <Badge variant="closed">예매 마감</Badge>
   );
 
   // [BOOK-OPEN] 오픈 이후 — 로그인 확인 후 대기열 페이지로 이동
@@ -95,12 +100,13 @@ if (now >= round) {
   };
 
   return (
-    <button
-      className="btnPrimary"
-      style={{ padding: "4px 12px", fontSize: 12 }}
+      // <Button 안에   variant = primary로 변경
+    <Button
+      variant="primary"
+      style={{ padding: "var(--space-1) var(--space-3)", fontSize: "var(--font-base)" }}
       onClick={handleBook}
     >
       예매하기
-    </button>
+    </Button>
   );
 }

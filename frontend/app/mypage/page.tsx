@@ -10,6 +10,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import type { Reservation } from "@/lib/data/types";
+import Button from "@/components/ui/Button";
+import Badge from "@/components/ui/Badge";
+import PageHeader from "@/components/ui/PageHeader";
+import StatusMessage from "@/components/ui/StatusMessage";
 import { getMyReservations, cancelReservation } from "@/lib/api/reservations"
 
 // 예매 상태 표시 라벨
@@ -17,10 +21,10 @@ const STATUS_LABEL: Record<string, string> = {
   RESERVED: "예매 완료",
   CANCELLED: "취소됨",
 };
-// 예매 상태 배지 CSS 클래스
-const STATUS_CLASS: Record<string, string> = {
-  RESERVED: "badge badgeOpen",
-  CANCELLED: "badge badgeClosed",
+// 예매 상태별 Badge variant
+const STATUS_VARIANT: Record<string, "open" | "closed"> = {
+  RESERVED: "open",
+  CANCELLED: "closed",
 };
 
 
@@ -63,12 +67,7 @@ export default function MyPage() {
 
   return (
     <>
-      <div className="pageWrap">
-        <div className="pageHeader">
-          <h1 className="pageTitle">마이페이지</h1>
-          <p className="pageSubtitle">계정 정보와 예매 내역을 확인합니다.</p>
-        </div>
-
+      <PageHeader title="마이페이지" subtitle="계정 정보와 예매 내역을 확인합니다.">
         <div className="mypageGrid">
           {/* 프로필 카드 */}
           <div className="profileCard">
@@ -81,12 +80,12 @@ export default function MyPage() {
 
             <hr className="divider" />
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 13, color: "var(--text-2)", display: "flex", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+              <div style={{ fontSize: "var(--font-md)", color: "var(--text-2)", display: "flex", justifyContent: "space-between" }}>
                 <span>예매 내역</span>
                 <span style={{ color: "var(--text)", fontWeight: 700 }}>{reservations.length}건</span>
               </div>
-              <div style={{ fontSize: 13, color: "var(--text-2)", display: "flex", justifyContent: "space-between" }}>
+              <div style={{ fontSize: "var(--font-md)", color: "var(--text-2)", display: "flex", justifyContent: "space-between" }}>
                 <span>완료된 예매</span>
                 <span style={{ color: "var(--success)", fontWeight: 700 }}>
                   {reservations.filter(r => r.reservedStatus === "RESERVED").length}건
@@ -97,23 +96,23 @@ export default function MyPage() {
 
           {/* 예매 내역 */}
           <div>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", marginBottom: 16, letterSpacing: "-0.02em" }}>
+            <h2 style={{ fontSize: "var(--font-xl)", fontWeight: 700, color: "var(--text)", marginBottom: "var(--space-4)", letterSpacing: "-0.02em" }}>
               예매 내역
             </h2>
 
-            {loading && <p className="loadingMsg">불러오는 중...</p>}
+            {loading && <StatusMessage variant="loading">불러오는 중...</StatusMessage>}
 
             {!loading && reservations.length === 0 && (
               <div className="emptyMsg">
-                <p style={{ fontSize: 32, marginBottom: 12 }}>🎫</p>
+                <p style={{ fontSize: "var(--font-2xl)", marginBottom: "var(--space-3)" }}>🎫</p>
                 <p>예매 내역이 없습니다.</p>
-                <button
-                  className="btnPrimary"
-                  style={{ marginTop: 16 }}
+                <Button
+                  variant="primary"
+                  style={{ marginTop: "var(--space-4)" }}
                   onClick={() => router.push("/")}
                 >
                   공연 보러 가기
-                </button>
+                </Button>
               </div>
             )}
 
@@ -127,28 +126,28 @@ export default function MyPage() {
                       <span>💺 {r.seatRow}행 {r.seatColume}번</span>
                       <span>🎟 {r.grade}</span>
                     </div>
-                    <div style={{ marginTop: 8 }}>
-                      <span className={STATUS_CLASS[r.reservedStatus] ?? "badge badgeClosed"}>
+                    <div style={{ marginTop: "var(--space-2)" }}>
+                      <Badge variant={STATUS_VARIANT[r.reservedStatus] ?? "closed"}>
                         {STATUS_LABEL[r.reservedStatus] ?? r.reservedStatus}
-                      </span>
+                      </Badge>
                     </div>
                   </div>
 
                   {r.reservedStatus === "RESERVED" && (
-                    <button
-                      className="btnDanger"
+                    <Button
+                      variant="danger"
                       onClick={() => handleCancel(r.reservationId)}
                       disabled={cancelling === r.reservationId}
                     >
                       {cancelling === r.reservationId ? "처리 중..." : "취소"}
-                    </button>
+                    </Button>
                   )}
                 </div>
               ))}
             </div>
           </div>
         </div>
-      </div>
+      </PageHeader>
     </>
   );
 }

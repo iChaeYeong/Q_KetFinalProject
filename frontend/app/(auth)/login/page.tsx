@@ -5,6 +5,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/api/auth";   //auth api
 import { useAuth } from "@/context/AuthContext";
+import Button from "@/components/ui/Button";
+import FormField from "@/components/ui/FormField";
+import Input from "@/components/ui/Input";
+import StatusMessage from "@/components/ui/StatusMessage";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -65,20 +69,16 @@ export default function LoginPage() {
         <h1 className="authTitle">로그인</h1>
         <p className="authDesc">공연을 예매하려면 로그인이 필요합니다.</p>
 
-        <div className="field">
-          <label className="fieldLabel">아이디</label>
-          <input
-            className="fieldInput"
+        <FormField label="아이디">
+          <Input
             placeholder="아이디를 입력하세요"
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
           />
-        </div>
+        </FormField>
 
-        <div className="field">
-          <label className="fieldLabel">비밀번호</label>
-          <input
-            className="fieldInput"
+        <FormField label="비밀번호">
+          <Input
             type="password"
             placeholder="비밀번호를 입력하세요"
             value={pwd}
@@ -87,18 +87,18 @@ export default function LoginPage() {
             //엔터 키 입력 시 handleLogin() 실행
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
           />
-        </div>
+        </FormField>
 
-        {error && <p className="errorMsg">{error}</p>}
+        {error && <StatusMessage variant="error">{error}</StatusMessage>}
 
-        <button
-          className="btnPrimary btnPrimaryFull"
-
+        <Button
+          variant="primary"
+          fullWidth
           onClick={handleLogin}          // 로그인 버튼 클릭 시 handleLogin() 실행
           disabled={loading}
         >
           {loading ? "로그인 중..." : "로그인"}
-        </button>
+        </Button>
 
         <p className="authHelper">
           계정이 없으신가요? <Link href="/signup">회원가입</Link>

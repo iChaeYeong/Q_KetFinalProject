@@ -7,11 +7,18 @@
 //     (Server Component → props 로 seats 전달 → Client Component 에서 selection 처리)
 "use client";
 
+// 좌석 선택화면으로 대기열을 통과한 사용자가 도착하는 페이지
+// 공연장 좌석 배치도를 그리드로 그려서 보여주고 VIP/R/S 등급별 색상을 다르게 표시
+// 좌석 선점 기능이 들어갈 화면
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import type { Seat } from "@/lib/data/types";
 import { getSeats } from "@/lib/api/seats"
-// import { createReservation } from "@/lib/api/reservations" 7/29 임시주석처리
+import Button from "@/components/ui/Button";
+import Badge from "@/components/ui/Badge";
+import PageHeader from "@/components/ui/PageHeader";
+import StatusMessage from "@/components/ui/StatusMessage";
 
 
 // 등급 표시 라벨
@@ -35,8 +42,6 @@ export default function SeatsPage() {
 
   // UI 상태
   const [loading, setLoading] = useState(true);
-  // const [booking, setBooking] = useState(false); 7/29 
-  // const [success, setSuccess] = useState(false); 7/29
 
   useEffect(() => {
     getSeats(Number(scheduleId))
@@ -73,44 +78,9 @@ export default function SeatsPage() {
     setSelected(prev => prev?.seatId === seat.seatId ? null : seat);
   };
 
-
-  // [TODO-SEATS-RESERVE] 예매하기 버튼 클릭 시 실행
-  // 1. selected 없으면 리턴
-  // 2. setBooking(true)
-  // 3. lib/api/reservations.ts 의 createReservation(scheduleId, selected.seatId) 호출
-  //    → POST /api/reservations { roundId: scheduleId, seatId }
-  // 4. 성공 시 setSuccess(true) → 2초 뒤 router.push("/mypage")
-  // 5. 실패 시 setError(응답.message)
-  // 6. catch 블록에서 setError("서버에 연결할 수 없습니다.")
-  // 7. finally 에서 setBooking(false)
-  // const handleReserve = async () => {
-  //   if (!selected) return; //아무것도 선택하지 않고 예매 시
-
-  //   setBooking(true);
-  //   try {
-  //     const result = await createReservation(selected.reservationId, Number(scheduleId), selected.seatId, queueToken);
-  //     if (result.success) {
-  //       setSuccess(true);
-  //       // push 대신 replace: 좌석 페이지를 히스토리에서 교체해야
-  //       // 마이페이지에서 뒤로가기를 눌러도 예매 끝난 좌석 화면(스냅샷)으로 안 돌아감
-  //       setTimeout(() => router.replace("/mypage"), 2000);
-  //     } else {
-  //       alert(result.message ?? "예매에 실패했습니다.");
-  //       setSelected(null);
-  //       getSeats(Number(scheduleId)).then(setSeats).catch(() => { });
-  //     }
-  //   } catch (e: any) {
-  //     alert(e?.message ?? "서버에 연결할 수 없습니다.");
-  //     setSelected(null);
-  //     getSeats(Number(scheduleId)).then(setSeats).catch(() => { });
-  //   } finally {
-  //     setBooking(false);
-  //   }
-
-
-  // }; 7/29 86~108 임시 주석처리 (handleReserve)
-
-  const handleReserve = () => { // 7/29 handleReserve 함수 교체 113~130
+  // 예매하기 버튼 클릭 시: 좌석을 바로 예약 확정하지 않고, 결제 수단 선택 화면(/payments/checkout)으로
+  // 이동만 함 — 실제 예약 확정(RESERVATIONS UPDATE)은 결제 승인(PAY01_PAYMENT03) 이후에 이뤄짐
+  const handleReserve = () => {
     if (!selected) return;
 
     const params = new URLSearchParams({
@@ -184,14 +154,9 @@ export default function SeatsPage() {
 
   return (
     <>
-      <div className="pageWrapWide">
-        <div className="pageHeader">
-          <h1 className="pageTitle">좌석 선택</h1>
-          <p className="pageSubtitle">원하는 좌석을 선택한 뒤 예매를 완료하세요.</p>
-        </div>
-
+      <PageHeader wide title="좌석 선택" subtitle="원하는 좌석을 선택한 뒤 예매를 완료하세요.">
         {loading ? (
-          <p className="loadingMsg">좌석 정보를 불러오는 중...</p>
+          <StatusMessage variant="loading">좌석 정보를 불러오는 중...</StatusMessage>
         ) : (
           <div className="seatLayout">
             {/* 좌석 배치도 */}
@@ -226,9 +191,9 @@ export default function SeatsPage() {
                   {sections.map((section, si) => (
                     <div key={si} className="seatSection">
                       <div className="seatSectionHeader">
-                        <span className={`badge badge${section.grade === "VIP" ? "Vip" : section.grade}`}>
+                        <Badge variant={section.grade.toLowerCase() as "vip" | "r" | "s"}>
                           {GRADE_LABEL[section.grade] ?? section.grade}
-                        </span>
+                        </Badge>
                       </div>
                       {(() => {
                         // 블록별 좌석 수 비율에 맞춰 폭을 배분 (좌석 크기가 블록 간에도 동일하게 보이도록)
@@ -293,45 +258,35 @@ export default function SeatsPage() {
                 <>
                   <div className="seatPanelRow">
                     <span className="seatPanelLabel">좌석</span>
-                    <span className="seatPanelValue">
-                      {selected.seatRow}{selected.seatColume}
-                    </span>
+                    <span className="seatPanelValue">{selected.seatRow}{selected.seatColume}</span>
                   </div>
-
                   <div className="seatPanelRow">
                     <span className="seatPanelLabel">등급</span>
                     <span className="seatPanelValue">
-                      <span
-                        className={`badge badge${selected.grade === "VIP" ? "Vip" : selected.grade
-                          }`}
-                      >
+                      <Badge variant={selected.grade.toLowerCase() as "vip" | "r" | "s"}>
                         {GRADE_LABEL[selected.grade]}
-                      </span>
+                      </Badge>
                     </span>
                   </div>
-
                   <div className="seatPanelRow">
                     <span className="seatPanelLabel">가격</span>
-                    <span className="seatPanelValue">
-                      {GRADE_PRICE[selected.grade]}
-                    </span>
+                    <span className="seatPanelValue">{GRADE_PRICE[selected.grade]}</span>
                   </div>
-
                   <hr className="seatPanelDivider" />
 
-                  <button
-                    className="btnPrimary"
+                  <Button
+                    variant="primary"
                     style={{ width: "100%" }}
                     onClick={handleReserve}
                   >
                     결제 수단 선택
-                  </button>
+                  </Button>
                 </>
               )}
             </div>
           </div>
         )}
-      </div>
+      </PageHeader>
     </>
   );
 }
