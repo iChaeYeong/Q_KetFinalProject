@@ -1,0 +1,4 @@
+# Claude Code — 개인/세션 전용 파일 (팀 공유 X)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude/*.log
