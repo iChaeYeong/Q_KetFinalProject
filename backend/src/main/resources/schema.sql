@@ -1,8 +1,21 @@
 USE qket;
 
+-- ins_id/ins_ip/ins_de: 등록자ID/등록IP/등록일시, upt_id/upt_ip/upt_de: 수정자ID/수정IP/수정일시
+-- ins_id 기본값 'SYSTEM': 로그인 전(회원가입 등) 처럼 행위자가 없는 INSERT에 사용
+-- upt_* 는 NULL 허용: 아직 한 번도 수정 안 된 행은 비어있는 게 정상
+-- FK를 안 건 이유: 'SYSTEM' 같은 고정값이 USERS.user_id 에 실재하지 않고,
+--   회원 탈퇴/삭제가 감사 기록까지 막지 않게 하기 위함
+
 CREATE TABLE IF NOT EXISTS ROLES (
     role_id BIGINT NOT NULL AUTO_INCREMENT,
     role_name VARCHAR(255),
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
 
     PRIMARY KEY (role_id),
     UNIQUE KEY uk_role_name (role_name)
@@ -11,6 +24,13 @@ CREATE TABLE IF NOT EXISTS ROLES (
 CREATE TABLE IF NOT EXISTS VENUE (
     venue_id BIGINT NOT NULL AUTO_INCREMENT,
     venue_name VARCHAR(255) NOT NULL,
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
 
     PRIMARY KEY (venue_id),
     UNIQUE KEY uk_venue_name (venue_name)
@@ -22,6 +42,13 @@ CREATE TABLE IF NOT EXISTS PERFORMANCES (
     venue_id BIGINT NOT NULL,
     poster_url VARCHAR(500),
     created_per DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (venue_id) REFERENCES VENUE (venue_id)
 );
@@ -36,6 +63,13 @@ CREATE TABLE IF NOT EXISTS USERS (
     user_status VARCHAR(255) NOT NULL,
     created_user DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
     PRIMARY KEY (user_id),
     FOREIGN KEY (role_id) REFERENCES ROLES (role_id),
     UNIQUE KEY uk_users_user_email (user_email)
@@ -49,6 +83,14 @@ CREATE TABLE IF NOT EXISTS PERFORMANCE_ROUND (
     round_time DATETIME NOT NULL COMMENT '공연(회차) 시작 시각',
     open_time DATETIME NOT NULL COMMENT '예매 오픈 시각 (이 시각 이전에는 예매 불가)',
     round_status VARCHAR(255) NOT NULL,
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
     FOREIGN KEY (performance_id) REFERENCES PERFORMANCES (performance_id)
 );
 
@@ -59,6 +101,13 @@ CREATE TABLE IF NOT EXISTS SEATS (
     seat_row VARCHAR(255) NOT NULL,
     seat_colume VARCHAR(255) NOT NULL,
     grade VARCHAR(255) NOT NULL,
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
 
     PRIMARY KEY (seat_id),
     FOREIGN KEY (venue_id) REFERENCES VENUE (venue_id),
@@ -79,6 +128,13 @@ CREATE TABLE IF NOT EXISTS RESERVATIONS (
     created_reserved DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '슬롯이 생성된 시각 (회차 등록 시점)',
     reserved_at DATETIME NULL COMMENT '실제 예매(버튼 클릭) 시각, 예매 전까지 NULL',
 
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL COMMENT '가장 최근에 예매/취소한 사용자',
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
     FOREIGN KEY (user_id) REFERENCES USERS (user_id),
     FOREIGN KEY (seat_id) REFERENCES SEATS (seat_id),
     FOREIGN KEY (round_id) REFERENCES PERFORMANCE_ROUND (round_id),
@@ -89,16 +145,79 @@ CREATE TABLE IF NOT EXISTS RESERVATIONS (
 CREATE TABLE IF NOT EXISTS RESERVATION_HISTORY (
     history_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id VARCHAR(50) NOT NULL,
-    seat_id BIGINT NOT NULL,  
+    seat_id BIGINT NOT NULL,
     round_id BIGINT NOT NULL,
     performance_id BIGINT NOT NULL,
     action VARCHAR(50) NOT NULL,  -- 'RESERVED' / 'CANCELLED'
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM' COMMENT '이 이력을 발생시킨 사용자 (user_id와 항상 동일)',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
     FOREIGN KEY (user_id) REFERENCES USERS(user_id),
     FOREIGN KEY (seat_id) REFERENCES SEATS(seat_id),
     FOREIGN KEY (round_id) REFERENCES PERFORMANCE_ROUND(round_id),
     FOREIGN KEY (performance_id) REFERENCES PERFORMANCES(performance_id)
+);
+
+-- PROGRAMS: 프로그램관리 — 프론트 화면(라우트) 등록. program_type: 'MENU'(네비게이션에 노출) / 'PAGE'(URL 접근만, 메뉴 미노출)
+CREATE TABLE IF NOT EXISTS PROGRAMS (
+    program_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    program_nm VARCHAR(255) NOT NULL,
+    url_path VARCHAR(255) NOT NULL,
+    program_type VARCHAR(20) NOT NULL,
+    use_yn CHAR(1) NOT NULL DEFAULT 'Y',
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_programs_url_path (url_path)
+);
+
+-- ROLE_PROGRAMS: 권한 확장 — 역할별로 어떤 프로그램(화면)에 접근 가능한지 매핑
+CREATE TABLE IF NOT EXISTS ROLE_PROGRAMS (
+    role_id BIGINT NOT NULL,
+    program_id BIGINT NOT NULL,
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (role_id, program_id),
+    FOREIGN KEY (role_id) REFERENCES ROLES (role_id),
+    FOREIGN KEY (program_id) REFERENCES PROGRAMS (program_id)
+);
+
+-- MENUS: 메뉴관리 — 네비게이션 트리 구조. parent_menu_id로 자기참조 (그리드 화면에서 순서/계층 관리)
+-- program_id는 NULL 허용 — 연결된 페이지 없이 하위메뉴만 묶는 "그룹 전용" 메뉴(예: 상단 "관리자" 드롭다운)를 만들기 위함
+CREATE TABLE IF NOT EXISTS MENUS (
+    menu_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    program_id BIGINT NULL,
+    parent_menu_id BIGINT NULL,
+    menu_nm VARCHAR(255) NOT NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    use_yn CHAR(1) NOT NULL DEFAULT 'Y',
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (program_id) REFERENCES PROGRAMS (program_id),
+    FOREIGN KEY (parent_menu_id) REFERENCES MENUS (menu_id)
 );
 
 SHOW TABLES;

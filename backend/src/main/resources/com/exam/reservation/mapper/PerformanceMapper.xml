@@ -23,18 +23,18 @@
     </select>
 
     <insert id="insert" parameterType="PerformanceDTO" useGeneratedKeys="true" keyProperty="performanceId">
-        INSERT INTO PERFORMANCES (p_title, venue_id, poster_url)
-        VALUES (#{pTitle}, #{venueId}, #{posterUrl})
+        INSERT INTO PERFORMANCES (p_title, venue_id, poster_url, ins_id, ins_ip)
+        VALUES (#{pTitle}, #{venueId}, #{posterUrl}, #{insId}, #{insIp})
     </insert>
 
     <insert id="insertRound" parameterType="RoundDTO" useGeneratedKeys="true" keyProperty="roundId">
-        INSERT INTO PERFORMANCE_ROUND (performance_id, round_time, open_time, round_status)
-        VALUES (#{performanceId}, #{roundTime}, #{openTime}, 'OPEN')
+        INSERT INTO PERFORMANCE_ROUND (performance_id, round_time, open_time, round_status, ins_id, ins_ip)
+        VALUES (#{performanceId}, #{roundTime}, #{openTime}, 'OPEN', #{insId}, #{insIp})
     </insert>
 
     <insert id="initReservationSlots">
-        INSERT INTO RESERVATIONS (user_id, seat_id, round_id, performance_id, reserved_status)
-        SELECT NULL, s.seat_id, #{roundId}, #{performanceId}, 'AVAILABLE'
+        INSERT INTO RESERVATIONS (user_id, seat_id, round_id, performance_id, reserved_status, ins_id, ins_ip)
+        SELECT NULL, s.seat_id, #{roundId}, #{performanceId}, 'AVAILABLE', #{insId}, #{insIp}
         FROM SEATS s
         JOIN PERFORMANCES p ON s.venue_id = p.venue_id
         WHERE p.performance_id = #{performanceId}
@@ -72,6 +72,8 @@
         <set>
             <if test="pTitle != null">p_title = #{pTitle},</if>
             <if test="posterUrl != null">poster_url = #{posterUrl},</if>
+            upt_id = #{uptId},
+            upt_ip = #{uptIp},
         </set>
         WHERE performance_id = #{performanceId}
     </update>
@@ -106,7 +108,7 @@
 
     <update id="updateRound" parameterType="RoundDTO">
         UPDATE PERFORMANCE_ROUND
-        SET round_time = #{roundTime}, open_time = #{openTime}
+        SET round_time = #{roundTime}, open_time = #{openTime}, upt_id = #{uptId}, upt_ip = #{uptIp}
         WHERE round_id = #{roundId}
     </update>
 

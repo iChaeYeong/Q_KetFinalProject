@@ -8,7 +8,9 @@
         UPDATE RESERVATIONS
         SET user_id         = #{userId},
             reserved_status = 'RESERVED',
-            reserved_at     = NOW()
+            reserved_at     = NOW(),
+            upt_id          = #{uptId},
+            upt_ip          = #{uptIp}
         WHERE reservation_id = #{reservationId}
           AND round_id = #{roundId}
           AND seat_id  = #{seatId}
@@ -16,8 +18,8 @@
     </update>
 
     <insert id="insertHistory" parameterType="ReservationDTO">
-        INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action)
-        SELECT #{userId}, #{seatId}, #{roundId}, performance_id, #{action}
+        INSERT INTO RESERVATION_HISTORY (user_id, seat_id, round_id, performance_id, action, ins_id, ins_ip)
+        SELECT #{userId}, #{seatId}, #{roundId}, performance_id, #{action}, #{insId}, #{insIp}
         FROM PERFORMANCE_ROUND
         WHERE round_id = #{roundId}
     </insert>
@@ -62,11 +64,13 @@
         WHERE reservation_id = #{reservationId}
     </select>
 
-    <update id="cancel" parameterType="Long">
+    <update id="cancel">
         UPDATE RESERVATIONS
         SET user_id         = NULL,
             reserved_status = 'AVAILABLE',
-            reserved_at     = NULL
+            reserved_at     = NULL,
+            upt_id          = #{uptId},
+            upt_ip          = #{uptIp}
         WHERE reservation_id = #{reservationId}
     </update>
 

@@ -55,7 +55,7 @@ public class ReservationServiceImpl implements ReservationService {
      *  param    :  String,Long,Long,Long,String
      *  return   :   Map<String, Object>
      ************************************/
-    public Map<String, Object> reserve(String userId, Long reservationId, Long roundId, Long seatId, String queueToken) {
+    public Map<String, Object> reserve(String userId, Long reservationId, Long roundId, Long seatId, String queueToken, String clientIp) {
         String lockKey = "lock:reservation:" + seatId;
 
         // Redis 분산 락 획득 시도 (TTL 10초)
@@ -70,6 +70,11 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setReservationId(reservationId);
             reservation.setSeatId(seatId);
             reservation.setRoundId(roundId);
+            // RESERVATIONS 는 UPDATE(누가 예매했는지), RESERVATION_HISTORY 는 INSERT(누가 이 이력을 남겼는지) — 행위자·IP는 둘 다 동일
+            reservation.setUptId(userId);
+            reservation.setUptIp(clientIp);
+            reservation.setInsId(userId);
+            reservation.setInsIp(clientIp);
 
             int affected = reservationMapper.save(reservation);
             if (affected == 0) {
@@ -121,7 +126,7 @@ public class ReservationServiceImpl implements ReservationService {
      *  param    :  Long,String
      *  return   :  Map<String, Object>
      ************************************/
-    public Map<String, Object> cancel(Long reservationId, String userId) {
+    public Map<String, Object> cancel(Long reservationId, String userId, String clientIp) {
         ReservationDTO reservation = reservationMapper.findById(reservationId);
         if (reservation == null || !reservation.getUserId().equals(userId)) {
             return Map.of("success", false, "message", "예매 정보를 찾을 수 없습니다.");
@@ -130,9 +135,11 @@ public class ReservationServiceImpl implements ReservationService {
             return Map.of("success", false, "message", "이미 취소된 예매입니다.");
         }
 
-        reservationMapper.cancel(reservationId);
+        reservationMapper.cancel(reservationId, userId, clientIp);
 
         reservation.setAction("CANCELLED");
+        reservation.setInsId(userId);
+        reservation.setInsIp(clientIp);
         reservationMapper.insertHistory(reservation);
 
         return Map.of("success", true, "message", "예매가 취소되었습니다.");
