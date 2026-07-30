@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { QueueStatus } from "@/lib/data/types";
 import { joinQueue, getQueueStatus, leaveQueue } from "@/lib/api/queues";
+import StatusMessage from "@/components/ui/StatusMessage";
 
 // 대기열 흐름 (기존 app/queue/page.tsx 로직을 팝업으로 이식):
 //   1. 모달 오픈 → POST /api/queues 로 대기열 등록 → queueToken 받기
@@ -138,7 +139,7 @@ export default function QueueModal({ scheduleId, title, onClose }: Props) {
         <h1 className="queueTitle">대기열</h1>
         <p className="queueEventName">{title}</p>
 
-        {error && <p className="errorMsg">{error}</p>}
+        {error && <StatusMessage variant="error">{error}</StatusMessage>}
 
         {/* 대기열 진입 중 (status 아직 없음) */}
         {!error && !status && (
@@ -148,7 +149,7 @@ export default function QueueModal({ scheduleId, title, onClose }: Props) {
               <div className="queueDot" />
               <div className="queueDot" />
             </div>
-            <p style={{ fontSize: 13, color: "var(--text-2)" }}>대기열에 진입하는 중...</p>
+            <p style={{ fontSize: "var(--font-md)", color: "var(--text-2)" }}>대기열에 진입하는 중...</p>
           </>
         )}
 

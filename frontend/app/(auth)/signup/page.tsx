@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signup } from "@/lib/api/auth"
+import Button from "@/components/ui/Button";
+import FormField from "@/components/ui/FormField";
+import Input from "@/components/ui/Input";
+import StatusMessage from "@/components/ui/StatusMessage";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -59,70 +63,61 @@ export default function SignupPage() {
         <h1 className="authTitle">회원가입</h1>
         <p className="authDesc">새 계정을 만들어 공연을 예매하세요.</p>
 
-        <div className="field">
-          <label className="fieldLabel">아이디</label>
-          <input
-            className="fieldInput"
+        <FormField label="아이디">
+          <Input
             placeholder="사용할 아이디"
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
           />
-        </div>
+        </FormField>
 
-        <div className="field">
-          <label className="fieldLabel">이름</label>
-          <input
-            className="fieldInput"
+        <FormField label="이름">
+          <Input
             placeholder="실명을 입력하세요"
             value={userNm}
             onChange={(e) => setUserNm(e.target.value)}
           />
-        </div>
+        </FormField>
 
-        <div className="field">
-          <label className="fieldLabel">이메일</label>
-          <input
-            className="fieldInput"
+        <FormField label="이메일">
+          <Input
             type="email"
             placeholder="example@email.com"
             value={userEmail}
             onChange={(e) => setUserEmail(e.target.value)}
           />
-        </div>
+        </FormField>
 
-        <div className="field">
-          <label className="fieldLabel">비밀번호</label>
-          <input
-            className="fieldInput"
+        <FormField label="비밀번호">
+          <Input
             type="password"
             placeholder="비밀번호 (6자 이상)"
             value={pwd}
             onChange={(e) => setPwd(e.target.value)}
           />
-        </div>
+        </FormField>
 
-        <div className="field">
-          <label className="fieldLabel">비밀번호 확인</label>
-          <input
-            className="fieldInput"
+        <FormField label="비밀번호 확인">
+          <Input
             type="password"
             placeholder="비밀번호 재입력"
             value={pwdConfirm}
             onChange={(e) => setPwdConfirm(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handlSignup()}
           />
-        </div>
+        </FormField>
 
-        {error && <p className="errorMsg">{error}</p>}
+        {error && <StatusMessage variant="error">{error}</StatusMessage>}
 
-        <button
-          className="btnPrimary btnPrimaryFull"
+        <Button
+          variant="primary"
+          fullWidth
           // 버튼클릭시 생성
           onClick={handlSignup}
           disabled={loading}
         >
           {loading ? "처리 중..." : "가입하기"}
-        </button>
+        </Button>
 
         <p className="authHelper">
           이미 계정이 있으신가요? <Link href="/login">로그인</Link>

@@ -7,6 +7,19 @@ Spring Boot(백엔드) + Next.js/TypeScript(프론트엔드) 모노레포. `back
 **레이어 구조**: `Controller → Service(interface) → ServiceImpl → Mapper(interface) → XML`
 새 기능을 추가할 땐 이 4단 구조를 그대로 따른다. Controller가 Mapper를 직접 호출하지 않는다.
 
+**메서드 주석 규칙**: Controller/Service/ServiceImpl의 각 public 메서드 바로 위에 아래 형식의 블록 주석을 단다 (실제 예: `AdminController.java`의 `getRoles`/`updateUser`/`batchUpdateUsers`).
+```
+/***********************************
+ * URL : "/users/batch"
+ * 이름 : 사용자 정보 일괄 수정
+ * 기능 : 관리자가 사용자 상태 및 권한 일괄 수정
+ * method : Patch
+ ************************************/
+```
+- `URL`/`method`는 그 로직이 속한 엔드포인트 기준(예: `@PatchMapping("/users/batch")`) — Service/ServiceImpl 메서드에도 그 로직을 실제로 호출하는 Controller 엔드포인트와 **동일한 URL/method**를 적어서, 레이어를 넘나들며 어떤 API의 구현인지 바로 추적할 수 있게 한다.
+- `이름`은 한 줄 기능명, `기능`은 누가/왜 하는지까지 포함한 조금 더 구체적인 설명.
+- 아직 `AdminController`/`ProgramController`/`MenuController`/`CommonController`에만 적용돼 있고 나머지 컨트롤러·모든 Service/ServiceImpl에는 없음 — 전체 소급 적용 대상이 아니라, 새로 추가하거나 수정하는 메서드부터 이 규칙을 따른다.
+
 **패키지 구조** (`com.exam.*`) — 도메인별로 나뉘어 있고, 각 패키지 안에 `controller/dto/mapper/service/` 하위 폴더:
 - `auth` — 로그인/세션/회원가입 (`UserController`, `UserDTO`)
 - `admin` — 사용자·역할 관리(`AdminController`), 프로그램·메뉴 관리(`ProgramController`/`MenuController`, 관리자 전용 CRUD)
@@ -33,6 +46,42 @@ Spring Boot(백엔드) + Next.js/TypeScript(프론트엔드) 모노레포. `back
 
 ## 프론트엔드 (`frontend/`)
 
+**API 함수 주석 규칙**: `lib/api/<domain>/*.ts`(barrel `index.ts` 제외)의 각 API 함수 바로 위에 아래 형식의 블록 주석을 단다 (실제 예: `lib/api/auth.ts`의 `login`, `lib/api/events.ts`의 `getEvents`).
+```
+// ============================================================
+// GET /api/events
+// 백엔드: PerformanceController.java → list()
+// 기능: 전체 공연 목록 조회 (메인/목록 화면용)
+//
+// 사용 예시:
+//   import { getEvents } from "@/lib/api/events";
+//
+//   useEffect(() => {
+//     getEvents().then(setPerformances).finally(() => setLoading(false));
+//   }, []);
+//
+// 요청: 파라미터 없음
+// 응답 JSON (Performance[] — 공연마다 rounds 배열까지 포함해서 옴):
+//   [
+//     {
+//       "performanceId": 1,
+//       "pTitle": "뮤지컬 지킬앤하이드",
+//       "pLocation": "고척스카이돔",
+//       "posterUrl": "https://.../poster.jpg",
+//       "rounds": [
+//         { "roundId": 10, "performanceId": 1, "roundTime": "2026-08-15 19:00:00",
+//           "openTime": "2026-08-01 10:00:00", "roundStatus": "OPEN" }
+//       ]
+//     }
+//   ]
+// ============================================================
+```
+- 첫 줄은 `METHOD /api/경로`, 그다음 `백엔드:` 줄에 실제로 이 API를 처리하는 `컨트롤러파일.java → 메서드명()`을 적어서 프론트-백엔드 코드를 바로 대응시킬 수 있게 한다.
+- `사용 예시`는 호출부에서 실제로 쓰는 모양(어떤 훅/컴포넌트에서, 어떻게 결과를 받는지) 그대로 붙여넣는다 — 추상적인 설명이 아니라 복붙 가능한 코드.
+- body가 있는 요청(POST/PATCH 등)은 `요청 JSON (프론트 → 백엔드, body)`, 없으면 `요청: 파라미터 없음` 또는 path/query 파라미터를 명시.
+- `응답 JSON`은 실제 필드명과 타입을 알 수 있는 예시 값으로 적는다 (타입 정의만 보고는 실제 모양이 바로 안 그려지는 걸 보완).
+- `client.ts`, `admin/index.ts`, `common/index.ts`, `manage/index.ts` 같은 barrel/유틸 파일은 대상이 아님.
+
 **API 호출**: 모든 API는 `lib/api/client.ts`의 `apiFetch<T>(path, options)`를 통해 호출.
 - 자동으로 `credentials:"include"`(세션 쿠키), JSON 직렬화/역직렬화.
 - 백엔드가 `{success,data,timestamp}` 모양으로 감싸서 응답하면 `data`만 자동으로 꺼내줌(`unwrap()`) — 호출부는 신경 안 써도 됨.
@@ -49,6 +98,33 @@ Spring Boot(백엔드) + Next.js/TypeScript(프론트엔드) 모노레포. `back
 - `changes: Record<id, Partial<Row>>` state로 dirty-tracking, "저장" 버튼으로 한 번에 배치 저장.
 - 필드가 null이 될 수 있으면(예: `parentMenuId`) `getVal`을 `?? original`(nullish coalescing)이 아니라 **`field in changes[id]`로 판단**해야 함 — `??`는 "명시적으로 null로 바꿈"과 "안 바꿈(undefined)"을 구분 못 해서 화면에 반영이 안 되는 버그가 생긴다.
 - 저장 시에도 마찬가지로, null 허용 필드가 있는 행은 변경된 필드만 보내지 말고 **그 행의 최종 상태 전체**를 합쳐서 보내야 한다 (안 그러면 위 MyBatis 항목에서 설명한 이유로 서버가 안 보낸 필드를 null로 덮어씀).
+
+**CSS 파일 구조** (작업 로그: `docs/css-refactor-log.md`): `app/globals.css`는 이제 조립 창구일 뿐이고, 실제 스타일은 전부 `frontend/styles/*.css`에 역할별로 분리돼 있다 (`@import`만 나열).
+```
+styles/
+ ├─ base.css       (reset, :root 변수)
+ ├─ nav.css        (상단 네비게이션)
+ ├─ layout.css     (페이지 공통 레이아웃 틀)
+ ├─ auth.css       (로그인/회원가입 + 폼)
+ ├─ button.css     (버튼 4종)
+ ├─ card.css       (카드 / 공연 목록 그리드)
+ ├─ badge.css      (상태 뱃지)
+ ├─ queue.css      (대기열 화면)
+ ├─ seat.css       (좌석 선택 화면)
+ ├─ mypage.css     (마이페이지)
+ ├─ message.css    (공통 에러/성공/로딩 메시지)
+ ├─ admin.css      (관리자 전체 화면)
+ └─ responsive.css (반응형 미디어쿼리, 항상 마지막 import)
+```
+- 새 화면/기능의 스타일은 성격이 맞는 기존 파일에 추가한다. 어디에도 안 맞으면 새 역할 파일을 만들고 `globals.css`에 `@import` 한 줄 추가 — 단 `responsive.css` import보다 앞에 둔다 (반응형이 항상 마지막에 적용되어야 함).
+- 기존 클래스명(`btnPrimary`, `pageWrap`, `adminModalOverlay` 등)과 값은 이 분리 작업으로 전혀 안 바뀌었음 — 파일 위치만 재배치된 것.
+
+**재사용 UI 컴포넌트** (`frontend/components/ui/`): 반복되는 UI 패턴은 raw `className`을 새로 조합하지 말고 아래 컴포넌트를 우선 재사용한다. 전부 기존 CSS 클래스/값을 그대로 감싸기만 한 것이라 스타일 자체는 안 바뀐다.
+- `Button` — `variant`(`primary`/`secondary`/`ghost`/`danger`) + `fullWidth`. primary=화면당 핵심 행동 1개(예매하기/제출), secondary=보조 행동(수정/닫기), ghost=배경 없이 테두리만, danger=되돌리기 어려운 행동(삭제/취소).
+- `Badge` — `variant`(`open`/`closed`/`soldout`/`vip`/`r`/`s`).
+- `FormField` + `Input` — `variant`(`auth`/`admin`)로 각각 로그인·회원가입 폼(`field`/`fieldInput`)과 관리자 폼(`adminFormRow`/`adminInput`) 스타일을 고름. `FormField`는 라벨+래퍼만 담당하고 실제 입력 요소는 `children`으로 받음(`select` 등 `Input`이 아닌 요소도 가능). `Input`은 관리자 폼 유효성 검사 실패 시 focus 이동을 위해 `forwardRef` 지원.
+- `PageHeader` — 페이지 최상위 wrapper(`pageWrap`/`pageWrapWide`)까지 함께 감싸므로 페이지 내용 전체를 `children`으로 넘긴다. `title`/`subtitle`/`variant`(`default`/`admin`)/`wide`/`actions`(우측 버튼 영역) prop 사용. 로딩 중 조기 return처럼 제목 없이 문구만 있는 자리에는 안 맞으니 그대로 `pageWrap` div를 쓴다.
+- `StatusMessage` — `variant`(`loading`/`error`/`success`), 기본 태그 `<p>`, 인라인 배치가 필요하면 `as="span"`.
 
 ## DB (`backend/src/main/resources/schema.sql`, `data.sql`)
 

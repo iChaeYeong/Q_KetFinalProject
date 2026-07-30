@@ -1,0 +1,96 @@
+/* ── CARD ── */
+/* 범용 카드 틀 (아직 어디서도 안 쓰이면 향후 재사용 목적으로 남아있는 기본형) */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+}
+
+/* ── EVENT GRID ── */
+/* 공연 목록 화면 전용 — app/page.tsx (메인 공연 목록) */
+
+/* 공연 카드들을 그리드로 배치 (화면 폭에 따라 자동으로 열 개수 조절) */
+.eventGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+/* 공연 카드 하나 (포스터 + 제목 + 회차 목록) */
+.eventCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+}
+
+.eventCard:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
+}
+
+/* 포스터 이미지가 없을 때 공연명 첫 글자 등을 크게 보여주는 대체 영역 */
+.eventPoster {
+  width: 100%;
+  aspect-ratio: 3/4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.eventInfo {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.eventTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+  white-space: nowrap; /* 제목 길면 ... 처리 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eventLocation {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-bottom: 12px;
+}
+
+/* 카드 안에 회차(날짜/시간)를 여러 줄로 나열 */
+.eventRounds {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eventRoundRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.eventRoundTime {
+  font-size: 12px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums; /* 숫자 폭을 고정해 시간 여러 줄이 깔끔하게 정렬 */
+}
