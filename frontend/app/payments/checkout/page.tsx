@@ -34,7 +34,6 @@ function CheckoutContent() {
   const seatRow = searchParams.get("seatRow");
   const seatColume = searchParams.get("seatColume");
   const grade = searchParams.get("grade") ?? "";
-  const queueToken = searchParams.get("queueToken");
   const amount = GRADE_PRICE[grade] ?? 0;
 
   const isValid = Boolean(
@@ -115,24 +114,18 @@ function CheckoutContent() {
   const handlePayment = async () => {
   if (!ready || !widgetsRef.current) return;
 
-  // successUrl/failUrl 은 토스가 paymentKey/orderId/amount 를 쿼리스트링으로 덧붙여 리다이렉트하는 주소.
-  // 우리가 미리 붙여둔 파라미터는 그대로 유지된 채 넘어가므로, 결제 승인(confirm) 단계에서
-  // 어느 예약 슬롯을 확정해야 하는지 알 수 있도록 reservationId/roundId/seatId/queueToken 을 실어보냄
-  const forwardParams = new URLSearchParams({
-    reservationId: reservationId!,
-    roundId: roundId!,
-    seatId: seatId!,
-  });
-  if (queueToken) {
-    forwardParams.set("queueToken", queueToken);
-  }
+  // successUrl/failUrl 은 토스가 paymentKey/orderId/amount(또는 code/message)를 쿼리스트링으로
+  // 덧붙여 리다이렉트하는 주소. 우리가 미리 붙여둔 파라미터는 그대로 유지된 채 넘어가므로,
+  // 지금 이 화면이 받은 예약 식별자를 그대로 실어보냄 — success 페이지는 confirm API 호출에,
+  // fail 페이지는 "다시 시도" 시 체크아웃 화면을 다시 여는 데 씀
+  const forwardParams = searchParams.toString();
 
   try {
     await widgetsRef.current.requestPayment({
       orderId: `QKET-${crypto.randomUUID()}`,
       orderName: `Qket ${grade}석 예매`,
-      successUrl: `${window.location.origin}/payments/success?${forwardParams.toString()}`,
-      failUrl: `${window.location.origin}/payments/fail`,
+      successUrl: `${window.location.origin}/payments/success?${forwardParams}`,
+      failUrl: `${window.location.origin}/payments/fail?${forwardParams}`,
     });
   } catch (error) {
     console.error("결제 요청 실패:", error);

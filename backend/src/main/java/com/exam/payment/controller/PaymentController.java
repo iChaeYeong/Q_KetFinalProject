@@ -9,10 +9,13 @@ import com.exam.payment.dto.PaymentDTO;
 import com.exam.payment.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/payments")
@@ -41,5 +44,22 @@ public class PaymentController {
             throw new BusinessException(ErrorCode.LOGIN_REQUIRED);
         }
         return paymentService.confirm(request, loginUser.getUserId(), WebUtil.getClientIp(servletRequest));
+    }
+
+    /***********************************
+     *  URL      :  "/payments/my"
+     *  이름      :   myPayments
+     *  기능      :   내 결제 내역 조회 (마이페이지, 최신순)
+     *  method   :   GET
+     *  param    :   HttpSession
+     *  return   :   List<PaymentDTO>
+     ************************************/
+    @GetMapping("/my")
+    public List<PaymentDTO> myPayments(HttpSession session) {
+        UserDTO loginUser = (UserDTO) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            throw new BusinessException(ErrorCode.LOGIN_REQUIRED);
+        }
+        return paymentService.getMyPayments(loginUser.getUserId());
     }
 }

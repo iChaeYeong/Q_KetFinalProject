@@ -9,12 +9,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import type { Reservation } from "@/lib/data/types";
+import type { Reservation, Payment } from "@/lib/data/types";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import PageHeader from "@/components/ui/PageHeader";
 import StatusMessage from "@/components/ui/StatusMessage";
 import { getMyReservations, cancelReservation } from "@/lib/api/reservations"
+import { getMyPayments } from "@/lib/api/payments"
 
 // 예매 상태 표시 라벨
 const STATUS_LABEL: Record<string, string> = {
@@ -36,8 +37,12 @@ export default function MyPage() {
   // 예매 내역 목록
   const [reservations, setReservations] = useState<Reservation[]>([]);
 
+  // 결제 내역 목록
+  const [payments, setPayments] = useState<Payment[]>([]);
+
   // UI 상태
   const [loading, setLoading] = useState(true);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
   const [cancelling, setCancelling] = useState<number | null>(null); // 취소 중인 reservationId
 
   useEffect(() => {
@@ -45,6 +50,11 @@ export default function MyPage() {
       .then(setReservations)
       .catch(() => setReservations([]))  //에러시
       .finally(() => setLoading(false));
+
+    getMyPayments()
+      .then(setPayments)
+      .catch(() => setPayments([]))
+      .finally(() => setPaymentsLoading(false));
   }, []);
 
   //예매버튼 클릭시 실행 이벤트
@@ -142,6 +152,36 @@ export default function MyPage() {
                       {cancelling === r.reservationId ? "처리 중..." : "취소"}
                     </Button>
                   )}
+                </div>
+              ))}
+            </div>
+
+            {/* 결제 내역 */}
+            <h2 style={{ fontSize: "var(--font-xl)", fontWeight: 700, color: "var(--text)", margin: "32px 0 var(--space-4)", letterSpacing: "-0.02em" }}>
+              결제 내역
+            </h2>
+
+            {paymentsLoading && <StatusMessage variant="loading">불러오는 중...</StatusMessage>}
+
+            {!paymentsLoading && payments.length === 0 && (
+              <div className="emptyMsg">
+                <p>결제 내역이 없습니다.</p>
+              </div>
+            )}
+
+            <div className="reservationList">
+              {payments.map(p => (
+                <div key={p.paymentId} className="reservationCard">
+                  <div className="reservationInfo">
+                    <p className="reservationTitle">{p.pTitle}</p>
+                    <div className="reservationMeta">
+                      <span>📅 {new Date(p.roundTime).toLocaleString("ko-KR", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                      <span>💺 {p.seatRow}행 {p.seatColume}번</span>
+                      <span>🎟 {p.grade}</span>
+                      <span>💳 {p.amount.toLocaleString("ko-KR")}원</span>
+                      <span>🕒 {new Date(p.approvedAt).toLocaleString("ko-KR", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })} 승인</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

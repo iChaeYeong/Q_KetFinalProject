@@ -8,6 +8,7 @@ import com.exam.payment.mapper.PaymentMapper;
 import com.exam.reservation.dto.SeatDTO;
 import com.exam.reservation.mapper.SeatMapper;
 import com.exam.reservation.service.ReservationService;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -54,6 +56,14 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public PaymentDTO confirm(PaymentConfirmRequestDTO request, String userId, String clientIp) {
+        // 멱등성 체크: 같은 orderId로 이미 처리된 결제면 재승인/재예매 시도 없이 그 결과를 그대로 반환.
+        // (버튼 중복클릭, success 페이지 새로고침, 네트워크 재시도 등으로 같은 요청이 다시 들어오는 경우 대비 —
+        //  이 체크가 없으면 이미 확정된 좌석에 대해 reserve()가 실패로 보고, 방금 승인된 결제를 오히려 자동취소해버림)
+        PaymentDTO existing = paymentMapper.findByOrderId(request.getOrderId());
+        if (existing != null) {
+            return existing;
+        }
+
         SeatDTO seat = seatMapper.findById(request.getSeatId());
         if (seat == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "존재하지 않는 좌석입니다.");
@@ -88,9 +98,20 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setInsId(userId);
         payment.setInsIp(clientIp);
 
-        paymentMapper.save(payment);
+        try {
+            paymentMapper.save(payment);
+        } catch (DuplicateKeyException e) {
+            // 위 findByOrderId 체크 이후 극히 짧은 순간에 동일 orderId 요청이 동시에 들어와
+            // 먼저 INSERT를 끝낸 경우 — 이번 요청은 실패 처리하지 않고 먼저 처리된 결과를 그대로 반환
+            return paymentMapper.findByOrderId(request.getOrderId());
+        }
 
         return payment;
+    }
+
+    @Override
+    public List<PaymentDTO> getMyPayments(String userId) {
+        return paymentMapper.findByUserId(userId);
     }
 
     private Map<String, Object> confirmWithToss(PaymentConfirmRequestDTO request) {

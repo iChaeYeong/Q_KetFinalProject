@@ -1,4 +1,5 @@
 import { apiFetch } from "./client";
+import type { Payment } from "../data/types";
 
 // ============================================================
 // POST /api/payments/confirm
@@ -36,4 +37,26 @@ export async function confirmPayment(
     method: "POST",
     body: params,
   });
+}
+
+// ============================================================
+// GET /api/payments/my
+// 백엔드: PaymentController.java → myPayments()  (로그인 필요)
+// 기능: 내 결제 내역 조회 (마이페이지, 최신순)
+//
+// 사용 예시:
+//   const payments = await getMyPayments();
+//   setPayments(payments);
+//
+// 요청: 파라미터 없음
+// 응답 JSON (Payment[]):
+//   [
+//     { "paymentId": 1, "reservationId": 225, "orderId": "QKET-...", "paymentKey": "...",
+//       "amount": 220000, "payStatus": "DONE", "approvedAt": "2026-07-31 02:10:00",
+//       "pTitle": "아이유 콘서트 - The Golden Hour", "roundTime": "2026-08-15 19:00:00",
+//       "seatRow": "C", "seatColume": "47", "grade": "VIP" }
+//   ]
+// ============================================================
+export async function getMyPayments(): Promise<Payment[]> {
+  return apiFetch<Payment[]>("/payments/my");
 }
