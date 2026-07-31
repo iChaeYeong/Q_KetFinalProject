@@ -5,8 +5,10 @@
 import BookButton from "@/components/BookButton";
 import Badge from "@/components/ui/Badge";
 import PageHeader from "@/components/ui/PageHeader";
+import Pagination from "@/components/ui/Pagination";
 import StatusMessage from "@/components/ui/StatusMessage";
 import { BASE_URL, unwrap } from "@/lib/api/client";
+import type { PageResponse } from "@/lib/data/types";
 
 // 백엔드 PerformanceDTO 와 일치
 type Round = {
@@ -23,6 +25,9 @@ type Performance = {
   rounds: Round[];
 };
 
+// 한 페이지에 보여줄 공연 개수 — 백엔드 PerformanceController.pagedList()의 size 기본값(8)과 맞춤
+const PAGE_SIZE = 8;
+
 const STATUS_LABEL: Record<string, string> = {
   OPEN: "예매 가능",
   CLOSED: "예매 종료",
@@ -36,13 +41,22 @@ const STATUS_CLASS: Record<string, string> = {
 };
 
 
-export default async function EventsPage() {
-  //events api 호출
-  const res = await fetch(`${BASE_URL}/api/events`, { cache: "no-store" });
-  // GET /api/events는 GlobalResponseAdvice가 { success, message, data, timestamp }로 감싸서 내려주므로
+export default async function EventsPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
+  const page = Math.max(Number(searchParams.page) || 1, 1);
+
+  //events api 호출 (페이지 단위)
+  const res = await fetch(`${BASE_URL}/api/events/paged?page=${page}&size=${PAGE_SIZE}`, {
+    cache: "no-store",
+  });
+  // GET /api/events/paged는 GlobalResponseAdvice가 { success, message, data, timestamp }로 감싸서 내려주므로
   // apiFetch를 안 거치는 이 직접 fetch()에서도 unwrap으로 data만 꺼내야 함
-  const performances: Performance[] = unwrap(await res.json()) as Performance[];
-  console.log(JSON.stringify(performances, null, 2));
+  const pageData = unwrap(await res.json()) as PageResponse<Performance>;
+  const performances = pageData.content;
+  console.log(JSON.stringify(pageData, null, 2));
 
   return (
     <PageHeader title="공연 목록" subtitle="예매하고 싶은 공연을 선택하세요.">
@@ -89,6 +103,8 @@ export default async function EventsPage() {
           </div>
         ))}
       </div>
+
+      <Pagination page={pageData.page} totalPages={pageData.totalPages} basePath="/" />
     </PageHeader>
   );
 }

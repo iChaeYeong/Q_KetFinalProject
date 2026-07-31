@@ -53,9 +53,15 @@ if (now >= round) {
   }, [openTime, roundTime]);
 
 
-  const openLabel = new Date(openTime).toLocaleString("ko-KR", {
-    month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit",
-  });
+  // "yyyy-MM-dd HH:mm:ss" 문자열을 직접 파싱해서 포맷 — Date/toLocaleString을 쓰면
+  // 서버(Node, ICU 데이터 제한)와 브라우저(완전한 ICU)에서 "AM"/"오전"처럼 다른 문자열이 나와
+  // 하이드레이션 에러(Text content does not match server-rendered HTML)가 났었음
+  const [openDatePart, openTimePart] = openTime.split(" ");
+  const [, openMonth, openDay] = openDatePart.split("-").map(Number);
+  const [openHour, openMinute] = openTimePart.split(":").map(Number);
+  const openPeriod = openHour < 12 ? "오전" : "오후";
+  const openHour12 = openHour % 12 === 0 ? 12 : openHour % 12;
+  const openLabel = `${openMonth}. ${openDay}. ${openPeriod} ${openHour12}:${String(openMinute).padStart(2, "0")}`;
 
   // [BOOK-HIDDEN] 10분 전보다 이전 — 오픈 시간 안내
   if (state === "Before") return (
