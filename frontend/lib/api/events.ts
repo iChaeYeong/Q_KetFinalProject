@@ -1,5 +1,5 @@
 import { apiFetch } from "./client";
-import type { Performance } from "../data/types";
+import type { PageResponse, Performance } from "../data/types";
 
 // ============================================================
 // GET /api/events
@@ -30,6 +30,41 @@ import type { Performance } from "../data/types";
 // ============================================================
 export async function getEvents(): Promise<Performance[]> {
   return apiFetch<Performance[]>("/events");
+}
+
+// ============================================================
+// GET /api/events/paged
+// 백엔드: PerformanceController.java → pagedList()
+// 기능: 공연 목록 페이지 단위 조회 (메인 공연 목록 화면 페이지네이션용)
+//
+// 사용 예시:
+//   import { getEventsPaged } from "@/lib/api/events";
+//
+//   const { content, page, totalPages } = await getEventsPaged(1, 8);
+//
+// 요청: page(1부터 시작, 기본 1), size(기본 8) — query string
+// 응답 JSON (PageResponse<Performance>):
+//   {
+//     "content": [
+//       {
+//         "performanceId": 1,
+//         "pTitle": "뮤지컬 지킬앤하이드",
+//         "pLocation": "고척스카이돔",
+//         "posterUrl": "https://.../poster.jpg",
+//         "rounds": [
+//           { "roundId": 10, "performanceId": 1, "roundTime": "2026-08-15 19:00:00",
+//             "openTime": "2026-08-01 10:00:00", "roundStatus": "OPEN" }
+//         ]
+//       }
+//     ],
+//     "page": 1,
+//     "size": 8,
+//     "totalCount": 42,
+//     "totalPages": 6
+//   }
+// ============================================================
+export async function getEventsPaged(page = 1, size = 8): Promise<PageResponse<Performance>> {
+  return apiFetch<PageResponse<Performance>>(`/events/paged?page=${page}&size=${size}`);
 }
 
 // ============================================================

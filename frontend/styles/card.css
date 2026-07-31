@@ -94,3 +94,50 @@
   color: var(--text-2);
   font-variant-numeric: tabular-nums; /* 숫자 폭을 고정해 시간 여러 줄이 깔끔하게 정렬 */
 }
+
+/* ── PAGINATION ── */
+/* 공연 목록 화면 번호 페이지네이션 — app/page.tsx (메인 공연 목록) */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.paginationItem,
+.paginationArrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 var(--space-2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: var(--font-md);
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.paginationItem:hover,
+.paginationArrow:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.paginationItemActive {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.paginationItemActive:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.paginationDisabled {
+  opacity: 0.4;
+  pointer-events: none;
+}

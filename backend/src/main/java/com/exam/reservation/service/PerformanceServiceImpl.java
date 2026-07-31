@@ -1,5 +1,6 @@
 package com.exam.reservation.service;
 
+import com.exam.common.dto.PageResponse;
 import com.exam.reservation.dto.PerformanceDTO;
 import com.exam.reservation.mapper.PerformanceMapper;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,22 @@ public class PerformanceServiceImpl implements PerformanceService {
     @Override
     public List<PerformanceDTO> getAllPerformances() {
         return performanceMapper.findAll();
+    }
+
+    /***********************************
+     *  이름      :   getPerformances
+     *  기능      :   공연 목록 페이지 단위 조회 (메인 화면 페이지네이션용)
+     *  param    :   page(1부터 시작), size
+     *  return   :   PageResponse<PerformanceDTO>
+     ************************************/
+    @Override
+    public PageResponse<PerformanceDTO> getPerformances(int page, int size) {
+        int safePage = Math.max(page, 1);
+        int safeSize = Math.max(size, 1);
+        int offset = (safePage - 1) * safeSize;
+        List<PerformanceDTO> content = performanceMapper.findAllPaged(offset, safeSize);
+        long totalCount = performanceMapper.countAll();
+        return new PageResponse<>(content, safePage, safeSize, totalCount);
     }
 
 //    @Override

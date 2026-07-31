@@ -11,6 +11,8 @@ import java.util.List;
 @Mapper
 public interface PerformanceMapper {
     List<PerformanceDTO> findAll();
+    List<PerformanceDTO> findAllPaged(@Param("offset") int offset, @Param("size") int size);
+    long countAll();
     List<VenueDTO> findAllVenues();
     int insert(PerformanceDTO performanceDTO);
     int insertRound(RoundDTO roundDTO);
