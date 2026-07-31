@@ -99,6 +99,33 @@ Spring Boot(백엔드) + Next.js/TypeScript(프론트엔드) 모노레포. `back
 - 필드가 null이 될 수 있으면(예: `parentMenuId`) `getVal`을 `?? original`(nullish coalescing)이 아니라 **`field in changes[id]`로 판단**해야 함 — `??`는 "명시적으로 null로 바꿈"과 "안 바꿈(undefined)"을 구분 못 해서 화면에 반영이 안 되는 버그가 생긴다.
 - 저장 시에도 마찬가지로, null 허용 필드가 있는 행은 변경된 필드만 보내지 말고 **그 행의 최종 상태 전체**를 합쳐서 보내야 한다 (안 그러면 위 MyBatis 항목에서 설명한 이유로 서버가 안 보낸 필드를 null로 덮어씀).
 
+**CSS 파일 구조** (작업 로그: `docs/css-refactor-log.md`): `app/globals.css`는 이제 조립 창구일 뿐이고, 실제 스타일은 전부 `frontend/styles/*.css`에 역할별로 분리돼 있다 (`@import`만 나열).
+```
+styles/
+ ├─ base.css       (reset, :root 변수)
+ ├─ nav.css        (상단 네비게이션)
+ ├─ layout.css     (페이지 공통 레이아웃 틀)
+ ├─ auth.css       (로그인/회원가입 + 폼)
+ ├─ button.css     (버튼 4종)
+ ├─ card.css       (카드 / 공연 목록 그리드)
+ ├─ badge.css      (상태 뱃지)
+ ├─ queue.css      (대기열 화면)
+ ├─ seat.css       (좌석 선택 화면)
+ ├─ mypage.css     (마이페이지)
+ ├─ message.css    (공통 에러/성공/로딩 메시지)
+ ├─ admin.css      (관리자 전체 화면)
+ └─ responsive.css (반응형 미디어쿼리, 항상 마지막 import)
+```
+- 새 화면/기능의 스타일은 성격이 맞는 기존 파일에 추가한다. 어디에도 안 맞으면 새 역할 파일을 만들고 `globals.css`에 `@import` 한 줄 추가 — 단 `responsive.css` import보다 앞에 둔다 (반응형이 항상 마지막에 적용되어야 함).
+- 기존 클래스명(`btnPrimary`, `pageWrap`, `adminModalOverlay` 등)과 값은 이 분리 작업으로 전혀 안 바뀌었음 — 파일 위치만 재배치된 것.
+
+**재사용 UI 컴포넌트** (`frontend/components/ui/`): 반복되는 UI 패턴은 raw `className`을 새로 조합하지 말고 아래 컴포넌트를 우선 재사용한다. 전부 기존 CSS 클래스/값을 그대로 감싸기만 한 것이라 스타일 자체는 안 바뀐다.
+- `Button` — `variant`(`primary`/`secondary`/`ghost`/`danger`) + `fullWidth`. primary=화면당 핵심 행동 1개(예매하기/제출), secondary=보조 행동(수정/닫기), ghost=배경 없이 테두리만, danger=되돌리기 어려운 행동(삭제/취소).
+- `Badge` — `variant`(`open`/`closed`/`soldout`/`vip`/`r`/`s`).
+- `FormField` + `Input` — `variant`(`auth`/`admin`)로 각각 로그인·회원가입 폼(`field`/`fieldInput`)과 관리자 폼(`adminFormRow`/`adminInput`) 스타일을 고름. `FormField`는 라벨+래퍼만 담당하고 실제 입력 요소는 `children`으로 받음(`select` 등 `Input`이 아닌 요소도 가능). `Input`은 관리자 폼 유효성 검사 실패 시 focus 이동을 위해 `forwardRef` 지원.
+- `PageHeader` — 페이지 최상위 wrapper(`pageWrap`/`pageWrapWide`)까지 함께 감싸므로 페이지 내용 전체를 `children`으로 넘긴다. `title`/`subtitle`/`variant`(`default`/`admin`)/`wide`/`actions`(우측 버튼 영역) prop 사용. 로딩 중 조기 return처럼 제목 없이 문구만 있는 자리에는 안 맞으니 그대로 `pageWrap` div를 쓴다.
+- `StatusMessage` — `variant`(`loading`/`error`/`success`), 기본 태그 `<p>`, 인라인 배치가 필요하면 `as="span"`.
+
 ## DB (`backend/src/main/resources/schema.sql`, `data.sql`)
 
 - 모든 테이블에 감사 컬럼 6개: `ins_id`(기본값 `'SYSTEM'`, 로그인 전 행위엔 이 값), `ins_ip`, `ins_de`, `upt_id`, `upt_ip`, `upt_de`(`ON UPDATE CURRENT_TIMESTAMP`). 새 테이블 추가 시 이 6개 컬럼을 그대로 포함시킨다.

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -1440,3 +1441,26 @@ a {
   .queuePosition { font-size: 56px; }
   .siteNavInner { padding: 0 16px; }
 }
+=======
+/* ============================================
+ * 3차 프로젝트 — CSS 파일 분리 (2단계)
+ * 이 파일은 이제 "조립 창구" 역할만 함.
+ * 실제 스타일은 ../styles/ 폴더의 역할별 파일에 있음.
+ * 값/디자인은 변경 없음 — 파일 위치만 재배치.
+ * styles/base.css 보면 css 관련 변수에 대한 설명 있음.
+ * ============================================ */
+
+@import "../styles/base.css";
+@import "../styles/nav.css";
+@import "../styles/layout.css";
+@import "../styles/auth.css";
+@import "../styles/button.css";
+@import "../styles/card.css";
+@import "../styles/badge.css";
+@import "../styles/queue.css";
+@import "../styles/seat.css";
+@import "../styles/mypage.css";
+@import "../styles/message.css";
+@import "../styles/admin.css";
+@import "../styles/responsive.css";
+>>>>>>> 504e5526e2289fd67da5784aefb8c07437f81443

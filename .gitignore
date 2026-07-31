@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Claude Code — 개인/세션 전용 파일 (팀 공유 X)
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
@@ -5,3 +6,35 @@
 
 # 소셜 로그인 client-id/secret — 개인 로컬 값, 커밋 금지
 backend/.env
+=======
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== 환경 변수 =====
+.env
+.env.local
+.env.*.local
+
+# ===== Next.js (frontend/) =====
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# ===== Spring Boot / Gradle (backend/) =====
+backend/.gradle/
+backend/build/
+
+# ===== IntelliJ IDEA =====
+.idea/
+*.iml
+
+# ===== VSCode =====
+.vscode/
+
+# ===== Claude Code — 개인/세션 전용 파일 (팀 공유 X) =====
+**/.claude/settings.local.json
+**/.claude/scheduled_tasks.lock
+**/.claude/*.log
+>>>>>>> 504e5526e2289fd67da5784aefb8c07437f81443

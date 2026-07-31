@@ -7,11 +7,19 @@
 //     (Server Component → props 로 seats 전달 → Client Component 에서 selection 처리)
 "use client";
 
+// 좌석 선택화면으로 대기열을 통과한 사용자가 도착하는 페이지
+// 공연장 좌석 배치도를 그리드로 그려서 보여주고 VIP/R/S 등급별 색상을 다르게 표시
+// 좌석 선점 기능이 들어갈 화면
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import type { Seat } from "@/lib/data/types";
 import { getSeats } from "@/lib/api/seats"
 import { createReservation } from "@/lib/api/reservations"
+import Button from "@/components/ui/Button";
+import Badge from "@/components/ui/Badge";
+import PageHeader from "@/components/ui/PageHeader";
+import StatusMessage from "@/components/ui/StatusMessage";
 
 
 // 등급 표시 라벨
@@ -165,14 +173,9 @@ export default function SeatsPage() {
 
   return (
     <>
-      <div className="pageWrapWide">
-        <div className="pageHeader">
-          <h1 className="pageTitle">좌석 선택</h1>
-          <p className="pageSubtitle">원하는 좌석을 선택한 뒤 예매를 완료하세요.</p>
-        </div>
-
+      <PageHeader wide title="좌석 선택" subtitle="원하는 좌석을 선택한 뒤 예매를 완료하세요.">
         {loading ? (
-          <p className="loadingMsg">좌석 정보를 불러오는 중...</p>
+          <StatusMessage variant="loading">좌석 정보를 불러오는 중...</StatusMessage>
         ) : (
           <div className="seatLayout">
             {/* 좌석 배치도 */}
@@ -207,9 +210,9 @@ export default function SeatsPage() {
                   {sections.map((section, si) => (
                     <div key={si} className="seatSection">
                       <div className="seatSectionHeader">
-                        <span className={`badge badge${section.grade === "VIP" ? "Vip" : section.grade}`}>
+                        <Badge variant={section.grade.toLowerCase() as "vip" | "r" | "s"}>
                           {GRADE_LABEL[section.grade] ?? section.grade}
-                        </span>
+                        </Badge>
                       </div>
                       {(() => {
                         // 블록별 좌석 수 비율에 맞춰 폭을 배분 (좌석 크기가 블록 간에도 동일하게 보이도록)
@@ -279,9 +282,9 @@ export default function SeatsPage() {
                   <div className="seatPanelRow">
                     <span className="seatPanelLabel">등급</span>
                     <span className="seatPanelValue">
-                      <span className={`badge badge${selected.grade === "VIP" ? "Vip" : selected.grade}`}>
+                      <Badge variant={selected.grade.toLowerCase() as "vip" | "r" | "s"}>
                         {GRADE_LABEL[selected.grade]}
-                      </span>
+                      </Badge>
                     </span>
                   </div>
                   <div className="seatPanelRow">
@@ -291,17 +294,17 @@ export default function SeatsPage() {
                   <hr className="seatPanelDivider" />
 
                   {success ? (
-                    <p className="successMsg">예매 완료! 마이페이지로 이동합니다.</p>
+                    <StatusMessage variant="success">예매 완료! 마이페이지로 이동합니다.</StatusMessage>
                   ) : (
                     <>
-                      <button
-                        className="btnPrimary"
+                      <Button
+                        variant="primary"
                         style={{ width: "100%" }}
                         onClick={handleReserve}
                         disabled={booking}
                       >
                         {booking ? "예매 중..." : "예매하기"}
-                      </button>
+                      </Button>
                     </>
                   )}
                 </>
@@ -309,7 +312,7 @@ export default function SeatsPage() {
             </div>
           </div>
         )}
-      </div>
+      </PageHeader>
     </>
   );
 }

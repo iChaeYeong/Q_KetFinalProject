@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import Button from "@/components/ui/Button";
+import PageHeader from "@/components/ui/PageHeader";
+import StatusMessage from "@/components/ui/StatusMessage";
 import {
   getAdminUsers,
   getRoles,
@@ -83,27 +86,30 @@ export default function AdminUsersPage() {
   };
 
   if (isLoading || loading)
-    return <div className="pageWrap"><p className="loadingMsg">불러오는 중...</p></div>;
+    return <div className="pageWrap"><StatusMessage variant="loading">불러오는 중...</StatusMessage></div>;
 
   return (
-    <div className="pageWrap">
-      <div className="adminPageHeader">
-        <div>
-          <h1 className="pageTitle">사용자 관리</h1>
-          <p className="pageSubtitle">역할과 상태를 수정한 뒤 저장 버튼을 누르세요.</p>
-        </div>
+    <PageHeader
+      variant="admin"
+      title="사용자 관리"
+      subtitle="역할과 상태를 수정한 뒤 저장 버튼을 누르세요."
+      actions={
         <div className="adminHeaderActions">
-          {msg && <span className={msg.includes("실패") ? "errorMsg" : "successMsg"} style={{ margin: 0 }}>{msg}</span>}
-          <button
-            className="btnPrimary"
+          {msg && (
+            <StatusMessage as="span" variant={msg.includes("실패") ? "error" : "success"} style={{ margin: 0 }}>
+              {msg}
+            </StatusMessage>
+          )}
+          <Button
+            variant="primary"
             onClick={handleSave}
             disabled={saving || changeCount === 0}
           >
             {saving ? "저장 중..." : changeCount > 0 ? `저장 (${changeCount}건)` : "저장"}
-          </button>
+          </Button>
         </div>
-      </div>
-
+      }
+    >
       <div className="adminTableWrap">
         <table className="adminTable">
           <thead>
@@ -150,6 +156,6 @@ export default function AdminUsersPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </PageHeader>
   );
 }
