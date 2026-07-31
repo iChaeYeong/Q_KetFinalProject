@@ -2,3 +2,6 @@
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 .claude/*.log
+
+# 소셜 로그인 client-id/secret — 개인 로컬 값, 커밋 금지
+backend/.env

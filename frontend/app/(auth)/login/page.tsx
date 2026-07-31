@@ -1,13 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { login } from "@/lib/api/auth";   //auth api
 import { useAuth } from "@/context/AuthContext";
 
-export default function LoginPage() {
+// 백엔드 OAuthController가 실패 시 /login?oauthError={code} 로 리다이렉트하며 넘기는 코드 → 한글 메시지
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  A003: "이미 해당 이메일로 가입된 계정이 있습니다. 아이디/비밀번호로 로그인해 주세요.",
+  A005: "소셜 로그인 처리 중 오류가 발생했습니다. 다시 시도해 주세요.",
+  A006: "잘못된 요청입니다. 다시 시도해 주세요.",
+  CANCELLED: "로그인이 취소되었습니다.",
+};
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   //세션 저장
   const { setUserSession } = useAuth();
 
@@ -27,9 +36,17 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 소셜 로그인 콜백이 실패해서 돌아온 경우(oauthError 쿼리파라미터) 에러 메시지 표시
+  useEffect(() => {
+    const oauthError = searchParams.get("oauthError");
+    if (oauthError) {
+      setError(OAUTH_ERROR_MESSAGES[oauthError] ?? "소셜 로그인에 실패했습니다.");
+    }
+  }, [searchParams]);
 
 
-  // userID, pwd 빈값 체크 
+
+  // userID, pwd 빈값 체크
   // 빈값이 존재시 error 변수에 에러메세지 저장
   const handleLogin = async () => {
     if (!userId || !pwd) {
@@ -100,10 +117,25 @@ export default function LoginPage() {
           {loading ? "로그인 중..." : "로그인"}
         </button>
 
+        <div className="authDivider"><span>또는</span></div>
+
+        {/* 소셜 로그인: fetch가 아니라 전체 페이지 이동 — 브라우저가 백엔드의 OAuth 리다이렉트를 그대로 따라가야 함 */}
+        <a href="/api/oauth2/authorize/google" className="btnSocial btnGoogle">Google로 계속하기</a>
+        <a href="/api/oauth2/authorize/kakao" className="btnSocial btnKakao">카카오로 계속하기</a>
+        <a href="/api/oauth2/authorize/naver" className="btnSocial btnNaver">네이버로 계속하기</a>
+
         <p className="authHelper">
           계정이 없으신가요? <Link href="/signup">회원가입</Link>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

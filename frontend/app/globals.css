@@ -284,6 +284,62 @@ a {
   font-weight: 600;
 }
 
+/* ── AUTH DIVIDER / SOCIAL LOGIN ── */
+.authDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.authDivider::before,
+.authDivider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.btnSocial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 11px 20px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.12s;
+}
+
+.btnSocial:hover { opacity: 0.85; }
+.btnSocial:last-of-type { margin-bottom: 0; }
+
+/* 브랜드 컬러는 라이트/다크 테마와 무관하게 고정 (각 서비스 로그인 버튼 관례) */
+.btnGoogle {
+  background: #ffffff;
+  color: #1f1f1f;
+  border: 1px solid #dadce0;
+}
+
+.btnKakao {
+  background: #fee500;
+  color: #1f1f1f;
+  border: none;
+}
+
+.btnNaver {
+  background: #03c75a;
+  color: #ffffff;
+  border: none;
+}
+
 /* ── FORM ── */
 .field {
   display: flex;
