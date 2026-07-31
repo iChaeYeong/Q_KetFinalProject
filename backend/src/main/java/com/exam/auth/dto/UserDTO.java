@@ -19,6 +19,10 @@ public class UserDTO implements Serializable {
     private Long roleId;
     private String roleName;
 
+    // 소셜 로그인 연동 정보 — loginProvider는 LOCAL/GOOGLE/KAKAO/NAVER, providerUserId는 LOCAL 계정이면 null
+    private String loginProvider;
+    private String providerUserId;
+
     // 감사(audit) 컬럼 — 등록자/수정자 ID·IP
     private String insId;
     private String insIp;

@@ -54,14 +54,18 @@ CREATE TABLE IF NOT EXISTS PERFORMANCES (
 );
 
 -- user_id: 회원가입 시 입력받는 로그인 아이디를 그대로 PK로 사용 (auto_increment 아님)
+-- 소셜 로그인 계정은 user_id를 "{provider}_{providerUserId}" 형태로 자동 생성하고 pwd는 NULL로 둠
+-- login_provider/provider_user_id: 소셜 로그인 연동 정보. LOCAL(일반 가입) 계정은 provider_user_id가 NULL
 CREATE TABLE IF NOT EXISTS USERS (
     user_id VARCHAR(50) NOT NULL,
     user_nm VARCHAR(255) NOT NULL,
-    pwd VARCHAR(255) NOT NULL,
+    pwd VARCHAR(255) NULL,
     user_email VARCHAR(255) NOT NULL,
     role_id BIGINT NOT NULL,
     user_status VARCHAR(255) NOT NULL,
     created_user DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    login_provider VARCHAR(20) NOT NULL DEFAULT 'LOCAL',
+    provider_user_id VARCHAR(255) NULL,
 
     ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
     ins_ip VARCHAR(45) NULL,
@@ -72,7 +76,8 @@ CREATE TABLE IF NOT EXISTS USERS (
 
     PRIMARY KEY (user_id),
     FOREIGN KEY (role_id) REFERENCES ROLES (role_id),
-    UNIQUE KEY uk_users_user_email (user_email)
+    UNIQUE KEY uk_users_user_email (user_email),
+    UNIQUE KEY uk_users_provider (login_provider, provider_user_id)
 );
 
 -- open_time: 예매 오픈 시각. round_time(공연 시작 시각)과 별개로 "언제부터 예매 가능한지"를 나타냄

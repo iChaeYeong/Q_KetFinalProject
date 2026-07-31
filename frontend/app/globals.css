@@ -1,3 +1,1447 @@
+<<<<<<< HEAD
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface2: #1e1e1e;
+  --border: #262626;
+  --border-strong: #383838;
+  --text: #f2f2f2;
+  --text-2: #737373;
+  --text-3: #404040;
+  --accent: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --accent-dim: rgba(139, 92, 246, 0.15);
+  --success: #22c55e;
+  --success-bg: rgba(34, 197, 94, 0.12);
+  --error: #f87171;
+  --error-bg: rgba(248, 113, 113, 0.12);
+  --warning: #fbbf24;
+  --warning-bg: rgba(251, 191, 36, 0.12);
+  --vip-color: #a78bfa;
+  --vip-bg: rgba(167, 139, 250, 0.18);
+  --r-color: #60a5fa;
+  --r-bg: rgba(96, 165, 250, 0.18);
+  --s-color: #4ade80;
+  --s-bg: rgba(74, 222, 128, 0.18);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── NAV ── */
+.siteNav {
+  background: #0d0d0d;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.siteNavInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 58px;
+}
+
+.siteNavBrand {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.03em;
+  text-decoration: none;
+  transition: opacity 0.12s;
+}
+
+.siteNavBrand:hover { opacity: 0.8; }
+
+.siteNavLinks {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.siteNavLink {
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: color 0.12s, background 0.12s;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.siteNavLink:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.siteNavLinkActive {
+  color: var(--text) !important;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.siteNavUser {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  padding: 6px 12px;
+}
+
+.siteNavLogin {
+  color: var(--text-2);
+}
+
+.siteNavLogin:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.siteNavLogout {
+  color: var(--text-2);
+}
+
+.siteNavLogout:hover {
+  color: var(--error);
+  background: var(--error-bg);
+}
+
+.siteNavItem {
+  position: relative;
+}
+
+.siteNavCaret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 5px;
+  vertical-align: middle;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: 0.55;
+}
+
+.siteNavDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  min-width: 160px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.14s ease, transform 0.14s ease, visibility 0.14s;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  z-index: 110;
+}
+
+.siteNavItem:hover .siteNavDropdown,
+.siteNavItem:focus-within .siteNavDropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.siteNavDropdownLink {
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: color 0.12s, background 0.12s;
+}
+
+.siteNavDropdownLink:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.siteNavDropdownLinkActive {
+  color: var(--text) !important;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── PAGE LAYOUT ── */
+.pageWrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+
+/* 좌석 선택 페이지 전용 — 좌석이 많은 대형 공연장(예: 2000석 고척스카이돔)도
+   좌석이 좁아지지 않게 다른 페이지보다 폭을 넓게 씀 */
+.pageWrapWide {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+
+.pageWrapNarrow {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+
+.pageHeader {
+  margin-bottom: 28px;
+}
+
+.pageTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.03em;
+  margin-bottom: 6px;
+}
+
+.pageSubtitle {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+/* ── AUTH ── */
+.authWrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+}
+
+.authBox {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px 36px 36px;
+}
+
+.authLogo {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.03em;
+  margin-bottom: 28px;
+}
+
+.authTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.03em;
+  margin-bottom: 6px;
+}
+
+.authDesc {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 28px;
+}
+
+.authHelper {
+  font-size: 13px;
+  color: var(--text-2);
+  text-align: center;
+  margin-top: 20px;
+}
+
+.authHelper a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── AUTH DIVIDER / SOCIAL LOGIN ── */
+.authDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.authDivider::before,
+.authDivider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.btnSocial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 11px 20px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.12s;
+}
+
+.btnSocial:hover { opacity: 0.85; }
+.btnSocial:last-of-type { margin-bottom: 0; }
+
+/* 브랜드 컬러는 라이트/다크 테마와 무관하게 고정 (각 서비스 로그인 버튼 관례) */
+.btnGoogle {
+  background: #ffffff;
+  color: #1f1f1f;
+  border: 1px solid #dadce0;
+}
+
+.btnKakao {
+  background: #fee500;
+  color: #1f1f1f;
+  border: none;
+}
+
+.btnNaver {
+  background: #03c75a;
+  color: #ffffff;
+  border: none;
+}
+
+/* ── FORM ── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fieldInput {
+  width: 100%;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  background: var(--surface2);
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.fieldInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.fieldInput::placeholder {
+  color: var(--text-3);
+}
+
+/* ── BUTTONS ── */
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, opacity 0.12s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btnPrimary:hover { background: var(--accent-hover); }
+.btnPrimary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btnPrimaryFull {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 15px;
+  margin-top: 8px;
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btnSecondary:hover { background: var(--border); }
+
+.btnGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btnGhost:hover { background: var(--surface2); color: var(--text); }
+
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--error);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btnDanger:hover:not(:disabled) { background: var(--error-bg); }
+
+.btnDanger:disabled {
+  background: var(--surface2);
+  border-color: var(--border);
+  color: var(--text-3);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+}
+
+/* ── EVENT GRID ── */
+.eventGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.eventCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+}
+
+.eventCard:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
+}
+
+.eventPoster {
+  width: 100%;
+  aspect-ratio: 3/4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.eventInfo {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.eventTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eventLocation {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-bottom: 12px;
+}
+
+.eventRounds {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eventRoundRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.eventRoundTime {
+  font-size: 12px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── STATUS BADGE ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.badgeOpen    { background: var(--success-bg); color: var(--success); }
+.badgeClosed  { background: var(--border);     color: var(--text-2);  }
+.badgeSoldout { background: var(--error-bg);   color: var(--error);   }
+.badgeVip     { background: var(--vip-bg);     color: var(--vip-color); }
+.badgeR       { background: var(--r-bg);       color: var(--r-color); }
+.badgeS       { background: var(--s-bg);       color: var(--s-color); }
+
+/* ── QUEUE PAGE ── */
+.queueWrap {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+  text-align: center;
+}
+
+.queueBox {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 48px 40px;
+}
+
+.queueIcon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.queueTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.queueEventName {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 36px;
+}
+
+.queuePosition {
+  font-size: 72px;
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: -0.05em;
+  line-height: 1;
+  margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.queuePositionLabel {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 24px;
+}
+
+.queueWait {
+  font-size: 14px;
+  color: var(--text-2);
+  margin-bottom: 32px;
+}
+
+.queueWait strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.queueDots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+
+.queueDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.queueDot:nth-child(2) { animation-delay: 0.2s; }
+.queueDot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40%            { opacity: 1;   transform: scale(1.2); }
+}
+
+.queueEntered {
+  padding: 16px;
+  background: var(--success-bg);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 10px;
+  color: var(--success);
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.queueNote {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* ── SEAT MAP ── */
+.seatLayout {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+}
+
+.seatMapWrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.seatVenue {
+  /* 양옆 블록 회전(transform)은 레이아웃 크기 계산에 반영되지 않으므로
+     기울어진 블록 모서리가 카드 밖으로 안 나가도록 패딩을 넉넉하게 줌 */
+  padding: 20px 28px 32px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface2);
+}
+
+.seatSection {
+  margin-bottom: 30px;
+}
+
+.seatSection:last-child {
+  margin-bottom: 0;
+}
+
+.seatSectionHeader {
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.seatStage {
+  width: 60%;
+  margin: 0 auto 24px;
+  padding: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.1em;
+}
+
+.seatLegend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.seatLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.seatLegendDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.seatGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── 블록 분할 배치 ──
+   각 등급 구역을 [행라벨 | 좌측블록 | 중앙블록 | 우측블록] 으로 구성.
+   양옆 블록은 무대 쪽으로 살짝 회전시켜 실제 공연장처럼 무대를 감싸는 부채꼴 느낌을 냄.
+   좌석을 개별로 이동시키지 않고 블록 전체를 기울이므로 블록 안 좌석은 항상 반듯하게 정렬됨. */
+.seatBlocks {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px; /* 블록 사이 통로 */
+}
+
+.seatLabelCol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.seatBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-basis: 0;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+/* 양옆 블록 기울임 — 중앙 통로 쪽을 축으로 바깥쪽 끝이 무대에서 멀어지듯 내려감 */
+.seatBlockLeft {
+  transform: rotate(-2.5deg);
+  transform-origin: center right;
+}
+
+.seatBlockRight {
+  transform: rotate(2.5deg);
+  transform-origin: center left;
+}
+
+.seatBlockRow {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 3px;
+  height: 20px;
+}
+
+.seatRowLabel {
+  height: 20px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seat {
+  width: 100%;
+  height: 100%;
+  min-height: 6px;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  font-size: 0;
+  font-family: inherit;
+  font-weight: 600;
+  transition: transform 0.1s, opacity 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seatAvailableVip  { background: var(--vip-bg);  color: var(--vip-color); }
+.seatAvailableR    { background: var(--r-bg);    color: var(--r-color);   }
+.seatAvailableS    { background: var(--s-bg);    color: var(--s-color);   }
+.seatReserved      { background: var(--border);  color: var(--text-3);    cursor: not-allowed; }
+.seatLocked        { background: var(--warning-bg); color: var(--warning); cursor: not-allowed; }
+
+.seat:hover:not(:disabled) { transform: scale(1.4); opacity: 0.9; }
+
+.seatSelected {
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
+  transform: scale(1.4);
+}
+
+/* ── SEAT DETAIL PANEL ── */
+.seatPanel {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  position: sticky;
+  top: 80px;
+}
+
+.seatPanelTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+}
+
+.seatPanelEmpty {
+  font-size: 13px;
+  color: var(--text-3);
+  text-align: center;
+  padding: 24px 0;
+}
+
+.seatPanelRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.seatPanelLabel { color: var(--text-2); }
+.seatPanelValue { font-weight: 600; color: var(--text); }
+
+.seatPanelDivider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 16px 0;
+}
+
+/* ── MYPAGE ── */
+.mypageGrid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.profileCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 24px;
+  position: sticky;
+  top: 80px;
+}
+
+.profileAvatar {
+  width: 64px;
+  height: 64px;
+  background: var(--accent-dim);
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.profileName {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.profileId {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.reservationList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reservationCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: border-color 0.15s;
+}
+
+.reservationCard:hover { border-color: var(--border-strong); }
+
+.reservationInfo { flex: 1; min-width: 0; }
+
+.reservationTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reservationMeta {
+  font-size: 12px;
+  color: var(--text-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ── HELPERS ── */
+.errorMsg {
+  font-size: 13px;
+  color: var(--error);
+  background: var(--error-bg);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 8px 0;
+}
+
+.successMsg {
+  font-size: 13px;
+  color: var(--success);
+  background: var(--success-bg);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 8px 0;
+}
+
+.loadingMsg {
+  font-size: 13px;
+  color: var(--text-2);
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.emptyMsg {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--text-3);
+  font-size: 14px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 24px 0;
+}
+
+/* ── ADMIN ── */
+.adminTableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.adminTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.adminPageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.adminHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+.adminSelect {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.adminSelect:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.adminRowDirty td { background: rgba(139, 92, 246, 0.06); }
+.adminRowDirty:hover td { background: rgba(139, 92, 246, 0.1) !important; }
+
+.adminSelect.dirty,
+.adminInput.dirty {
+  border-color: var(--primary);
+  background: rgba(139, 92, 246, 0.12);
+  color: var(--primary);
+}
+
+.adminCellId { font-weight: 600; }
+.adminCellEmail { color: var(--text-2); font-size: 12px; }
+
+.adminTable th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-2);
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.adminTable td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.adminTable tr:last-child td { border-bottom: none; }
+.adminTable tr:hover td { background: var(--surface2); }
+
+.adminCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 28px;
+}
+
+.adminCardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.adminForm { display: flex; flex-direction: column; gap: 0; }
+
+.adminFormRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.adminLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.adminInput {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.adminInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.adminFormSection { margin-bottom: 16px; }
+
+.adminFormSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.adminRoundRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  background: var(--surface2);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+/* ── ADMIN PERFORMANCE GRID ── */
+.adminPerfGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.adminPerfCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.15s;
+}
+
+.adminPerfCard:hover { border-color: var(--border-strong); }
+
+.adminPerfPoster {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: var(--surface2);
+  overflow: hidden;
+}
+
+.adminPerfPoster img { width: 100%; height: 100%; object-fit: cover; }
+.adminPerfPosterEmpty { width: 100%; height: 100%; background: var(--surface2); }
+
+.adminPerfLock {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 16px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adminPerfInfo { padding: 12px; flex: 1; }
+
+.adminPerfTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adminPerfVenue { font-size: 11px; color: var(--text-2); margin-bottom: 2px; }
+.adminPerfRounds { font-size: 11px; color: var(--text-3); }
+.adminPerfRoundDetail { display: flex; flex-direction: column; gap: 1px; margin-top: 3px; padding: 4px 6px; background: var(--surface2); border-radius: 4px; font-size: 10px; color: var(--text-3); }
+
+.adminPerfActions {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.adminPerfActions .btnSecondary,
+.adminPerfActions .btnDanger {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.adminRoundCard {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.adminRoundCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+
+.adminRoundNum {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.adminRoundCardBody {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+}
+
+/* ── ADMIN MODAL ── */
+.adminModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.adminModal {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.adminModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.adminModalClose {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: inherit;
+}
+
+.adminModalClose:hover { background: var(--surface2); }
+
+.adminModalBody {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.adminModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.adminRequired { color: var(--error); margin-left: 2px; }
+
+.adminPosterWrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.adminPosterPreview {
+  position: relative;
+  width: 100px;
+  height: 140px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.adminPosterPreview img { width: 100%; height: 100%; object-fit: cover; }
+
+.adminPosterOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #fff;
+}
+
+.adminFileLabel {
+  display: inline-block;
+  padding: 8px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.adminFileLabel:hover { background: var(--border); }
+
+.adminUploadDone { font-size: 12px; color: var(--success); }
+
+.btnSecondary {
+  background: var(--surface2);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.btnSecondary:hover { background: var(--border); }
+
+.btnDanger {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--error);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.btnDanger:hover:not(:disabled) { background: rgba(248, 113, 113, 0.2); }
+
+.btnDanger:disabled {
+  background: var(--surface2);
+  border-color: var(--border);
+  color: var(--text-3);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .seatLayout { flex-direction: column; }
+  .seatPanel  { width: 100%; position: static; }
+  .mypageGrid { grid-template-columns: 1fr; }
+  .profileCard { position: static; }
+  .eventGrid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+}
+
+@media (max-width: 480px) {
+  .pageWrap, .pageWrapNarrow { padding: 20px 16px 60px; }
+  .authBox { padding: 28px 20px 24px; }
+  .queueBox { padding: 36px 24px; }
+  .queuePosition { font-size: 56px; }
+  .siteNavInner { padding: 0 16px; }
+}
+=======
 /* ============================================
  * 3차 프로젝트 — CSS 파일 분리 (2단계)
  * 이 파일은 이제 "조립 창구" 역할만 함.
@@ -19,3 +1463,4 @@
 @import "../styles/message.css";
 @import "../styles/admin.css";
 @import "../styles/responsive.css";
+>>>>>>> 504e5526e2289fd67da5784aefb8c07437f81443
