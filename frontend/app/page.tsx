@@ -2,6 +2,7 @@
 // 서버에서 실행되므로 useState, useEffect, useRouter 사용 불가
 // 데이터는 async/await 로 직접 fetch, 네비게이션은 <Link> 사용
 
+import Link from "next/link";
 import BookButton from "@/components/BookButton";
 import Badge from "@/components/ui/Badge";
 import PageHeader from "@/components/ui/PageHeader";
@@ -67,18 +68,29 @@ export default async function EventsPage({
       <div className="eventGrid">
         {performances.map((performance) => (
           <div key={performance.performanceId} className="eventCard">
-            <div className="eventPoster">
-              {/* posterUrl 이 있으면 이미지, 없으면 기본 배경  */}
-              {performance.posterUrl
-                ? <img src={performance.posterUrl} alt={performance.pTitle} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <div style={{ width: "100%", height: "100%", background: "var(--surface2)" }} />
-              }
-            </div>
+            {/* 포스터 + 제목만 상세 페이지 링크로 감싼다.
+                아래 회차 영역에는 예매 버튼(<button>)이 있어서 같이 감싸면 안 됨
+                — <a> 안의 <button>은 유효하지 않은 마크업이고 클릭도 서로 충돌한다 */}
+            <Link
+              href={`/events/${performance.performanceId}`}
+              className="eventCardLink"
+              aria-label={`${performance.pTitle} 상세 보기`}
+            >
+              <div className="eventPoster">
+                {/* posterUrl 이 있으면 이미지, 없으면 기본 배경  */}
+                {performance.posterUrl
+                  ? <img src={performance.posterUrl} alt={performance.pTitle} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : <div style={{ width: "100%", height: "100%", background: "var(--surface2)" }} />
+                }
+              </div>
 
-            <div className="eventInfo">
-              <p className="eventTitle">{performance.pTitle}</p>
-              <p className="eventLocation">{performance.pLocation}</p>
+              <div className="eventInfoHead">
+                <p className="eventTitle">{performance.pTitle}</p>
+                <p className="eventLocation">{performance.pLocation}</p>
+              </div>
+            </Link>
 
+            <div className="eventRoundsWrap">
               <div className="eventRounds">
                 {performance.rounds?.map((round) => (
                   <div key={round.roundId} className="eventRoundRow">
