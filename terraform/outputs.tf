@@ -47,3 +47,58 @@ output "nat_gateway_public_ips" {
   description = "NAT Gateway에 붙은 고정 IP 목록"
   value       = module.network.nat_gateway_public_ips
 }
+
+output "eks_cluster_role_arn" {
+  description = "EKS 클러스터(컨트롤 플레인) IAM 역할 ARN"
+  value       = module.eks.cluster_role_arn
+}
+
+output "eks_cluster_name" {
+  description = "EKS 클러스터 이름"
+  value       = module.eks.cluster_name
+}
+
+output "eks_cluster_endpoint" {
+  description = "EKS 클러스터 API 엔드포인트"
+  value       = module.eks.cluster_endpoint
+}
+
+output "eks_cluster_certificate_authority" {
+  description = "EKS 클러스터 CA 인증서 (kubeconfig 구성용)"
+  value       = module.eks.cluster_certificate_authority
+}
+
+output "eks_cluster_security_group_id" {
+  description = "EKS가 자동 생성한 클러스터 보안 그룹 ID"
+  value       = module.eks.cluster_security_group_id
+}
+
+output "eks_node_group_status" {
+  description = "노드그룹 상태"
+  value       = module.eks.node_group_status
+}
+
+output "eks_node_role_arn" {
+  description = "워커 노드 IAM 역할 ARN"
+  value       = module.eks.node_role_arn
+}
+
+output "ssm_bastion_instance_id" {
+  description = "SSM 세션 연결에 쓸 bastion 인스턴스 ID (aws ssm start-session --target <이값>)"
+  value       = aws_instance.ssm_bastion.id
+}
+
+output "rds_dev_endpoint" {
+  description = "dev RDS 엔드포인트 (DB_HOST)"
+  value       = module.data_dev.rds_endpoint
+}
+
+output "rds_dev_master_user_secret_arn" {
+  description = "dev RDS 마스터 비밀번호가 저장된 Secrets Manager ARN"
+  value       = module.data_dev.rds_master_user_secret_arn
+}
+
+output "redis_dev_endpoint" {
+  description = "dev ElastiCache Redis 엔드포인트 (REDIS_HOST)"
+  value       = module.data_dev.redis_endpoint
+}
