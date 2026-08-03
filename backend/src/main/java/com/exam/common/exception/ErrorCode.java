@@ -28,11 +28,17 @@ public enum ErrorCode {
     // Auth (UserController)
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A001", "아이디 또는 비밀번호가 올바르지 않습니다."),
     SUSPENDED_ACCOUNT(HttpStatus.FORBIDDEN, "A002", "정지된 계정입니다. 고객센터에 문의하세요."),
+    DUPLICATE_USER_NM(HttpStatus.CONFLICT, "A004", "이미 동일한 이름으로 가입된 계정이 있습니다."),
 
     // Auth - 소셜 로그인 (OAuthController)
     EMAIL_ALREADY_REGISTERED(HttpStatus.CONFLICT, "A003", "이미 해당 이메일로 가입된 계정이 있습니다. 아이디/비밀번호로 로그인해 주세요."),
     OAUTH_PROVIDER_ERROR(HttpStatus.BAD_GATEWAY, "A005", "소셜 로그인 처리 중 오류가 발생했습니다."),
     INVALID_OAUTH_STATE(HttpStatus.BAD_REQUEST, "A006", "잘못된 요청입니다. 다시 시도해 주세요."),
+
+    // Auth - 비밀번호 찾기 (UserController)
+    PASSWORD_RESET_TARGET_NOT_FOUND(HttpStatus.BAD_REQUEST, "A007", "아이디 또는 이메일이 일치하지 않습니다."),
+    SOCIAL_ACCOUNT_NO_PASSWORD(HttpStatus.BAD_REQUEST, "A008", "소셜 로그인 계정입니다. 소셜 로그인으로 이용해 주세요."),
+    INVALID_RESET_TOKEN(HttpStatus.BAD_REQUEST, "A009", "유효하지 않거나 만료된 링크입니다. 다시 요청해 주세요."),
 
     // Admin (AdminController)
     ADMIN_ONLY(HttpStatus.FORBIDDEN, "AD001", "관리자 권한이 필요합니다."),

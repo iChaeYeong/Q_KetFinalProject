@@ -16,4 +16,6 @@ public interface UserMapper {
     List<Map<String, Object>> findAllRoles();
     UserDTO findByEmail(@Param("email") String email);
     UserDTO findByProviderAndProviderUserId(@Param("provider") String provider, @Param("providerUserId") String providerUserId);
+    int countByUserNm(@Param("userNm") String userNm);
+    int updatePwd(@Param("userId") String userId, @Param("pwd") String pwd, @Param("uptId") String uptId, @Param("uptIp") String uptIp);
 }

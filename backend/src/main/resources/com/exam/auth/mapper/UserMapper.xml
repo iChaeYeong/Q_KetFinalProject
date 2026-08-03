@@ -78,4 +78,20 @@
         WHERE user_id = #{userId}
     </update>
 
+    <select id="countByUserNm" resultType="int" parameterType="String">
+        SELECT COUNT(*)
+        FROM USERS
+        WHERE user_nm = #{userNm}
+    </select>
+
+    <update id="updatePwd">
+        UPDATE USERS
+        <set>
+            pwd = #{pwd},
+            upt_id = #{uptId},
+            upt_ip = #{uptIp},
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+
 </mapper>

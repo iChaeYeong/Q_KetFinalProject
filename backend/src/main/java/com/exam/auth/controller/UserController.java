@@ -1,5 +1,6 @@
 package com.exam.auth.controller;
 
+import com.exam.auth.dto.ResetPasswordRequest;
 import com.exam.auth.dto.UserDTO;
 import com.exam.auth.service.UserService;
 import com.exam.common.exception.BusinessException;
@@ -72,27 +73,19 @@ public class UserController {
      *  param    :   UserDTO
      *  result   :   Map<String, Object> 완료 메세지
      ************************************/
+    // register()가 던지는 BusinessException(이메일/이름 중복 등)은 여기서 잡지 않고 그대로 올려보내서
+    // GlobalExceptionHandler가 처리하게 함 — 여기서 잡아버리면 항상 200 OK로 응답하게 되어
+    // 프론트의 "던져진 에러만 catch" 구조상 실패가 조용히 무시되고 성공한 것처럼 넘어가버림 (실제 겪었던 버그)
     @PostMapping("/signup")
     public Map<String, Object> register(@RequestBody UserDTO userDTO, HttpServletRequest request) {
-        Map<String, Object> result = new HashMap<>();
-        try {
-            // 회원가입은 로그인 전이라 행위자가 없음 → ins_id 는 고정값 'SYSTEM', ins_ip 는 실제 요청 IP
-            userDTO.setInsId("SYSTEM");
-            userDTO.setInsIp(WebUtil.getClientIp(request));
-            int n = userService.register(userDTO);
-            if (n > 0) {
-                result.put("success", true);
-                result.put("message", "회원가입이 완료되었습니다.");
-            } else {
-                result.put("success", false);
-                result.put("message", "회원가입에 실패했습니다.");
-            }
-        } catch (Exception e) {
-            result.put("success", false);
-            //result.put("message", "이미 사용 중인 아이디 또는 이메일입니다.");
-            result.put("message", e.getMessage());
+        // 회원가입은 로그인 전이라 행위자가 없음 → ins_id 는 고정값 'SYSTEM', ins_ip 는 실제 요청 IP
+        userDTO.setInsId("SYSTEM");
+        userDTO.setInsIp(WebUtil.getClientIp(request));
+        int n = userService.register(userDTO);
+        if (n <= 0) {
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "회원가입에 실패했습니다.");
         }
-        return result;
+        return Map.of("success", true, "message", "회원가입이 완료되었습니다.");
     }
 
     /***********************************
@@ -115,5 +108,33 @@ public class UserController {
             result.put("user", user);
         }
         return result;
+    }
+
+    /***********************************
+     *  URL      :  "/auth/password/code"
+     *  이름      :   비밀번호 재설정 인증코드 발송
+     *  기능      :   아이디+이메일이 일치하는 계정에 6자리 인증코드를 이메일로 발송
+     *  method   :   POST
+     *  param    :   UserDTO
+     *  result   :   Map<String, Object>
+     ************************************/
+    @PostMapping("/password/code")
+    public Map<String, Object> requestPasswordResetCode(@RequestBody UserDTO userDTO) {
+        userService.requestPasswordResetCode(userDTO.getUserId(), userDTO.getUserEmail());
+        return Map.of("success", true, "message", "비밀번호 재설정 링크를 이메일로 전송했습니다.");
+    }
+
+    /***********************************
+     *  URL      :  "/auth/password/reset"
+     *  이름      :   비밀번호 재설정
+     *  기능      :   이메일로 받은 링크의 토큰을 확인 후 새 비밀번호로 변경
+     *  method   :   POST
+     *  param    :   ResetPasswordRequest, HttpServletRequest
+     *  result   :   Map<String, Object>
+     ************************************/
+    @PostMapping("/password/reset")
+    public Map<String, Object> resetPassword(@RequestBody ResetPasswordRequest req, HttpServletRequest request) {
+        userService.resetPassword(req.getToken(), req.getNewPwd(), request);
+        return Map.of("success", true, "message", "비밀번호가 재설정되었습니다.");
     }
 }

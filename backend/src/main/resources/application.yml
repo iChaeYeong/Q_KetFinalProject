@@ -31,6 +31,19 @@ spring:
     store-type: redis
     timeout: 1800s
 
+  # 비밀번호 찾기 인증코드 발송용 (Gmail SMTP, 앱 비밀번호 필요)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 # Actuator
 management:
   endpoints:
