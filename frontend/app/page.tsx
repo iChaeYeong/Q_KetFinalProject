@@ -5,6 +5,7 @@
 import Link from "next/link";
 import BookButton from "@/components/BookButton";
 import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
 import PageHeader from "@/components/ui/PageHeader";
 import Pagination from "@/components/ui/Pagination";
 import StatusMessage from "@/components/ui/StatusMessage";
@@ -47,16 +48,20 @@ const STATUS_CLASS: Record<string, string> = {
 export default async function EventsPage({
   searchParams,
 }: {
-  searchParams: { page?: string; categoryId?: string };
+  searchParams: { page?: string; categoryId?: string; keyword?: string };
 }) {
   const page = Math.max(Number(searchParams.page) || 1, 1);
   const categoryId = searchParams.categoryId ? Number(searchParams.categoryId) : undefined;
-  const categoryQuery = categoryId != null ? `&categoryId=${categoryId}` : "";
+  const keyword = searchParams.keyword?.trim() || undefined;
 
-  //카테고리 목록 + events api 호출 (페이지 단위, 카테고리 필터 포함)
+  const eventsQuery = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE) });
+  if (categoryId != null) eventsQuery.set("categoryId", String(categoryId));
+  if (keyword) eventsQuery.set("keyword", keyword);
+
+  //카테고리 목록 + events api 호출 (페이지 단위, 카테고리 필터·검색어 포함)
   const [categoriesRes, res] = await Promise.all([
     fetch(`${BASE_URL}/api/events/categories`, { cache: "no-store" }),
-    fetch(`${BASE_URL}/api/events/paged?page=${page}&size=${PAGE_SIZE}${categoryQuery}`, {
+    fetch(`${BASE_URL}/api/events/paged?${eventsQuery.toString()}`, {
       cache: "no-store",
     }),
   ]);
@@ -67,16 +72,33 @@ export default async function EventsPage({
   const pageData = unwrap(await res.json()) as PageResponse<Performance>;
   const performances = pageData.content;
 
+  const keywordQuery = keyword ? `keyword=${encodeURIComponent(keyword)}` : "";
+
   return (
     <PageHeader title="공연 목록" subtitle="예매하고 싶은 공연을 선택하세요.">
+      <form method="GET" action="/" className="searchBar">
+        {categoryId != null && <input type="hidden" name="categoryId" value={categoryId} />}
+        <input
+          type="text"
+          name="keyword"
+          defaultValue={keyword ?? ""}
+          placeholder="공연 제목 또는 공연장으로 검색"
+          className="searchInput"
+        />
+        <Button type="submit" variant="primary">검색</Button>
+      </form>
+
       <div className="categoryFilterBar">
-        <Link href="/" className={`categoryChip${categoryId == null ? " categoryChipActive" : ""}`}>
+        <Link
+          href={keyword ? `/?${keywordQuery}` : "/"}
+          className={`categoryChip${categoryId == null ? " categoryChipActive" : ""}`}
+        >
           전체
         </Link>
         {categories.map((c) => (
           <Link
             key={c.categoryId}
-            href={`/?categoryId=${c.categoryId}`}
+            href={`/?categoryId=${c.categoryId}${keyword ? `&${keywordQuery}` : ""}`}
             className={`categoryChip${categoryId === c.categoryId ? " categoryChipActive" : ""}`}
           >
             {c.categoryNm}
@@ -132,7 +154,7 @@ export default async function EventsPage({
         page={pageData.page}
         totalPages={pageData.totalPages}
         basePath="/"
-        extraQuery={{ categoryId }}
+        extraQuery={{ categoryId, keyword }}
       />
     </PageHeader>
   );
