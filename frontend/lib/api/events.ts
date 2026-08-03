@@ -85,8 +85,8 @@ export async function getEventsPaged(
 }
 
 // ============================================================
-// GET /api/events/categories
-// 백엔드: PerformanceController.java → categories()
+// GET /api/categories
+// 백엔드: CategoryController.java → list()
 // 기능: 사용 중인 공연 카테고리 목록 조회 (홈 화면 카테고리 필터, 공연 등록/수정 폼의 카테고리 선택용)
 //
 // 사용 예시:
@@ -102,7 +102,7 @@ export async function getEventsPaged(
 //   ]
 // ============================================================
 export async function getCategories(): Promise<Category[]> {
-  return apiFetch<Category[]>("/events/categories");
+  return apiFetch<Category[]>("/categories");
 }
 
 // ============================================================

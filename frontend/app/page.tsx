@@ -4,8 +4,8 @@
 
 import Link from "next/link";
 import BookButton from "@/components/BookButton";
+import SearchBar from "@/components/SearchBar";
 import Badge from "@/components/ui/Badge";
-import Button from "@/components/ui/Button";
 import PageHeader from "@/components/ui/PageHeader";
 import Pagination from "@/components/ui/Pagination";
 import StatusMessage from "@/components/ui/StatusMessage";
@@ -60,12 +60,12 @@ export default async function EventsPage({
 
   //카테고리 목록 + events api 호출 (페이지 단위, 카테고리 필터·검색어 포함)
   const [categoriesRes, res] = await Promise.all([
-    fetch(`${BASE_URL}/api/events/categories`, { cache: "no-store" }),
+    fetch(`${BASE_URL}/api/categories`, { cache: "no-store" }),
     fetch(`${BASE_URL}/api/events/paged?${eventsQuery.toString()}`, {
       cache: "no-store",
     }),
   ]);
-  // GET /api/events/paged, /api/events/categories 는 GlobalResponseAdvice가
+  // GET /api/events/paged, /api/categories 는 GlobalResponseAdvice가
   // { success, message, data, timestamp }로 감싸서 내려주므로 apiFetch를 안 거치는 이 직접 fetch()에서도
   // unwrap으로 data만 꺼내야 함
   const categories = unwrap(await categoriesRes.json()) as Category[];
@@ -76,17 +76,7 @@ export default async function EventsPage({
 
   return (
     <PageHeader title="공연 목록" subtitle="예매하고 싶은 공연을 선택하세요.">
-      <form method="GET" action="/" className="searchBar">
-        {categoryId != null && <input type="hidden" name="categoryId" value={categoryId} />}
-        <input
-          type="text"
-          name="keyword"
-          defaultValue={keyword ?? ""}
-          placeholder="공연 제목 또는 공연장으로 검색"
-          className="searchInput"
-        />
-        <Button type="submit" variant="primary">검색</Button>
-      </form>
+      <SearchBar defaultValue={keyword} categoryId={categoryId} />
 
       <div className="categoryFilterBar">
         <Link

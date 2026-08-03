@@ -1,7 +1,5 @@
 package com.exam.reservation.controller;
 
-import com.exam.admin.dto.CategoryDTO;
-import com.exam.admin.service.CategoryService;
 import com.exam.common.dto.PageResponse;
 import com.exam.reservation.dto.PerformanceDTO;
 import com.exam.reservation.service.PerformanceService;
@@ -14,14 +12,9 @@ import java.util.List;
 public class PerformanceController {
 
     private final PerformanceService performanceService;
-    // 카테고리는 관리 대상 데이터라 admin 패키지에 있지만, 카테고리별 공연 조회는 비로그인 사용자도
-    // 접근하는 홈 화면 기능이라 로그인이 필요한 CommonController 대신 공개 컨트롤러인 여기서 노출한다
-    // (CommonController가 admin.service.MenuService를 가져다 쓰는 것과 같은 취지의 의도적인 도메인 간 의존)
-    private final CategoryService categoryService;
 
-    public PerformanceController(PerformanceService performanceService, CategoryService categoryService) {
+    public PerformanceController(PerformanceService performanceService) {
         this.performanceService = performanceService;
-        this.categoryService = categoryService;
     }
 
     /***********************************
@@ -54,19 +47,6 @@ public class PerformanceController {
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String keyword) {
         return performanceService.getPerformances(page, size, categoryId, keyword);
-    }
-
-    /***********************************
-     *  URL      :  "/events/categories"
-     *  이름      :   카테고리 목록 조회
-     *  기능      :   사용 중인 공연 카테고리 목록 조회 (홈 화면 카테고리 필터, 공연 등록/수정 폼의 카테고리 선택용)
-     *  method   :   GET
-     *  param    :
-     *  result   :   List<CategoryDTO>
-     ************************************/
-    @GetMapping("/categories")
-    public List<CategoryDTO> categories() {
-        return categoryService.getActiveCategories();
     }
 
 //    @GetMapping("/{performanceId}")
