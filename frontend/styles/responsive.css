@@ -8,6 +8,15 @@
   .mypageGrid { grid-template-columns: 1fr; }    /* 프로필 카드 + 예매 목록을 1열로 */
   .profileCard { position: static; }             /* sticky 해제 */
   .eventGrid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; } /* 카드 최소폭 축소 */
+  .detailTop { flex-direction: column; }         /* 공연 상세: 포스터 + 정보를 세로로 쌓음 */
+  .detailPoster { width: 160px; }                /* 세로 배치라 포스터도 조금 줄임 */
+  .calendarLayout { grid-template-columns: 1fr; gap: var(--space-4); } /* 달력 + 회차목록을 세로로 */
+  .calendarListPane {                            /* 세로 배치라 구분선을 세로선 → 가로선으로 */
+    padding-left: 0;
+    border-left: none;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+  }
 }
 
 /* 모바일(480px 이하) — 여백/폰트 크기를 더 줄임 */

@@ -52,7 +52,8 @@ CREATE TABLE IF NOT EXISTS CATEGORIES (
 
     PRIMARY KEY (category_id),
     UNIQUE KEY uk_categories_category_nm (category_nm)
-);
+    );
+
 
 CREATE TABLE IF NOT EXISTS PERFORMANCES (
     performance_id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -119,6 +120,31 @@ CREATE TABLE IF NOT EXISTS PERFORMANCE_ROUND (
     FOREIGN KEY (performance_id) REFERENCES PERFORMANCES (performance_id)
 );
 
+-- PERFORMANCE_CAST: 공연 캐스팅(출연 배우/배역) — PER02_DETAIL01(공연 상세 조회)
+-- 캐스팅표 엑셀 업로드는 이 테이블에 여러 행을 bulk insert 하는 API로 처리 (스키마는 동일)
+-- round_id: NULL 이면 전체 회차 공통 캐스팅, 값이 있으면 그 회차 전용(더블/트리플 캐스팅 대응)
+-- [주의] round_id 는 nullable FK — MyBatis update 문에서 <if test="roundId != null"> 가드를 쓰면 안 됨
+--   ("전체 회차 공통으로 되돌리기"가 정상 케이스라 부분요청과 구분이 안 됨. CLAUDE.md 참고)
+CREATE TABLE IF NOT EXISTS PERFORMANCE_CAST (
+    cast_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    performance_id BIGINT NOT NULL,
+    round_id BIGINT NULL COMMENT 'NULL이면 전체 회차 공통, 값이 있으면 해당 회차 전용',
+    actor_name VARCHAR(100) NOT NULL COMMENT '배우 이름',
+    casting_nm VARCHAR(100) NULL COMMENT '배역명 (ERD 기준 컬럼명)',
+    sort_order INT NOT NULL DEFAULT 0,
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (performance_id) REFERENCES PERFORMANCES (performance_id),
+    FOREIGN KEY (round_id) REFERENCES PERFORMANCE_ROUND (round_id),
+    KEY idx_cast_performance (performance_id, sort_order)
+);
+
 -- SEATS: round_id, status 제거. 공연장(venue) 소속으로 변경 (회차 구분 없이 좌석 자체는 공연장에 귀속)
 CREATE TABLE IF NOT EXISTS SEATS (
     seat_id BIGINT NOT NULL AUTO_INCREMENT,
@@ -166,7 +192,7 @@ CREATE TABLE IF NOT EXISTS RESERVATIONS (
     FOREIGN KEY (performance_id) REFERENCES PERFORMANCES (performance_id),
     UNIQUE KEY uk_reservations_seat_round (seat_id, round_id)
 );
--- Test용 (예매 이력 남기기)
+
 CREATE TABLE IF NOT EXISTS RESERVATION_HISTORY (
     history_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id VARCHAR(50) NOT NULL,
