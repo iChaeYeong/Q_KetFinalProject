@@ -48,7 +48,9 @@ export default async function PerformanceDetailPage({
   const actorCount = new Set(detail.casts.map((cast) => cast.actorName)).size;
 
   return (
-    <PageHeader title={detail.pTitle} subtitle={detail.pLocation}>
+    // 제목은 이 헤더에만 둔다 — 아래 포스터 옆에도 제목을 넣었더니 한 화면에 두 번 나왔음.
+    // 공연장은 헤더 부제에서 빼고 오른쪽 상세 정보(detailMeta)에만 둔다 (같은 이유로 중복이었음).
+    <PageHeader title={detail.pTitle}>
       <div className="detailTop">
         <div className="detailPoster">
           {detail.posterUrl
@@ -57,7 +59,6 @@ export default async function PerformanceDetailPage({
         </div>
 
         <div className="detailInfo">
-          <h2 className="detailTitle">{detail.pTitle}</h2>
           <dl className="detailMeta">
             <div className="detailMetaRow">
               <dt>공연장</dt>

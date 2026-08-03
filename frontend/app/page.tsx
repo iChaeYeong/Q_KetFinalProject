@@ -3,14 +3,12 @@
 // 데이터는 async/await 로 직접 fetch, 네비게이션은 <Link> 사용
 
 import Link from "next/link";
-import BookButton from "@/components/BookButton";
 import Badge from "@/components/ui/Badge";
 import PageHeader from "@/components/ui/PageHeader";
 import Pagination from "@/components/ui/Pagination";
 import StatusMessage from "@/components/ui/StatusMessage";
 import { BASE_URL, unwrap } from "@/lib/api/client";
 import { parseDateTime } from "@/lib/utils/datetime";
-import type { PageResponse } from "@/lib/data/types";
 import type { Category, PageResponse } from "@/lib/data/types";
 
 // 백엔드 PerformanceDTO 와 일치

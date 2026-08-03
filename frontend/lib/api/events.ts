@@ -1,11 +1,11 @@
 import { apiFetch } from "./client";
 import type {
+  Category,
   PageResponse,
   Performance,
   PerformanceDetail,
   PerformanceRound,
 } from "../data/types";
-import type { Category, PageResponse, Performance } from "../data/types";
 
 // ============================================================
 // GET /api/events
