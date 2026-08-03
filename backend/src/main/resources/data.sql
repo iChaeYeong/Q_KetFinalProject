@@ -90,20 +90,29 @@ INSERT INTO VENUE (venue_name) VALUES
   ('블루스퀘어 마스터카드홀'),
   ('인천 파라다이스시티 아레나');
 
+-- CATEGORIES (공연 카테고리 5개)
+INSERT INTO CATEGORIES (category_nm, sort_order) VALUES
+  ('콘서트', 1),
+  ('뮤지컬', 2),
+  ('팬미팅', 3),
+  ('스포츠', 4),
+  ('연극', 5);
+
 -- PERFORMANCES (공연 10개)
 -- ins_id/ins_ip: 실제 앱에서는 AdminController.createPerformance() 통해 등록한 관리자 정보가 들어감 →
 --   시드 데이터도 그 흐름을 흉내내서 admin01이 등록한 것으로 채움 (ins_ip는 로컬 테스트용 더미값)
-INSERT INTO PERFORMANCES (p_title, venue_id, poster_url, ins_id, ins_ip) VALUES
-  ('아이유 콘서트 - The Golden Hour',     1, 'https://example.com/poster/iu.jpg',         'admin01', '127.0.0.1'),
-  ('BTS World Tour - Yet To Come',       2, 'https://example.com/poster/bts.jpg',        'admin01', '127.0.0.1'),
-  ('BLACKPINK - Born Pink',              4, 'https://example.com/poster/blackpink.jpg',  'admin01', '127.0.0.1'),
-  ('임영웅 - 영웅시대',                   1, 'https://example.com/poster/lim.jpg',        'admin01', '127.0.0.1'),
-  ('뮤지컬 레미제라블',                   5, 'https://example.com/poster/miserable.jpg',  'admin01', '127.0.0.1'),
-  ('세븐틴 - Be The Sun',                2, 'https://example.com/poster/seventeen.jpg',  'admin01', '127.0.0.1'),
-  ('NewJeans 팬미팅 - Bunnies Camp',     3, 'https://example.com/poster/newjeans.jpg',   'admin01', '127.0.0.1'),
-  ('나훈아 - 테스형!',                    4, 'https://example.com/poster/na.jpg',         'admin01', '127.0.0.1'),
-  ('뮤지컬 오페라의 유령',                5, 'https://example.com/poster/phantom.jpg',    'admin01', '127.0.0.1'),
-  ('태연 - My Voice Concert',            6, 'https://example.com/poster/taeyeon.jpg',    'admin01', '127.0.0.1');
+-- category_id: 1=콘서트, 2=뮤지컬, 3=팬미팅, 4=스포츠, 5=연극
+INSERT INTO PERFORMANCES (p_title, venue_id, category_id, poster_url, ins_id, ins_ip) VALUES
+  ('아이유 콘서트 - The Golden Hour',     1, 1, 'https://example.com/poster/iu.jpg',         'admin01', '127.0.0.1'),
+  ('BTS World Tour - Yet To Come',       2, 1, 'https://example.com/poster/bts.jpg',        'admin01', '127.0.0.1'),
+  ('BLACKPINK - Born Pink',              4, 1, 'https://example.com/poster/blackpink.jpg',  'admin01', '127.0.0.1'),
+  ('임영웅 - 영웅시대',                   1, 1, 'https://example.com/poster/lim.jpg',        'admin01', '127.0.0.1'),
+  ('뮤지컬 레미제라블',                   5, 2, 'https://example.com/poster/miserable.jpg',  'admin01', '127.0.0.1'),
+  ('세븐틴 - Be The Sun',                2, 1, 'https://example.com/poster/seventeen.jpg',  'admin01', '127.0.0.1'),
+  ('NewJeans 팬미팅 - Bunnies Camp',     3, 3, 'https://example.com/poster/newjeans.jpg',   'admin01', '127.0.0.1'),
+  ('나훈아 - 테스형!',                    4, 1, 'https://example.com/poster/na.jpg',         'admin01', '127.0.0.1'),
+  ('뮤지컬 오페라의 유령',                5, 2, 'https://example.com/poster/phantom.jpg',    'admin01', '127.0.0.1'),
+  ('태연 - My Voice Concert',            6, 1, 'https://example.com/poster/taeyeon.jpg',    'admin01', '127.0.0.1');
 
 -- USERS (password: test1234)
 INSERT INTO USERS (user_id, user_nm, pwd, user_email, role_id, user_status) VALUES

@@ -7,8 +7,8 @@ import com.exam.reservation.dto.RoundDTO;
 import java.util.List;
 
 public interface PerformanceService {
-    List<PerformanceDTO> getAllPerformances();
-    PageResponse<PerformanceDTO> getPerformances(int page, int size);
+    List<PerformanceDTO> getAllPerformances(Long categoryId);
+    PageResponse<PerformanceDTO> getPerformances(int page, int size, Long categoryId);
 
     PerformanceDTO getPerformanceDetail(Long performanceId);
     List<RoundDTO> getRoundsByMonth(Long performanceId, String month);

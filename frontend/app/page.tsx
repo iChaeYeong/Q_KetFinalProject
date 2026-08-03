@@ -3,6 +3,7 @@
 // 데이터는 async/await 로 직접 fetch, 네비게이션은 <Link> 사용
 
 import Link from "next/link";
+import BookButton from "@/components/BookButton";
 import Badge from "@/components/ui/Badge";
 import PageHeader from "@/components/ui/PageHeader";
 import Pagination from "@/components/ui/Pagination";
@@ -10,6 +11,7 @@ import StatusMessage from "@/components/ui/StatusMessage";
 import { BASE_URL, unwrap } from "@/lib/api/client";
 import { parseDateTime } from "@/lib/utils/datetime";
 import type { PageResponse } from "@/lib/data/types";
+import type { Category, PageResponse } from "@/lib/data/types";
 
 // 백엔드 PerformanceDTO 와 일치
 type Round = {
@@ -23,6 +25,8 @@ type Performance = {
   pTitle: string;
   pLocation: string;
   posterUrl: string;
+  categoryId: number;
+  categoryNm: string;
   rounds: Round[];
 };
 
@@ -75,22 +79,43 @@ function summarizeRounds(rounds: Round[]): { schedule: string; status: CardStatu
 export default async function EventsPage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: { page?: string; categoryId?: string };
 }) {
   const page = Math.max(Number(searchParams.page) || 1, 1);
+  const categoryId = searchParams.categoryId ? Number(searchParams.categoryId) : undefined;
+  const categoryQuery = categoryId != null ? `&categoryId=${categoryId}` : "";
 
-  //events api 호출 (페이지 단위)
-  const res = await fetch(`${BASE_URL}/api/events/paged?page=${page}&size=${PAGE_SIZE}`, {
-    cache: "no-store",
-  });
-  // GET /api/events/paged는 GlobalResponseAdvice가 { success, message, data, timestamp }로 감싸서 내려주므로
-  // apiFetch를 안 거치는 이 직접 fetch()에서도 unwrap으로 data만 꺼내야 함
+  //카테고리 목록 + events api 호출 (페이지 단위, 카테고리 필터 포함)
+  const [categoriesRes, res] = await Promise.all([
+    fetch(`${BASE_URL}/api/events/categories`, { cache: "no-store" }),
+    fetch(`${BASE_URL}/api/events/paged?page=${page}&size=${PAGE_SIZE}${categoryQuery}`, {
+      cache: "no-store",
+    }),
+  ]);
+  // GET /api/events/paged, /api/events/categories 는 GlobalResponseAdvice가
+  // { success, message, data, timestamp }로 감싸서 내려주므로 apiFetch를 안 거치는 이 직접 fetch()에서도
+  // unwrap으로 data만 꺼내야 함
+  const categories = unwrap(await categoriesRes.json()) as Category[];
   const pageData = unwrap(await res.json()) as PageResponse<Performance>;
   const performances = pageData.content;
-  console.log(JSON.stringify(pageData, null, 2));
 
   return (
     <PageHeader title="공연 목록" subtitle="예매하고 싶은 공연을 선택하세요.">
+      <div className="categoryFilterBar">
+        <Link href="/" className={`categoryChip${categoryId == null ? " categoryChipActive" : ""}`}>
+          전체
+        </Link>
+        {categories.map((c) => (
+          <Link
+            key={c.categoryId}
+            href={`/?categoryId=${c.categoryId}`}
+            className={`categoryChip${categoryId === c.categoryId ? " categoryChipActive" : ""}`}
+          >
+            {c.categoryNm}
+          </Link>
+        ))}
+      </div>
+
       {performances.length === 0 && (
         <StatusMessage variant="loading">등록된 공연이 없습니다.</StatusMessage>
       )}
@@ -134,7 +159,12 @@ export default async function EventsPage({
         })}
       </div>
 
-      <Pagination page={pageData.page} totalPages={pageData.totalPages} basePath="/" />
+      <Pagination
+        page={pageData.page}
+        totalPages={pageData.totalPages}
+        basePath="/"
+        extraQuery={{ categoryId }}
+      />
     </PageHeader>
   );
 }

@@ -1,5 +1,7 @@
 package com.exam.reservation.controller;
 
+import com.exam.admin.dto.CategoryDTO;
+import com.exam.admin.service.CategoryService;
 import com.exam.common.dto.PageResponse;
 import com.exam.reservation.dto.PerformanceDTO;
 import com.exam.reservation.dto.RoundDTO;
@@ -14,37 +16,56 @@ import java.util.List;
 public class PerformanceController {
 
     private final PerformanceService performanceService;
+    // 카테고리는 관리 대상 데이터라 admin 패키지에 있지만, 카테고리별 공연 조회는 비로그인 사용자도
+    // 접근하는 홈 화면 기능이라 로그인이 필요한 CommonController 대신 공개 컨트롤러인 여기서 노출한다
+    // (CommonController가 admin.service.MenuService를 가져다 쓰는 것과 같은 취지의 의도적인 도메인 간 의존)
+    private final CategoryService categoryService;
 
-    public PerformanceController(PerformanceService performanceService) {
+    public PerformanceController(PerformanceService performanceService, CategoryService categoryService) {
         this.performanceService = performanceService;
+        this.categoryService = categoryService;
     }
 
     /***********************************
      *  URL      :  "/events"
      *  이름      :   list
-     *  기능      :   공연조회
+     *  기능      :   공연조회 (categoryId로 카테고리 필터링 가능)
      *  method   :   GET
-     *  param    :
+     *  param    :   categoryId(선택)
      *  result   :   List<PerformanceDTO>
      ************************************/
     @GetMapping
-    public List<PerformanceDTO> list() {
-        return performanceService.getAllPerformances();
+    public List<PerformanceDTO> list(@RequestParam(required = false) Long categoryId) {
+        return performanceService.getAllPerformances(categoryId);
     }
 
     /***********************************
      *  URL      :  "/events/paged"
      *  이름      :   pagedList
-     *  기능      :   공연 목록 페이지 단위 조회 (메인 공연 목록 화면 페이지네이션용)
+     *  기능      :   공연 목록 페이지 단위 조회 (메인 공연 목록 화면 페이지네이션용), categoryId로 카테고리 필터링 가능
      *  method   :   GET
-     *  param    :   page(기본값 1), size(기본값 8)
+     *  param    :   page(기본값 1), size(기본값 8), categoryId(선택)
      *  result   :   PageResponse<PerformanceDTO>
      ************************************/
     @GetMapping("/paged")
     public PageResponse<PerformanceDTO> pagedList(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "8") int size) {
-        return performanceService.getPerformances(page, size);
+            @RequestParam(defaultValue = "8") int size,
+            @RequestParam(required = false) Long categoryId) {
+        return performanceService.getPerformances(page, size, categoryId);
+    }
+
+    /***********************************
+     *  URL      :  "/events/categories"
+     *  이름      :   카테고리 목록 조회
+     *  기능      :   사용 중인 공연 카테고리 목록 조회 (홈 화면 카테고리 필터, 공연 등록/수정 폼의 카테고리 선택용)
+     *  method   :   GET
+     *  param    :
+     *  result   :   List<CategoryDTO>
+     ************************************/
+    @GetMapping("/categories")
+    public List<CategoryDTO> categories() {
+        return categoryService.getActiveCategories();
     }
 
     /***********************************

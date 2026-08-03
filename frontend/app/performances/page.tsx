@@ -12,8 +12,8 @@ import {
   deleteRound,
 } from "@/lib/api/manage";
 import { uploadImage } from "@/lib/api/common";
-import { getEvents } from "@/lib/api/events";
-import type { Performance, PerformanceRound } from "@/lib/data/types";
+import { getEvents, getCategories } from "@/lib/api/events";
+import type { Category, Performance, PerformanceRound } from "@/lib/data/types";
 import Button from "@/components/ui/Button";
 import PageHeader from "@/components/ui/PageHeader";
 import FormField from "@/components/ui/FormField";
@@ -39,11 +39,13 @@ export default function AdminPerformancesPage() {
   const { userSession, isLoading } = useAuth();
 
   const [performances, setPerformances] = useState<Performance[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   // 수정 모달
   const [editingPerf, setEditingPerf] = useState<Performance | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  const [editCategoryId, setEditCategoryId] = useState(0);
   const [editPosterUrl, setEditPosterUrl] = useState("");
   const [editPreview, setEditPreview] = useState("");
   const [editUploading, setEditUploading] = useState(false);
@@ -65,14 +67,18 @@ export default function AdminPerformancesPage() {
       router.replace("/");
       return;
     }
-    getEvents()
-      .then(perfs => setPerformances(perfs))
+    Promise.all([getEvents(), getCategories()])
+      .then(([perfs, cats]) => {
+        setPerformances(perfs);
+        setCategories(cats);
+      })
       .finally(() => setLoading(false));
   }, [isLoading, userSession]);
 
   const openEdit = (perf: Performance) => {
     setEditingPerf(perf);
     setEditTitle(perf.pTitle);
+    setEditCategoryId(perf.categoryId);
     setEditPosterUrl(perf.posterUrl ?? "");
     setEditPreview(perf.posterUrl ?? "");
     setEditMsg(null);
@@ -114,6 +120,7 @@ export default function AdminPerformancesPage() {
       await updatePerformance(editingPerf.performanceId, {
         pTitle: editTitle,
         posterUrl: editPosterUrl,
+        categoryId: editCategoryId,
         rounds: unlockedRounds.map(r => ({
           roundId: r.roundId,
           roundTime: toMysqlDatetime(roundEdits[r.roundId]?.roundTime ?? toInputDatetime(r.roundTime)),
@@ -121,9 +128,16 @@ export default function AdminPerformancesPage() {
         })),
       });
 
+      const newCategory = categories.find(c => c.categoryId === editCategoryId);
       setPerformances(prev =>
         prev.map(p => p.performanceId === editingPerf.performanceId
-          ? { ...p, pTitle: editTitle, posterUrl: editPosterUrl }
+          ? {
+              ...p,
+              pTitle: editTitle,
+              posterUrl: editPosterUrl,
+              categoryId: editCategoryId,
+              categoryNm: newCategory?.categoryNm ?? p.categoryNm,
+            }
           : p)
       );
       setEditMsg({ text: "저장되었습니다.", ok: true });
@@ -214,7 +228,7 @@ export default function AdminPerformancesPage() {
               </div>
               <div className="adminPerfInfo">
                 <p className="adminPerfTitle">{perf.pTitle}</p>
-                <p className="adminPerfVenue">{perf.pLocation}</p>
+                <p className="adminPerfVenue">{perf.pLocation} · {perf.categoryNm}</p>
                 <p className="adminPerfRounds">{perf.rounds?.length ?? 0}회차</p>
                 {(perf.rounds ?? []).map((r) => {
                   const roundLocked = new Date(r.openTime) <= new Date();
@@ -260,6 +274,19 @@ export default function AdminPerformancesPage() {
                   value={editTitle}
                   onChange={e => setEditTitle(e.target.value)}
                 />
+              </FormField>
+
+              {/* 카테고리 */}
+              <FormField variant="admin" label="카테고리" required>
+                <select
+                  className="adminInput"
+                  value={editCategoryId}
+                  onChange={e => setEditCategoryId(Number(e.target.value))}
+                >
+                  {categories.map(c => (
+                    <option key={c.categoryId} value={c.categoryId}>{c.categoryNm}</option>
+                  ))}
+                </select>
               </FormField>
 
               {/* 포스터 */}
