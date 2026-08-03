@@ -221,14 +221,78 @@
   background: var(--accent);
 }
 
+/* 회차 영역 2단 구성 — 왼쪽 달력 / 오른쪽 회차 목록.
+   minmax(0, 1fr)로 두는 이유: 기본값 auto 는 내용이 길면 열이 컨테이너 밖으로 밀린다 */
+/* align-items 를 기본값(stretch)으로 두는 게 중요하다 — start 로 두면 두 칸이 각자 내용 높이만큼만
+   차지해서, 회차가 1건일 때와 6건일 때 오른쪽 칸 높이가 널뛴다.
+   stretch 면 두 칸이 같은 높이가 되어 날짜를 골라도 영역 크기가 그대로 유지된다 */
+.calendarLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+}
+
+.calendarPane { min-width: 0; }
+
+/* 목록 쪽은 세로 구분선으로 달력과 나눔 (좁은 화면에서는 가로선으로 바뀜 — responsive.css) */
+.calendarListPane {
+  min-width: 0;
+  padding-left: 24px;
+  border-left: 1px solid var(--border);
+}
+
 .calendarListHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin: var(--space-4) 0 var(--space-2);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
+  margin-bottom: var(--space-3);
+  min-height: 28px; /* "전체 보기" 버튼이 나타났다 사라져도 목록이 위아래로 안 흔들리게 */
+}
+
+/* 헤더 오른쪽 — "전체 보기" + 페이지 화살표 */
+.calendarListActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.listPager {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.listPagerBtn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: var(--font-md);
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.listPagerBtn:hover:not(:disabled) {
+  background: var(--surface2);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.listPagerBtn:disabled { color: var(--text-3); cursor: default; }
+
+.listPagerLabel {
+  font-size: var(--font-sm);
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums; /* 1/2 → 2/2 로 바뀔 때 폭이 흔들리지 않게 */
+  min-width: 28px;
+  text-align: center;
 }
 
 .calendarListLabel {

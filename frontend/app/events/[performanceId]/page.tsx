@@ -1,24 +1,31 @@
-// Server Component — 목 데이터를 그대로 읽어 렌더링만 함 ("use client" 없음)
-// 탭 전환처럼 상태가 필요한 부분은 components/PerformanceTabs.tsx(Client Component)로 분리했다.
-// 8단계에서 실제 API를 붙일 때 async 함수로 바꾸고 MOCK_… 자리를 getEvent() 호출로 교체한다.
+// Server Component — 데이터 조회 후 렌더링만 함 ("use client" 없음)
+// 탭 전환/달력처럼 상태가 필요한 부분은 Client Component로 분리했다
+// (components/PerformanceTabs.tsx, components/RoundCalendar.tsx).
 
 import { notFound } from "next/navigation";
 import PageHeader from "@/components/ui/PageHeader";
 import PerformanceTabs, { type RoundCastGroup } from "@/components/PerformanceTabs";
 import RoundCalendar from "@/components/RoundCalendar";
-import { MOCK_PERFORMANCE_DETAIL } from "@/lib/data/mock/performanceDetail";
+import { BASE_URL, unwrap } from "@/lib/api/client";
 import { formatRoundTime } from "@/lib/utils/datetime";
+import type { PerformanceDetail } from "@/lib/data/types";
 
-export default function PerformanceDetailPage({
+export default async function PerformanceDetailPage({
   params,
 }: {
   params: { performanceId: string };
 }) {
   const performanceId = Number(params.performanceId);
-  const detail = MOCK_PERFORMANCE_DETAIL[performanceId];
 
-  // 없는 공연이면 404 (notFound()의 반환 타입이 never라 아래에서 detail이 자동으로 좁혀짐)
-  if (!detail) notFound();
+  // lib/api/events.ts 의 getEvent() 는 apiFetch 기반이라 상대경로("/api/...")를 쓴다.
+  // 서버 컴포넌트에서는 상대경로 fetch가 안 되므로 여기서는 절대경로로 직접 호출하고
+  // unwrap 으로 { success, data, ... } 래퍼를 벗긴다 (app/page.tsx 와 같은 방식).
+  const res = await fetch(`${BASE_URL}/api/events/${performanceId}`, { cache: "no-store" });
+
+  // 없는 공연이면 백엔드가 400(C001)을 준다 → 화면에서는 404로 처리
+  if (!res.ok) notFound();
+
+  const detail = unwrap(await res.json()) as PerformanceDetail;
 
   // 전체 회차 공통 캐스팅
   const commonCasts = detail.casts
@@ -72,8 +79,13 @@ export default function PerformanceDetailPage({
         </div>
       </div>
 
-      {/* 회차 — 달력에서 날짜를 고르면 아래 목록이 그 날짜만 남는다 */}
-      <RoundCalendar rounds={detail.rounds} title={detail.pTitle} />
+      {/* 회차 — 달력에서 날짜를 고르면 아래 목록이 그 날짜만 남는다.
+          달을 옮기면 RoundCalendar 가 /calendar?month= 로 그 달 회차를 다시 받아온다 */}
+      <RoundCalendar
+        performanceId={detail.performanceId}
+        rounds={detail.rounds}
+        title={detail.pTitle}
+      />
 
       {/* 출연진 / 감상평 탭 */}
       <PerformanceTabs commonCasts={commonCasts} roundCasts={roundCasts} />

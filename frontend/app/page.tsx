@@ -3,12 +3,12 @@
 // 데이터는 async/await 로 직접 fetch, 네비게이션은 <Link> 사용
 
 import Link from "next/link";
-import BookButton from "@/components/BookButton";
 import Badge from "@/components/ui/Badge";
 import PageHeader from "@/components/ui/PageHeader";
 import Pagination from "@/components/ui/Pagination";
 import StatusMessage from "@/components/ui/StatusMessage";
 import { BASE_URL, unwrap } from "@/lib/api/client";
+import { parseDateTime } from "@/lib/utils/datetime";
 import type { PageResponse } from "@/lib/data/types";
 
 // 백엔드 PerformanceDTO 와 일치
@@ -29,17 +29,47 @@ type Performance = {
 // 한 페이지에 보여줄 공연 개수 — 백엔드 PerformanceController.pagedList()의 size 기본값(8)과 맞춤
 const PAGE_SIZE = 8;
 
-const STATUS_LABEL: Record<string, string> = {
-  OPEN: "예매 가능",
-  CLOSED: "예매 종료",
-  SOLDOUT: "매진",
-};
+// 카드에 붙일 상태 뱃지 3가지 (Badge 컴포넌트의 variant 와 표시 문구)
+const CARD_STATUS = {
+  OPEN: { variant: "open", label: "예매 가능" },
+  BEFORE: { variant: "closed", label: "예매 전" },
+  SOLDOUT: { variant: "soldout", label: "매진" },
+} as const;
 
-const STATUS_CLASS: Record<string, string> = {
-  OPEN: "badge badgeOpen",
-  CLOSED: "badge badgeClosed",
-  SOLDOUT: "badge badgeSoldout",
-};
+type CardStatus = keyof typeof CARD_STATUS;
+
+// 카드용 회차 요약.
+// 공연마다 회차 수가 2~12회로 제각각이라 목록에 전부 나열하면 카드 높이가 들쭉날쭉해지고
+// (그리드 행 높이가 제일 긴 카드에 맞춰져 옆 카드에 빈 공간이 생김),
+// 회차마다 붙던 BookButton 이 각각 1초 타이머를 돌려서 낭비도 컸다.
+// → 목록은 "기간 + 회차 수 + 상태" 한 줄로 줄이고, 회차 선택·예매는 상세 화면의 달력에서 한다.
+function summarizeRounds(rounds: Round[]): { schedule: string; status: CardStatus } {
+  if (rounds.length === 0) return { schedule: "회차 미정", status: "BEFORE" };
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const sorted = [...rounds].map((r) => r.roundTime).sort();
+  const first = parseDateTime(sorted[0]);
+  const last = parseDateTime(sorted[sorted.length - 1]);
+
+  const start = `${first.year}.${pad(first.month)}.${pad(first.day)}`;
+  const schedule =
+    sorted.length === 1
+      ? start
+      : first.year === last.year
+        ? `${start} ~ ${pad(last.month)}.${pad(last.day)}`
+        : `${start} ~ ${last.year}.${pad(last.month)}.${pad(last.day)}`;
+
+  // 오픈 시각 비교는 서버에서만 계산된다(Server Component라 클라이언트 재렌더가 없어
+  // 하이드레이션 불일치 걱정은 없음). 시드의 open_time 은 전부 과거라 경계값 이슈도 없다.
+  const now = Date.now();
+  const status: CardStatus = rounds.every((r) => r.roundStatus === "SOLDOUT")
+    ? "SOLDOUT"
+    : rounds.some((r) => new Date(r.openTime.replace(" ", "T")).getTime() <= now)
+      ? "OPEN"
+      : "BEFORE";
+
+  return { schedule, status };
+}
 
 
 export default async function EventsPage({
@@ -66,14 +96,17 @@ export default async function EventsPage({
       )}
 
       <div className="eventGrid">
-        {performances.map((performance) => (
-          <div key={performance.performanceId} className="eventCard">
-            {/* 포스터 + 제목만 상세 페이지 링크로 감싼다.
-                아래 회차 영역에는 예매 버튼(<button>)이 있어서 같이 감싸면 안 됨
-                — <a> 안의 <button>은 유효하지 않은 마크업이고 클릭도 서로 충돌한다 */}
+        {performances.map((performance) => {
+          const { schedule, status } = summarizeRounds(performance.rounds ?? []);
+          const badge = CARD_STATUS[status];
+
+          return (
+            // 카드 안에 버튼이 없어졌으므로 카드 전체를 링크로 감쌀 수 있다
+            // (예전엔 예매 버튼 때문에 <a> 안에 <button>이 들어가는 문제로 포스터+제목만 감쌌음)
             <Link
+              key={performance.performanceId}
               href={`/events/${performance.performanceId}`}
-              className="eventCardLink"
+              className="eventCard eventCardLink"
               aria-label={`${performance.pTitle} 상세 보기`}
             >
               <div className="eventPoster">
@@ -87,33 +120,18 @@ export default async function EventsPage({
               <div className="eventInfoHead">
                 <p className="eventTitle">{performance.pTitle}</p>
                 <p className="eventLocation">{performance.pLocation}</p>
+
+                <div className="eventSummary">
+                  <span className="eventSchedule">
+                    {schedule}
+                    {performance.rounds?.length > 0 && ` · 총 ${performance.rounds.length}회차`}
+                  </span>
+                  <Badge variant={badge.variant}>{badge.label}</Badge>
+                </div>
               </div>
             </Link>
-
-            <div className="eventRoundsWrap">
-              <div className="eventRounds">
-                {performance.rounds?.map((round) => (
-                  <div key={round.roundId} className="eventRoundRow">
-                    <span className="eventRoundTime">
-                      {round.roundTime.replace("T", " ")}
-                    </span>
-
-                    {round.roundStatus !== "SOLDOUT" ? (
-                      <BookButton
-                        roundId={round.roundId}
-                        roundTime={round.roundTime}
-                        openTime={round.openTime}
-                        title={performance.pTitle}
-                      />
-                    ) : (
-                      <Badge variant="soldout">매진</Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <Pagination page={pageData.page} totalPages={pageData.totalPages} basePath="/" />

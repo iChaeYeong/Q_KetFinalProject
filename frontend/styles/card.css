@@ -68,15 +68,10 @@
   text-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
-/* 카드 아래쪽 정보 영역을 링크 부분(제목/장소)과 회차 부분으로 나눔.
-   위아래 여백 합은 기존 .eventInfo(padding 16px)와 동일 */
+/* 카드 아래쪽 정보 영역 (제목 + 장소 + 회차 요약) */
 .eventInfoHead {
-  padding: 16px 16px 0;
+  padding: 16px;
   border-top: 1px solid var(--border);
-}
-
-.eventRoundsWrap {
-  padding: 0 16px 16px;
 }
 
 .eventTitle {
@@ -97,24 +92,25 @@
   margin-bottom: 12px;
 }
 
-/* 카드 안에 회차(날짜/시간)를 여러 줄로 나열 */
-.eventRounds {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.eventRoundRow {
+/* 회차 요약 한 줄 — "2026.08.06 ~ 09.04 · 총 12회차" + 상태 뱃지.
+   회차를 전부 나열하던 방식은 카드 높이가 공연마다 달라져서 요약으로 바꿨다
+   (회차 선택/예매는 상세 화면의 달력에서 함) */
+.eventSummary {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-2);
+  margin-top: var(--space-2-5);
 }
 
-.eventRoundTime {
+.eventSchedule {
   font-size: 12px;
   color: var(--text-2);
-  font-variant-numeric: tabular-nums; /* 숫자 폭을 고정해 시간 여러 줄이 깔끔하게 정렬 */
+  font-variant-numeric: tabular-nums; /* 숫자 폭 고정 — 카드마다 날짜 자리가 맞도록 */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── PAGINATION ── */

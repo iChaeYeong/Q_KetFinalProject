@@ -1,5 +1,10 @@
 import { apiFetch } from "./client";
-import type { PageResponse, Performance } from "../data/types";
+import type {
+  PageResponse,
+  Performance,
+  PerformanceDetail,
+  PerformanceRound,
+} from "../data/types";
 
 // ============================================================
 // GET /api/events
@@ -68,16 +73,64 @@ export async function getEventsPaged(page = 1, size = 8): Promise<PageResponse<P
 }
 
 // ============================================================
-// GET /api/events/{eventId}
-// 기능: 공연 상세 조회 (제목, 장소, 포스터, 회차 목록)
+// GET /api/events/{performanceId}
+// 백엔드: PerformanceController.java → detail()
+// 기능: 공연 상세 조회 (제목, 장소, 포스터, 회차 목록 + 캐스팅) — PER02_DETAIL01
 //
-// ⚠️ 주의: 백엔드 PerformanceController.java 에 이 엔드포인트(/events/{performanceId})가
-//    아직 주석 처리되어 있어서 지금 호출하면 404가 납니다. 실제로 쓰는 곳도 아직 없음.
-//    쓰려면 먼저 백엔드에서 해당 @GetMapping 주석을 풀어야 함.
+// 사용 예시:
+//   import { getEvent } from "@/lib/api/events";
 //
-// 사용 예시 (백엔드 준비되면):
-//   const perf = await getEvent(performanceId);
+//   const detail = await getEvent(performanceId);
+//   const commonCasts = detail.casts.filter((c) => c.roundId === null);
+//
+// 요청: performanceId (path)
+// 응답 JSON (PerformanceDetail — rounds 에 이어 casts 배열이 추가로 옴):
+//   {
+//     "performanceId": 5,
+//     "pTitle": "뮤지컬 레미제라블",
+//     "pLocation": "블루스퀘어 마스터카드홀",
+//     "posterUrl": "https://.../poster.jpg",
+//     "rounds": [
+//       { "roundId": 10, "performanceId": 5, "roundTime": "2026-08-20 19:30:00",
+//         "openTime": "2025-01-01 10:00:00", "roundStatus": "OPEN" }
+//     ],
+//     "casts": [
+//       { "castId": 1, "performanceId": 5, "roundId": 10,
+//         "actorName": "김민석", "castingNm": "장발장", "sortOrder": 0 },
+//       { "castId": 7, "performanceId": 5, "roundId": null,
+//         "actorName": "한지우", "castingNm": "판틴", "sortOrder": 2 }
+//     ]
+//   }
+//   · casts[].roundId 가 null 이면 전체 회차 공통 캐스팅, 값이 있으면 그 회차 전용
+//   · casts[].castingNm 이 null 이면 배역 개념이 없는 공연(콘서트 등)
+//   · 없는 공연이면 400 (code: C001, "존재하지 않는 공연입니다.")
 // ============================================================
-export async function getEvent(eventId: number): Promise<Performance> {
-  return apiFetch<Performance>(`/events/${eventId}`);
+export async function getEvent(performanceId: number): Promise<PerformanceDetail> {
+  return apiFetch<PerformanceDetail>(`/events/${performanceId}`);
+}
+
+// ============================================================
+// GET /api/events/{performanceId}/calendar
+// 백엔드: PerformanceController.java → calendar()
+// 기능: 달력 화면에서 보고 있는 "그 달"의 회차만 조회 — PER02_DETAIL02
+//
+// 사용 예시:
+//   import { getEventCalendar } from "@/lib/api/events";
+//
+//   // 달 이동 시에만 호출 (날짜 클릭 필터는 받아온 목록으로 클라이언트에서 처리)
+//   const rounds = await getEventCalendar(performanceId, "2026-09");
+//
+// 요청: performanceId (path), month("YYYY-MM", query) — 생략하면 백엔드가 이번 달로 처리
+// 응답 JSON (PerformanceRound[]):
+//   [
+//     { "roundId": 20, "performanceId": 5, "roundTime": "2026-09-03 19:30:00",
+//       "openTime": "2025-01-01 10:00:00", "roundStatus": "OPEN" }
+//   ]
+//   · 그 달에 회차가 없으면 빈 배열
+// ============================================================
+export async function getEventCalendar(
+  performanceId: number,
+  month: string
+): Promise<PerformanceRound[]> {
+  return apiFetch<PerformanceRound[]>(`/events/${performanceId}/calendar?month=${month}`);
 }
