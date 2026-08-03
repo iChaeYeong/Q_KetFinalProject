@@ -113,6 +113,30 @@
   white-space: nowrap;
 }
 
+/* ── SEARCH BAR ── */
+/* 공연 검색창 — app/page.tsx (메인 공연 목록, 제목/공연장 검색) */
+.searchBar {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.searchInput {
+  flex: 1;
+  height: 40px;
+  padding: 0 var(--space-3);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--font-md);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 /* ── CATEGORY FILTER ── */
 /* 카테고리 필터 칩 — app/page.tsx (메인 공연 목록, 카테고리 선택) */
 .categoryFilterBar {

@@ -3,6 +3,7 @@
 // 데이터는 async/await 로 직접 fetch, 네비게이션은 <Link> 사용
 
 import Link from "next/link";
+import SearchBar from "@/components/SearchBar";
 import Badge from "@/components/ui/Badge";
 import PageHeader from "@/components/ui/PageHeader";
 import Pagination from "@/components/ui/Pagination";
@@ -77,36 +78,47 @@ function summarizeRounds(rounds: Round[]): { schedule: string; status: CardStatu
 export default async function EventsPage({
   searchParams,
 }: {
-  searchParams: { page?: string; categoryId?: string };
+  searchParams: { page?: string; categoryId?: string; keyword?: string };
 }) {
   const page = Math.max(Number(searchParams.page) || 1, 1);
   const categoryId = searchParams.categoryId ? Number(searchParams.categoryId) : undefined;
-  const categoryQuery = categoryId != null ? `&categoryId=${categoryId}` : "";
+  const keyword = searchParams.keyword?.trim() || undefined;
 
-  //카테고리 목록 + events api 호출 (페이지 단위, 카테고리 필터 포함)
+  const eventsQuery = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE) });
+  if (categoryId != null) eventsQuery.set("categoryId", String(categoryId));
+  if (keyword) eventsQuery.set("keyword", keyword);
+
+  //카테고리 목록 + events api 호출 (페이지 단위, 카테고리 필터·검색어 포함)
   const [categoriesRes, res] = await Promise.all([
-    fetch(`${BASE_URL}/api/events/categories`, { cache: "no-store" }),
-    fetch(`${BASE_URL}/api/events/paged?page=${page}&size=${PAGE_SIZE}${categoryQuery}`, {
+    fetch(`${BASE_URL}/api/categories`, { cache: "no-store" }),
+    fetch(`${BASE_URL}/api/events/paged?${eventsQuery.toString()}`, {
       cache: "no-store",
     }),
   ]);
-  // GET /api/events/paged, /api/events/categories 는 GlobalResponseAdvice가
+  // GET /api/events/paged, /api/categories 는 GlobalResponseAdvice가
   // { success, message, data, timestamp }로 감싸서 내려주므로 apiFetch를 안 거치는 이 직접 fetch()에서도
   // unwrap으로 data만 꺼내야 함
   const categories = unwrap(await categoriesRes.json()) as Category[];
   const pageData = unwrap(await res.json()) as PageResponse<Performance>;
   const performances = pageData.content;
 
+  const keywordQuery = keyword ? `keyword=${encodeURIComponent(keyword)}` : "";
+
   return (
     <PageHeader title="공연 목록" subtitle="예매하고 싶은 공연을 선택하세요.">
+      <SearchBar defaultValue={keyword} categoryId={categoryId} />
+
       <div className="categoryFilterBar">
-        <Link href="/" className={`categoryChip${categoryId == null ? " categoryChipActive" : ""}`}>
+        <Link
+          href={keyword ? `/?${keywordQuery}` : "/"}
+          className={`categoryChip${categoryId == null ? " categoryChipActive" : ""}`}
+        >
           전체
         </Link>
         {categories.map((c) => (
           <Link
             key={c.categoryId}
-            href={`/?categoryId=${c.categoryId}`}
+            href={`/?categoryId=${c.categoryId}${keyword ? `&${keywordQuery}` : ""}`}
             className={`categoryChip${categoryId === c.categoryId ? " categoryChipActive" : ""}`}
           >
             {c.categoryNm}
@@ -161,7 +173,7 @@ export default async function EventsPage({
         page={pageData.page}
         totalPages={pageData.totalPages}
         basePath="/"
-        extraQuery={{ categoryId }}
+        extraQuery={{ categoryId, keyword }}
       />
     </PageHeader>
   );

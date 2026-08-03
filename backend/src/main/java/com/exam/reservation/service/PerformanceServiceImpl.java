@@ -25,13 +25,13 @@ public class PerformanceServiceImpl implements PerformanceService {
     }
     /***********************************
      *  이름      :   getAllPerformances
-     *  기능      :   공연 목록 조회, categoryId로 카테고리 필터링 가능
-     *  param    :   categoryId(선택, null이면 전체)
+     *  기능      :   공연 목록 조회, categoryId로 카테고리 필터링·keyword로 제목/공연장 검색 가능
+     *  param    :   categoryId(선택, null이면 전체), keyword(선택, null/빈 문자열이면 전체)
      *  return   :   List<PerformanceDTO>
      ************************************/
     @Override
-    public List<PerformanceDTO> getAllPerformances(Long categoryId) {
-        return performanceMapper.findAll(categoryId);
+    public List<PerformanceDTO> getAllPerformances(Long categoryId, String keyword) {
+        return performanceMapper.findAll(categoryId, keyword);
     }
 
     /***********************************
@@ -69,18 +69,19 @@ public class PerformanceServiceImpl implements PerformanceService {
 
     /***********************************
      *  이름      :   getPerformances
-     *  기능      :   공연 목록 페이지 단위 조회 (메인 화면 페이지네이션용), categoryId로 카테고리 필터링 가능
-     *  param    :   page(1부터 시작), size, categoryId(선택, null이면 전체)
+     *  기능      :   공연 목록 페이지 단위 조회 (메인 화면 페이지네이션용),
+     *              categoryId로 카테고리 필터링·keyword로 제목/공연장 검색 가능
+     *  param    :   page(1부터 시작), size, categoryId(선택), keyword(선택)
      *  return   :   PageResponse<PerformanceDTO>
      ************************************/
 
     @Override
-    public PageResponse<PerformanceDTO> getPerformances(int page, int size, Long categoryId) {
+    public PageResponse<PerformanceDTO> getPerformances(int page, int size, Long categoryId, String keyword) {
         int safePage = Math.max(page, 1);
         int safeSize = Math.max(size, 1);
         int offset = (safePage - 1) * safeSize;
-        List<PerformanceDTO> content = performanceMapper.findAllPaged(offset, safeSize, categoryId);
-        long totalCount = performanceMapper.countAll(categoryId);
+        List<PerformanceDTO> content = performanceMapper.findAllPaged(offset, safeSize, categoryId, keyword);
+        long totalCount = performanceMapper.countAll(categoryId, keyword);
         return new PageResponse<>(content, safePage, safeSize, totalCount);
     }
 

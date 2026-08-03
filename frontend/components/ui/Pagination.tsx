@@ -27,7 +27,7 @@ export default function Pagination({ page, totalPages, basePath = "/", extraQuer
 
   const extra = Object.entries(extraQuery ?? {})
     .filter(([, v]) => v !== undefined)
-    .map(([k, v]) => `${k}=${v}&`)
+    .map(([k, v]) => `${k}=${encodeURIComponent(v!)}&`)
     .join("");
 
   const hrefFor = (p: number) => `${basePath}?${extra}page=${p}`;

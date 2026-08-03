@@ -59,7 +59,12 @@
         LEFT OUTER JOIN VENUE V ON A.venue_id = V.venue_id
         LEFT OUTER JOIN CATEGORIES C ON A.category_id = C.category_id
         LEFT OUTER JOIN PERFORMANCE_ROUND B ON A.performance_id = B.performance_id
-        <if test="categoryId != null">WHERE A.category_id = #{categoryId}</if>
+        <where>
+            <if test="categoryId != null">AND A.category_id = #{categoryId}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (A.p_title LIKE CONCAT('%', #{keyword}, '%') OR V.venue_name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
         ORDER BY A.created_per DESC
     </select>
 
@@ -124,10 +129,16 @@
                 B.open_time,
                 B.round_status
         FROM (
-            SELECT performance_id, venue_id, category_id, p_title, poster_url, created_per
-            FROM PERFORMANCES
-            <if test="categoryId != null">WHERE category_id = #{categoryId}</if>
-            ORDER BY created_per DESC
+            SELECT P.performance_id, P.venue_id, P.category_id, P.p_title, P.poster_url, P.created_per
+            FROM PERFORMANCES P
+            LEFT OUTER JOIN VENUE V ON P.venue_id = V.venue_id
+            <where>
+                <if test="categoryId != null">AND P.category_id = #{categoryId}</if>
+                <if test="keyword != null and keyword != ''">
+                    AND (P.p_title LIKE CONCAT('%', #{keyword}, '%') OR V.venue_name LIKE CONCAT('%', #{keyword}, '%'))
+                </if>
+            </where>
+            ORDER BY P.created_per DESC
             LIMIT #{size} OFFSET #{offset}
         ) A
         LEFT OUTER JOIN VENUE V ON A.venue_id = V.venue_id
@@ -137,8 +148,15 @@
     </select>
 
     <select id="countAll" resultType="long">
-        SELECT COUNT(*) FROM PERFORMANCES
-        <if test="categoryId != null">WHERE category_id = #{categoryId}</if>
+        SELECT COUNT(*)
+        FROM PERFORMANCES P
+        LEFT OUTER JOIN VENUE V ON P.venue_id = V.venue_id
+        <where>
+            <if test="categoryId != null">AND P.category_id = #{categoryId}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (P.p_title LIKE CONCAT('%', #{keyword}, '%') OR V.venue_name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
     </select>
 
     <select id="hasPassedRound" parameterType="Long" resultType="boolean">
