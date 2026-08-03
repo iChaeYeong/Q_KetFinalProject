@@ -15,6 +15,7 @@ public class PerformanceDTO {
     private Long venueId;
     private Long categoryId;
     private String categoryNm;
+
     //소문자 한글자로 인해서 camel-case 가 안먹음
     @JsonProperty("pTitle")
     private String pTitle;
@@ -23,6 +24,9 @@ public class PerformanceDTO {
     private String posterUrl;
     private LocalDateTime createdPer;
     private List<RoundDTO> rounds;
+
+    // casting 필드
+    private List<CastDTO> casts;
 
     // 감사(audit) 컬럼 — 등록자/수정자 ID·IP
     private String insId;
