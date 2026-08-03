@@ -32,8 +32,25 @@ export default function AdminCategoriesPage() {
 
   const changeCount = Object.keys(changes).length;
 
+  // 원래 값으로 되돌아오면 dirty 표시(및 저장 대상)에서 빠지도록 처리
   const handleChange = (categoryId: number, field: keyof RowChange, value: string | number) => {
-    setChanges((prev) => ({ ...prev, [categoryId]: { ...prev[categoryId], [field]: value } }));
+    const original = categories.find((c) => c.categoryId === categoryId);
+    const isUnchanged = original !== undefined && (original as unknown as Record<string, unknown>)[field] === value;
+    setChanges((prev) => {
+      const rowChange: Record<string, unknown> = { ...prev[categoryId] };
+      if (isUnchanged) {
+        delete rowChange[field];
+      } else {
+        rowChange[field] = value;
+      }
+      const next = { ...prev };
+      if (Object.keys(rowChange).length === 0) {
+        delete next[categoryId];
+      } else {
+        next[categoryId] = rowChange as RowChange;
+      }
+      return next;
+    });
     setMsg("");
   };
 
@@ -72,6 +89,24 @@ export default function AdminCategoriesPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  // 위/아래로 행 자체를 옮기고, 옮긴 두 카테고리의 순서값만 서로 맞바꿔서 그 둘만 dirty 표시.
+  // 다른 필드처럼 바로 저장하지 않고 "미저장 변경사항"으로만 표시, "저장" 버튼을 눌러야 반영됨
+  const handleMove = (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= categories.length) return;
+    const current = categories[index];
+    const target = categories[targetIndex];
+    const currentSortOrder = getVal(current.categoryId, "sortOrder", current.sortOrder);
+    const targetSortOrder = getVal(target.categoryId, "sortOrder", target.sortOrder);
+
+    const reordered = [...categories];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+    setCategories(reordered);
+
+    handleChange(current.categoryId, "sortOrder", targetSortOrder);
+    handleChange(target.categoryId, "sortOrder", currentSortOrder);
   };
 
   const handleDelete = async (categoryId: number) => {
@@ -130,10 +165,11 @@ export default function AdminCategoriesPage() {
               <th>정렬순서</th>
               <th>사용여부</th>
               <th></th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
-            {categories.map((c) => {
+            {categories.map((c, idx) => {
               const isDirty = !!changes[c.categoryId];
               return (
                 <tr key={c.categoryId} className={isDirty ? "adminRowDirty" : ""}>
@@ -166,6 +202,26 @@ export default function AdminCategoriesPage() {
                   </td>
                   <td>
                     <button className="btnDanger" onClick={() => handleDelete(c.categoryId)}>삭제</button>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <button
+                        className="btnSecondary"
+                        onClick={() => handleMove(idx, "up")}
+                        disabled={idx === 0}
+                        title="위로 이동"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        className="btnSecondary"
+                        onClick={() => handleMove(idx, "down")}
+                        disabled={idx === categories.length - 1}
+                        title="아래로 이동"
+                      >
+                        ▼
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

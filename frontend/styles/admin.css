@@ -59,7 +59,8 @@
 .adminRowDirty td { background: rgba(139, 92, 246, 0.06); }
 .adminRowDirty:hover td { background: rgba(139, 92, 246, 0.1) !important; }
 
-.adminSelect.dirty {
+.adminSelect.dirty,
+.adminInput.dirty {
   border-color: var(--accent);
   background: rgba(139, 92, 246, 0.12);
   color: var(--accent);
