@@ -5,8 +5,8 @@ import com.exam.reservation.dto.PerformanceDTO;
 import java.util.List;
 
 public interface PerformanceService {
-    List<PerformanceDTO> getAllPerformances();
-    PageResponse<PerformanceDTO> getPerformances(int page, int size);
+    List<PerformanceDTO> getAllPerformances(Long categoryId);
+    PageResponse<PerformanceDTO> getPerformances(int page, int size, Long categoryId);
 
 //    PerformanceDTO getPerformance(Long performanceId);
 //    List<PerformanceRoundDTO> getRounds(Long performanceId);

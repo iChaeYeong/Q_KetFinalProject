@@ -1,4 +1,5 @@
 export * from "./auth";
+export * from "./category";
 export * from "./performance";
 export * from "./seat";
 export * from "./reservation";

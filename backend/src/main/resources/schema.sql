@@ -36,10 +36,29 @@ CREATE TABLE IF NOT EXISTS VENUE (
     UNIQUE KEY uk_venue_name (venue_name)
 );
 
+-- CATEGORIES: 공연 카테고리(콘서트/뮤지컬 등). 사용자가 홈 화면에서 카테고리를 선택해 공연을 필터링하는 데 사용
+CREATE TABLE IF NOT EXISTS CATEGORIES (
+    category_id BIGINT NOT NULL AUTO_INCREMENT,
+    category_nm VARCHAR(100) NOT NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    use_yn CHAR(1) NOT NULL DEFAULT 'Y',
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (category_id),
+    UNIQUE KEY uk_categories_category_nm (category_nm)
+);
+
 CREATE TABLE IF NOT EXISTS PERFORMANCES (
     performance_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     p_title VARCHAR(255) NOT NULL,
     venue_id BIGINT NOT NULL,
+    category_id BIGINT NOT NULL,
     poster_url VARCHAR(500),
     created_per DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -50,7 +69,8 @@ CREATE TABLE IF NOT EXISTS PERFORMANCES (
     upt_ip VARCHAR(45) NULL,
     upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (venue_id) REFERENCES VENUE (venue_id)
+    FOREIGN KEY (venue_id) REFERENCES VENUE (venue_id),
+    FOREIGN KEY (category_id) REFERENCES CATEGORIES (category_id)
 );
 
 -- user_id: 회원가입 시 입력받는 로그인 아이디를 그대로 PK로 사용 (auto_increment 아님)

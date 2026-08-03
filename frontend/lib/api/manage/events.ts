@@ -19,12 +19,13 @@ export const getVenues = () => apiFetch<Venue[]>("/manage/venues");
 //   const { performanceId } = await createPerformance({
 //     pTitle: "뮤지컬 지킬앤하이드",
 //     venueId: 1,
+//     categoryId: 2,
 //     posterUrl: uploadedUrl,               // uploadImage()로 먼저 업로드한 결과
 //     rounds: [{ roundTime: "2026-08-15 19:00:00", openTime: "2026-08-01 10:00:00" }],
 //   });
 //
 // 요청 JSON (프론트 → 백엔드, body):
-//   { "pTitle": "...", "venueId": 1, "posterUrl": "https://...", "rounds": [
+//   { "pTitle": "...", "venueId": 1, "categoryId": 2, "posterUrl": "https://...", "rounds": [
 //       { "roundTime": "2026-08-15 19:00:00", "openTime": "2026-08-01 10:00:00" }
 //   ] }
 //   ⚠️ roundTime/openTime 은 "YYYY-MM-DD HH:mm:ss" 형식(MySQL DATETIME)이어야 함
@@ -36,6 +37,7 @@ export const getVenues = () => apiFetch<Venue[]>("/manage/venues");
 export const createPerformance = (data: {
   pTitle: string;
   venueId: number;
+  categoryId: number;
   posterUrl?: string;
   rounds: { roundTime: string; openTime: string }[];
 }) =>
@@ -67,7 +69,7 @@ export const addRound = (
 // 기능: 공연 정보 수정 (제목/포스터/회차 일괄 수정) — 필드는 선택적, 보낸 것만 반영됨
 // ⚠️ 이미 예매 오픈 시간이 지난 회차는 백엔드가 수정을 무시함 (hasPassedRoundById 체크)
 //
-// 요청 JSON: { "pTitle": "...", "posterUrl": "...", "rounds": [
+// 요청 JSON: { "pTitle": "...", "posterUrl": "...", "categoryId": 2, "rounds": [
 //   { "roundId": 10, "roundTime": "...", "openTime": "..." }
 // ] }
 // 응답 JSON: { "success": true }
@@ -77,6 +79,7 @@ export const updatePerformance = (
   data: {
     pTitle?: string;
     posterUrl?: string;
+    categoryId?: number;
     rounds?: { roundId: number; roundTime: string; openTime: string }[];
   }
 ) =>

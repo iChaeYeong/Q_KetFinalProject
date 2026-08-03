@@ -13,6 +13,8 @@ public class PerformanceDTO {
 
     private Long performanceId;
     private Long venueId;
+    private Long categoryId;
+    private String categoryNm;
     //소문자 한글자로 인해서 camel-case 가 안먹음
     @JsonProperty("pTitle")
     private String pTitle;

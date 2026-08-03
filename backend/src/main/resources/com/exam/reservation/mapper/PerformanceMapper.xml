@@ -7,6 +7,8 @@
     <resultMap id="performanceMap" type="PerformanceDTO">
         <id property="performanceId" column="performance_id"/>
         <result property="venueId" column="venue_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryNm" column="category_nm"/>
         <result property="pTitle" column="p_title"/>
         <result property="pLocation" column="venue_name"/>
         <result property="posterUrl" column="poster_url"/>
@@ -23,8 +25,8 @@
     </select>
 
     <insert id="insert" parameterType="PerformanceDTO" useGeneratedKeys="true" keyProperty="performanceId">
-        INSERT INTO PERFORMANCES (p_title, venue_id, poster_url, ins_id, ins_ip)
-        VALUES (#{pTitle}, #{venueId}, #{posterUrl}, #{insId}, #{insIp})
+        INSERT INTO PERFORMANCES (p_title, venue_id, category_id, poster_url, ins_id, ins_ip)
+        VALUES (#{pTitle}, #{venueId}, #{categoryId}, #{posterUrl}, #{insId}, #{insIp})
     </insert>
 
     <insert id="insertRound" parameterType="RoundDTO" useGeneratedKeys="true" keyProperty="roundId">
@@ -43,6 +45,8 @@
     <select id="findAll" resultMap="performanceMap">
         SELECT  A.performance_id,
                 A.venue_id,
+                A.category_id,
+                C.category_nm,
                 A.p_title,
                 V.venue_name,
                 A.poster_url,
@@ -53,7 +57,9 @@
                 B.round_status
         FROM PERFORMANCES A
         LEFT OUTER JOIN VENUE V ON A.venue_id = V.venue_id
+        LEFT OUTER JOIN CATEGORIES C ON A.category_id = C.category_id
         LEFT OUTER JOIN PERFORMANCE_ROUND B ON A.performance_id = B.performance_id
+        <if test="categoryId != null">WHERE A.category_id = #{categoryId}</if>
         ORDER BY A.created_per DESC
     </select>
 
@@ -63,6 +69,8 @@
     <select id="findAllPaged" resultMap="performanceMap">
         SELECT  A.performance_id,
                 A.venue_id,
+                A.category_id,
+                C.category_nm,
                 A.p_title,
                 V.venue_name,
                 A.poster_url,
@@ -72,18 +80,21 @@
                 B.open_time,
                 B.round_status
         FROM (
-            SELECT performance_id, venue_id, p_title, poster_url, created_per
+            SELECT performance_id, venue_id, category_id, p_title, poster_url, created_per
             FROM PERFORMANCES
+            <if test="categoryId != null">WHERE category_id = #{categoryId}</if>
             ORDER BY created_per DESC
             LIMIT #{size} OFFSET #{offset}
         ) A
         LEFT OUTER JOIN VENUE V ON A.venue_id = V.venue_id
+        LEFT OUTER JOIN CATEGORIES C ON A.category_id = C.category_id
         LEFT OUTER JOIN PERFORMANCE_ROUND B ON A.performance_id = B.performance_id
         ORDER BY A.created_per DESC, B.round_time ASC
     </select>
 
     <select id="countAll" resultType="long">
         SELECT COUNT(*) FROM PERFORMANCES
+        <if test="categoryId != null">WHERE category_id = #{categoryId}</if>
     </select>
 
     <select id="hasPassedRound" parameterType="Long" resultType="boolean">
@@ -101,6 +112,7 @@
         <set>
             <if test="pTitle != null">p_title = #{pTitle},</if>
             <if test="posterUrl != null">poster_url = #{posterUrl},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
             upt_id = #{uptId},
             upt_ip = #{uptIp},
         </set>
