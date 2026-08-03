@@ -36,7 +36,11 @@ public enum ErrorCode {
 
     // Payment (PaymentController)
     PAYMENT_CONFIRM_FAILED(HttpStatus.BAD_REQUEST, "PAY001", "결제 승인에 실패했습니다."),
-    SEAT_ALREADY_TAKEN(HttpStatus.CONFLICT, "PAY002", "이미 다른 사용자가 예매한 좌석입니다. 결제는 자동 취소 처리되었습니다.");
+    SEAT_ALREADY_TAKEN(HttpStatus.CONFLICT, "PAY002", "이미 다른 사용자가 예매한 좌석입니다. 결제는 자동 취소 처리되었습니다."),
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PAY003", "결제 정보를 찾을 수 없습니다."),
+    PAYMENT_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "PAY004", "이미 취소된 결제입니다."),
+    PAYMENT_CANCEL_FAILED(HttpStatus.BAD_REQUEST, "PAY005", "결제 취소에 실패했습니다."),
+    PAYMENT_DELETE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "PAY006", "취소(환불)된 결제만 삭제할 수 있습니다.");
 
     private final HttpStatus status;
     private final String code;

@@ -114,6 +114,52 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentMapper.findByUserId(userId);
     }
 
+    @Override
+    @Transactional
+    public PaymentDTO cancelPayment(Long paymentId, String userId, String clientIp) {
+        PaymentDTO payment = paymentMapper.findById(paymentId);
+        if (payment == null || !payment.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.PAYMENT_NOT_FOUND);
+        }
+        if (!"DONE".equals(payment.getPayStatus())) {
+            throw new BusinessException(ErrorCode.PAYMENT_ALREADY_CANCELED);
+        }
+
+        // 사용자가 직접 요청한 취소라 확실히 실패를 알려줘야 함 — confirm()의 자동취소(cancelWithToss)와
+        // 달리 여기서는 예외를 삼키지 않고 그대로 던져서 "취소가 안 됐다"는 걸 사용자가 알 수 있게 함
+        try {
+            restTemplate.postForEntity(
+                    TOSS_API_BASE + "/" + payment.getPaymentKey() + "/cancel",
+                    new HttpEntity<>(Map.of("cancelReason", "고객 요청에 의한 결제 취소"), buildAuthHeaders()),
+                    Map.class
+            );
+        } catch (HttpClientErrorException e) {
+            throw new BusinessException(ErrorCode.PAYMENT_CANCEL_FAILED, extractTossMessage(e, ErrorCode.PAYMENT_CANCEL_FAILED.getMessage()));
+        }
+
+        // 결제 취소가 끝난 뒤 좌석도 함께 반납 — 이미 취소된 예매 등으로 실패해도 결제 취소 자체는 되돌리지 않음
+        // (환불은 이미 토스에 확정됐으므로, 좌석 반납 실패는 별도로 확인이 필요한 상황이지 결제 취소를 무효화할 사유는 아님)
+        reservationService.cancel(payment.getReservationId(), userId, clientIp);
+
+        paymentMapper.updateStatus(paymentId, "CANCELED", userId, clientIp);
+        payment.setPayStatus("CANCELED");
+        return payment;
+    }
+
+    @Override
+    public void deletePayment(Long paymentId, String userId, String clientIp) {
+        PaymentDTO payment = paymentMapper.findById(paymentId);
+        if (payment == null || !payment.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.PAYMENT_NOT_FOUND);
+        }
+        // 취소(환불)된 결제만 목록에서 지울 수 있음 — 진행 중인(DONE) 결제 기록을 임의로 안 보이게 하면
+        // 실제로는 유효한 결제인데 사용자 화면에서만 사라져 혼란을 줄 수 있음
+        if (!"CANCELED".equals(payment.getPayStatus())) {
+            throw new BusinessException(ErrorCode.PAYMENT_DELETE_NOT_ALLOWED);
+        }
+        paymentMapper.markDeleted(paymentId, userId, clientIp);
+    }
+
     private Map<String, Object> confirmWithToss(PaymentConfirmRequestDTO request) {
         Map<String, Object> body = Map.of(
                 "paymentKey", request.getPaymentKey(),
@@ -128,7 +174,7 @@ public class PaymentServiceImpl implements PaymentService {
             );
             return response.getBody();
         } catch (HttpClientErrorException e) {
-            throw new BusinessException(ErrorCode.PAYMENT_CONFIRM_FAILED, extractTossMessage(e));
+            throw new BusinessException(ErrorCode.PAYMENT_CONFIRM_FAILED, extractTossMessage(e, ErrorCode.PAYMENT_CONFIRM_FAILED.getMessage()));
         }
     }
 
@@ -154,7 +200,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @SuppressWarnings("unchecked")
-    private String extractTossMessage(HttpClientErrorException e) {
+    private String extractTossMessage(HttpClientErrorException e, String fallback) {
         try {
             Map<String, Object> body = e.getResponseBodyAs(Map.class);
             if (body != null && body.get("message") != null) {
@@ -163,6 +209,6 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (Exception ignore) {
             // 파싱 실패 시 기본 메시지로 폴백
         }
-        return ErrorCode.PAYMENT_CONFIRM_FAILED.getMessage();
+        return fallback;
     }
 }

@@ -60,3 +60,40 @@ export async function confirmPayment(
 export async function getMyPayments(): Promise<Payment[]> {
   return apiFetch<Payment[]>("/payments/my");
 }
+
+// ============================================================
+// POST /api/payments/{paymentId}/cancel
+// 백엔드: PaymentController.java → cancelPayment()  (로그인 필요, 본인 결제만 취소 가능)
+// 기능: 결제 취소(환불) 요청 — 토스에 환불 처리 + 좌석도 함께 반납되어 다시 예매 가능해짐
+//
+// 사용 예시:
+//   if (confirm("결제를 취소하시겠습니까? 환불이 진행됩니다.")) {
+//     const canceled = await cancelPayment(paymentId);
+//     setPayments(prev => prev.map(p => p.paymentId === paymentId ? canceled : p));
+//   }
+//
+// 요청: 파라미터 없음 (path의 paymentId만 사용)
+// 응답 JSON (Payment, payStatus가 "CANCELED"로 바뀜)
+// ============================================================
+export async function cancelPayment(paymentId: number): Promise<Payment> {
+  return apiFetch<Payment>(`/payments/${paymentId}/cancel`, {
+    method: "POST",
+  });
+}
+
+// ============================================================
+// DELETE /api/payments/{paymentId}
+// 백엔드: PaymentController.java → deletePayment()  (로그인 필요, 본인 결제만 삭제 가능)
+// 기능: 결제 내역 목록에서 삭제 — 취소(환불)된 건만 가능. 실제 행은 안 지우고 숨김 처리(deleted_yn)라
+//      회계 기록은 그대로 남고, 사용자 화면에서만 다음 조회 때부터 안 보임
+//
+// 사용 예시:
+//   await deletePayment(paymentId);
+//   setPayments(prev => prev.filter(p => p.paymentId !== paymentId));
+//
+// 요청: 파라미터 없음 (path의 paymentId만 사용)
+// 응답: 없음 (성공 시 204/200)
+// ============================================================
+export async function deletePayment(paymentId: number): Promise<void> {
+  await apiFetch(`/payments/${paymentId}`, { method: "DELETE" });
+}

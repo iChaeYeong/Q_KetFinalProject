@@ -231,6 +231,7 @@ CREATE TABLE IF NOT EXISTS PAYMENTS (
     amount BIGINT NOT NULL,
     pay_status VARCHAR(50) NOT NULL,
     approved_at DATETIME NULL,
+    deleted_yn CHAR(1) NOT NULL DEFAULT 'N' COMMENT '결제내역 목록에서 사용자가 지운 건 Y — 회계 기록 보존을 위해 실제 행은 안 지우고 숨기기만 함',
 
     ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
     ins_ip VARCHAR(45) NULL,

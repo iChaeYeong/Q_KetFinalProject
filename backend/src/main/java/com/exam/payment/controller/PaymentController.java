@@ -9,7 +9,9 @@ import com.exam.payment.dto.PaymentDTO;
 import com.exam.payment.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -61,5 +63,43 @@ public class PaymentController {
             throw new BusinessException(ErrorCode.LOGIN_REQUIRED);
         }
         return paymentService.getMyPayments(loginUser.getUserId());
+    }
+
+    /***********************************
+     *  URL      :  "/payments/{paymentId}/cancel"
+     *  이름      :   cancelPayment
+     *  기능      :   결제 취소(환불) 요청 — 좌석도 함께 반납되어 다시 예매 가능해짐
+     *  method   :   POST
+     *  param    :   Long, HttpSession, HttpServletRequest
+     *  return   :   PaymentDTO
+     ************************************/
+    @PostMapping("/{paymentId}/cancel")
+    public PaymentDTO cancelPayment(@PathVariable Long paymentId,
+                                     HttpSession session,
+                                     HttpServletRequest servletRequest) {
+        UserDTO loginUser = (UserDTO) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            throw new BusinessException(ErrorCode.LOGIN_REQUIRED);
+        }
+        return paymentService.cancelPayment(paymentId, loginUser.getUserId(), WebUtil.getClientIp(servletRequest));
+    }
+
+    /***********************************
+     *  URL      :  "/payments/{paymentId}"
+     *  이름      :   deletePayment
+     *  기능      :   결제 내역 목록에서 삭제 (취소/환불된 건만 가능, 실제 행은 안 지우고 숨김 처리)
+     *  method   :   DELETE
+     *  param    :   Long, HttpSession, HttpServletRequest
+     *  return   :   void
+     ************************************/
+    @DeleteMapping("/{paymentId}")
+    public void deletePayment(@PathVariable Long paymentId,
+                               HttpSession session,
+                               HttpServletRequest servletRequest) {
+        UserDTO loginUser = (UserDTO) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            throw new BusinessException(ErrorCode.LOGIN_REQUIRED);
+        }
+        paymentService.deletePayment(paymentId, loginUser.getUserId(), WebUtil.getClientIp(servletRequest));
     }
 }
