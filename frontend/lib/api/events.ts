@@ -4,7 +4,7 @@ import type { Category, PageResponse, Performance } from "../data/types";
 // ============================================================
 // GET /api/events
 // 백엔드: PerformanceController.java → list()
-// 기능: 전체 공연 목록 조회 (메인/목록 화면용), categoryId로 카테고리 필터링 가능
+// 기능: 전체 공연 목록 조회 (메인/목록 화면용), categoryId로 카테고리 필터링·keyword로 제목/공연장 검색 가능
 //
 // 사용 예시:
 //   import { getEvents } from "@/lib/api/events";
@@ -13,7 +13,7 @@ import type { Category, PageResponse, Performance } from "../data/types";
 //     getEvents().then(setPerformances).finally(() => setLoading(false));
 //   }, []);
 //
-// 요청: categoryId(선택, 없으면 전체) — query string
+// 요청: categoryId(선택, 없으면 전체), keyword(선택, 제목/공연장 부분 일치) — query string
 // 응답 JSON (Performance[] — 공연마다 rounds 배열까지 포함해서 옴):
 //   [
 //     {
@@ -30,22 +30,26 @@ import type { Category, PageResponse, Performance } from "../data/types";
 //     }
 //   ]
 // ============================================================
-export async function getEvents(categoryId?: number): Promise<Performance[]> {
-  const query = categoryId != null ? `?categoryId=${categoryId}` : "";
+export async function getEvents(categoryId?: number, keyword?: string): Promise<Performance[]> {
+  const params = new URLSearchParams();
+  if (categoryId != null) params.set("categoryId", String(categoryId));
+  if (keyword) params.set("keyword", keyword);
+  const query = params.toString() ? `?${params.toString()}` : "";
   return apiFetch<Performance[]>(`/events${query}`);
 }
 
 // ============================================================
 // GET /api/events/paged
 // 백엔드: PerformanceController.java → pagedList()
-// 기능: 공연 목록 페이지 단위 조회 (메인 공연 목록 화면 페이지네이션용), categoryId로 카테고리 필터링 가능
+// 기능: 공연 목록 페이지 단위 조회 (메인 공연 목록 화면 페이지네이션용),
+//      categoryId로 카테고리 필터링·keyword로 제목/공연장 검색 가능
 //
 // 사용 예시:
 //   import { getEventsPaged } from "@/lib/api/events";
 //
-//   const { content, page, totalPages } = await getEventsPaged(1, 8, categoryId);
+//   const { content, page, totalPages } = await getEventsPaged(1, 8, categoryId, keyword);
 //
-// 요청: page(1부터 시작, 기본 1), size(기본 8), categoryId(선택, 없으면 전체) — query string
+// 요청: page(1부터 시작, 기본 1), size(기본 8), categoryId(선택), keyword(선택) — query string
 // 응답 JSON (PageResponse<Performance>):
 //   {
 //     "content": [
@@ -68,14 +72,21 @@ export async function getEvents(categoryId?: number): Promise<Performance[]> {
 //     "totalPages": 6
 //   }
 // ============================================================
-export async function getEventsPaged(page = 1, size = 8, categoryId?: number): Promise<PageResponse<Performance>> {
-  const categoryQuery = categoryId != null ? `&categoryId=${categoryId}` : "";
-  return apiFetch<PageResponse<Performance>>(`/events/paged?page=${page}&size=${size}${categoryQuery}`);
+export async function getEventsPaged(
+  page = 1,
+  size = 8,
+  categoryId?: number,
+  keyword?: string
+): Promise<PageResponse<Performance>> {
+  const params = new URLSearchParams({ page: String(page), size: String(size) });
+  if (categoryId != null) params.set("categoryId", String(categoryId));
+  if (keyword) params.set("keyword", keyword);
+  return apiFetch<PageResponse<Performance>>(`/events/paged?${params.toString()}`);
 }
 
 // ============================================================
-// GET /api/events/categories
-// 백엔드: PerformanceController.java → categories()
+// GET /api/categories
+// 백엔드: CategoryController.java → list()
 // 기능: 사용 중인 공연 카테고리 목록 조회 (홈 화면 카테고리 필터, 공연 등록/수정 폼의 카테고리 선택용)
 //
 // 사용 예시:
@@ -91,7 +102,7 @@ export async function getEventsPaged(page = 1, size = 8, categoryId?: number): P
 //   ]
 // ============================================================
 export async function getCategories(): Promise<Category[]> {
-  return apiFetch<Category[]>("/events/categories");
+  return apiFetch<Category[]>("/categories");
 }
 
 // ============================================================
