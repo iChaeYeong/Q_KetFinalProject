@@ -11,6 +11,8 @@ export type Performance = {
   pTitle: string;
   pLocation: string;
   posterUrl?: string;
+  categoryId: number;
+  categoryNm: string;
   rounds: PerformanceRound[];
 };
 

@@ -10,9 +10,9 @@ import java.util.List;
 
 @Mapper
 public interface PerformanceMapper {
-    List<PerformanceDTO> findAll();
-    List<PerformanceDTO> findAllPaged(@Param("offset") int offset, @Param("size") int size);
-    long countAll();
+    List<PerformanceDTO> findAll(@Param("categoryId") Long categoryId);
+    List<PerformanceDTO> findAllPaged(@Param("offset") int offset, @Param("size") int size, @Param("categoryId") Long categoryId);
+    long countAll(@Param("categoryId") Long categoryId);
     List<VenueDTO> findAllVenues();
     int insert(PerformanceDTO performanceDTO);
     int insertRound(RoundDTO roundDTO);
