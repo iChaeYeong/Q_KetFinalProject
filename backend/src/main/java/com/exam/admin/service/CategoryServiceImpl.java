@@ -2,6 +2,8 @@ package com.exam.admin.service;
 
 import com.exam.admin.dto.CategoryDTO;
 import com.exam.admin.mapper.CategoryMapper;
+import com.exam.common.exception.BusinessException;
+import com.exam.common.exception.ErrorCode;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,5 +20,17 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public List<CategoryDTO> getActiveCategories() {
         return categoryMapper.findActive();
+    }
+
+    @Override
+    public List<CategoryDTO> getAllCategories() {
+        return categoryMapper.findAll();
+    }
+
+    @Override
+    public void createCategory(CategoryDTO categoryDTO) {
+        if (categoryMapper.existsByName(categoryDTO.getCategoryNm()))
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "이미 존재하는 카테고리명입니다.");
+        categoryMapper.save(categoryDTO);
     }
 }
