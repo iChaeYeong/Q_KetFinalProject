@@ -200,7 +200,7 @@ INSERT INTO PERFORMANCE_ROUND (performance_id, round_time, open_time, round_stat
 --
 -- 회차 ID 참고: 공연5 → 10,11,12 / 공연9 → 19,20,21 / 공연1 → 1,2
 -- =========================
-INSERT INTO PERFORMANCE_CAST (performance_id, round_id, actor_name, casting_nm, sort_order, ins_id, ins_ip) VALUES
+INSERT INTO PERFORMANCE_CAST (performance_id, round_id, actor_nm, casting_nm, sort_order, ins_id, ins_ip) VALUES
   -- 뮤지컬 레미제라블 (공연 5) — 장발장/자베르는 회차별 캐스팅, 나머지 배역은 전체 공통
   (5, 10,   '김민석', '장발장',     0, 'admin01', '127.0.0.1'),
   (5, 11,   '이서준', '장발장',     0, 'admin01', '127.0.0.1'),

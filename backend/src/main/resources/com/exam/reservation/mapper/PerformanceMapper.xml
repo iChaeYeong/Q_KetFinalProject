@@ -92,7 +92,7 @@
         SELECT cast_id AS castId,
                performance_id AS performanceId,
                round_id AS roundId,
-               actor_name AS actorName,
+               actor_nm AS actorName,
                casting_nm AS castingNm,
                sort_order AS sortOrder
         FROM PERFORMANCE_CAST
