@@ -90,3 +90,18 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+
+/* 환불완료된 결제 내역 카드의 작은 삭제(x) 버튼 — .adminModalClose와 동일한 스타일 */
+.cardCloseBtn {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: inherit;
+}
+
+.cardCloseBtn:hover { background: var(--surface2); color: var(--text); }

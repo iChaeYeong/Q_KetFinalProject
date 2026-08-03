@@ -15,7 +15,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import type { Seat } from "@/lib/data/types";
 import { getSeats } from "@/lib/api/seats"
-import { createReservation } from "@/lib/api/reservations"
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import PageHeader from "@/components/ui/PageHeader";
@@ -43,8 +42,6 @@ export default function SeatsPage() {
 
   // UI 상태
   const [loading, setLoading] = useState(true);
-  const [booking, setBooking] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     getSeats(Number(scheduleId))
@@ -81,41 +78,25 @@ export default function SeatsPage() {
     setSelected(prev => prev?.seatId === seat.seatId ? null : seat);
   };
 
+  // 예매하기 버튼 클릭 시: 좌석을 바로 예약 확정하지 않고, 결제 수단 선택 화면(/payments/checkout)으로
+  // 이동만 함 — 실제 예약 확정(RESERVATIONS UPDATE)은 결제 승인(PAY01_PAYMENT03) 이후에 이뤄짐
+  const handleReserve = () => {
+    if (!selected) return;
 
-  // [TODO-SEATS-RESERVE] 예매하기 버튼 클릭 시 실행
-  // 1. selected 없으면 리턴
-  // 2. setBooking(true)
-  // 3. lib/api/reservations.ts 의 createReservation(scheduleId, selected.seatId) 호출
-  //    → POST /api/reservations { roundId: scheduleId, seatId }
-  // 4. 성공 시 setSuccess(true) → 2초 뒤 router.push("/mypage")
-  // 5. 실패 시 setError(응답.message)
-  // 6. catch 블록에서 setError("서버에 연결할 수 없습니다.")
-  // 7. finally 에서 setBooking(false)
-  const handleReserve = async () => {
-    if (!selected) return; //아무것도 선택하지 않고 예매 시
+    const params = new URLSearchParams({
+      reservationId: String(selected.reservationId),
+      roundId: String(scheduleId),
+      seatId: String(selected.seatId),
+      seatRow: selected.seatRow,
+      seatColume: selected.seatColume,
+      grade: selected.grade,
+    });
 
-    setBooking(true);
-    try {
-      const result = await createReservation(selected.reservationId, Number(scheduleId), selected.seatId, queueToken);
-      if (result.success) {
-        setSuccess(true);
-        // push 대신 replace: 좌석 페이지를 히스토리에서 교체해야
-        // 마이페이지에서 뒤로가기를 눌러도 예매 끝난 좌석 화면(스냅샷)으로 안 돌아감
-        setTimeout(() => router.replace("/mypage"), 2000);
-      } else {
-        alert(result.message ?? "예매에 실패했습니다.");
-        setSelected(null);
-        getSeats(Number(scheduleId)).then(setSeats).catch(() => { });
-      }
-    } catch (e: any) {
-      alert(e?.message ?? "서버에 연결할 수 없습니다.");
-      setSelected(null);
-      getSeats(Number(scheduleId)).then(setSeats).catch(() => { });
-    } finally {
-      setBooking(false);
+    if (queueToken) {
+      params.set("queueToken", queueToken);
     }
 
-
+    router.push(`/payments/checkout?${params.toString()}`);
   };
 
   // 좌석 버튼 CSS 클래스 결정
@@ -293,20 +274,13 @@ export default function SeatsPage() {
                   </div>
                   <hr className="seatPanelDivider" />
 
-                  {success ? (
-                    <StatusMessage variant="success">예매 완료! 마이페이지로 이동합니다.</StatusMessage>
-                  ) : (
-                    <>
-                      <Button
-                        variant="primary"
-                        style={{ width: "100%" }}
-                        onClick={handleReserve}
-                        disabled={booking}
-                      >
-                        {booking ? "예매 중..." : "예매하기"}
-                      </Button>
-                    </>
-                  )}
+                  <Button
+                    variant="primary"
+                    style={{ width: "100%" }}
+                    onClick={handleReserve}
+                  >
+                    결제 수단 선택
+                  </Button>
                 </>
               )}
             </div>
