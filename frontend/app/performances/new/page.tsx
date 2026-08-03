@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getVenues, createPerformance, type Venue } from "@/lib/api/manage";
 import { uploadImage } from "@/lib/api/common";
+import { getCategories } from "@/lib/api/events";
+import type { Category } from "@/lib/data/types";
 import Button from "@/components/ui/Button";
 import PageHeader from "@/components/ui/PageHeader";
 import FormField from "@/components/ui/FormField";
@@ -15,7 +17,7 @@ import Input from "@/components/ui/Input";
 import StatusMessage from "@/components/ui/StatusMessage";
 
 type Round = { roundTime: string; openTime: string };
-type NewPerformance = { pTitle: string; venueId: number; posterUrl: string };
+type NewPerformance = { pTitle: string; venueId: number; categoryId: number; posterUrl: string };
 
 const EMPTY_ROUND: Round = { roundTime: "", openTime: "" };
 
@@ -30,9 +32,10 @@ export default function AdminPerformancesPage() {
   const router = useRouter();
   const { userSession, isLoading } = useAuth();
   const [venues, setVenues] = useState<Venue[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [perfForm, setPerfForm] = useState<NewPerformance>({ pTitle: "", venueId: 0, posterUrl: "" });
+  const [perfForm, setPerfForm] = useState<NewPerformance>({ pTitle: "", venueId: 0, categoryId: 0, posterUrl: "" });
   const [perfRounds, setPerfRounds] = useState<Round[]>([EMPTY_ROUND]);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
@@ -49,10 +52,15 @@ export default function AdminPerformancesPage() {
       router.replace("/");
       return;
     }
-    getVenues()
-      .then(v => {
+    Promise.all([getVenues(), getCategories()])
+      .then(([v, c]) => {
         setVenues(v);
-        if (v.length > 0) setPerfForm(f => ({ ...f, venueId: v[0].venueId }));
+        setCategories(c);
+        setPerfForm(f => ({
+          ...f,
+          venueId: v.length > 0 ? v[0].venueId : 0,
+          categoryId: c.length > 0 ? c[0].categoryId : 0,
+        }));
       })
       .finally(() => setLoading(false));
   }, [isLoading, userSession]);
@@ -117,7 +125,7 @@ export default function AdminPerformancesPage() {
         })),
       });
       setMsg({ text: `공연이 등록되었습니다. (ID: ${performanceId})`, ok: true });
-      setPerfForm({ pTitle: "", venueId: venues[0]?.venueId ?? 0, posterUrl: "" });
+      setPerfForm({ pTitle: "", venueId: venues[0]?.venueId ?? 0, categoryId: categories[0]?.categoryId ?? 0, posterUrl: "" });
       setPerfRounds([{ ...EMPTY_ROUND }]);
       setPreviewUrl("");
       setTimeout(() => router.push("/performances"), 1200);
@@ -166,6 +174,19 @@ export default function AdminPerformancesPage() {
             >
               {venues.map(v => (
                 <option key={v.venueId} value={v.venueId}>{v.venueName}</option>
+              ))}
+            </select>
+          </FormField>
+
+          {/* 카테고리 */}
+          <FormField variant="admin" label="카테고리" required>
+            <select
+              className="adminInput"
+              value={perfForm.categoryId}
+              onChange={e => setPerfForm(f => ({ ...f, categoryId: Number(e.target.value) }))}
+            >
+              {categories.map(c => (
+                <option key={c.categoryId} value={c.categoryId}>{c.categoryNm}</option>
               ))}
             </select>
           </FormField>
