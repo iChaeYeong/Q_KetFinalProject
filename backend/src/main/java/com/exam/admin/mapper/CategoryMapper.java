@@ -16,4 +16,7 @@ public interface CategoryMapper {
     boolean existsByNameExcludingId(@Param("categoryNm") String categoryNm, @Param("categoryId") Long categoryId);
     int save(CategoryDTO categoryDTO);
     int updateCategory(CategoryDTO categoryDTO);
+
+    boolean hasLinkedPerformances(@Param("categoryId") Long categoryId);
+    int deleteCategory(@Param("categoryId") Long categoryId);
 }

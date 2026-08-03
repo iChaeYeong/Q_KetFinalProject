@@ -81,4 +81,18 @@ public class AdminCategoryController {
         categoryService.updateCategory(body);
         return Map.of("success", true);
     }
+
+    /***********************************
+     * URL : "/admin/categories/{categoryId}"
+     * 이름 : 카테고리 삭제
+     * 기능 : 관리자가 등록된 공연 카테고리를 삭제 (연결된 공연이 있으면 삭제 제한)
+     * method : Delete
+     ************************************/
+    @DeleteMapping("/{categoryId}")
+    public Map<String, Object> deleteCategory(@PathVariable Long categoryId, HttpSession session) {
+        if (!isAdmin(getLoginUser(session)))
+            throw new BusinessException(ErrorCode.ADMIN_ONLY);
+        categoryService.deleteCategory(categoryId);
+        return Map.of("success", true);
+    }
 }

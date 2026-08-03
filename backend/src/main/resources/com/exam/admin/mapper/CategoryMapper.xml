@@ -57,4 +57,12 @@
         WHERE category_id = #{categoryId}
     </update>
 
+    <select id="hasLinkedPerformances" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM PERFORMANCES WHERE category_id = #{categoryId}
+    </select>
+
+    <delete id="deleteCategory">
+        DELETE FROM CATEGORIES WHERE category_id = #{categoryId}
+    </delete>
+
 </mapper>

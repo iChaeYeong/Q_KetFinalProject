@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { getAdminCategories, createCategory, updateCategory, type Category } from "@/lib/api/admin";
+import { getAdminCategories, createCategory, updateCategory, deleteCategory, type Category } from "@/lib/api/admin";
 
 type RowChange = { categoryNm?: string; sortOrder?: number; useYn?: string };
 
@@ -74,6 +74,18 @@ export default function AdminCategoriesPage() {
     }
   };
 
+  const handleDelete = async (categoryId: number) => {
+    if (!confirm("이 카테고리를 삭제할까요? 연결된 공연이 있으면 삭제가 제한됩니다.")) return;
+    setMsg("");
+    try {
+      await deleteCategory(categoryId);
+      await load();
+      setMsg("삭제되었습니다.");
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "삭제에 실패했습니다.");
+    }
+  };
+
   if (isLoading || loading)
     return <div className="pageWrap"><p className="loadingMsg">불러오는 중...</p></div>;
 
@@ -117,6 +129,7 @@ export default function AdminCategoriesPage() {
               <th>카테고리명</th>
               <th>정렬순서</th>
               <th>사용여부</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -150,6 +163,9 @@ export default function AdminCategoriesPage() {
                       <option value="Y">사용</option>
                       <option value="N">미사용</option>
                     </select>
+                  </td>
+                  <td>
+                    <button className="btnDanger" onClick={() => handleDelete(c.categoryId)}>삭제</button>
                   </td>
                 </tr>
               );
