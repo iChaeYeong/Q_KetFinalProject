@@ -21,3 +21,17 @@ export const getAdminCategories = () => apiFetch<Category[]>("/admin/categories"
 // ============================================================
 export const createCategory = (data: Pick<Category, "categoryNm">) =>
   apiFetch<{ success: boolean }>("/admin/categories", { method: "POST", body: data });
+
+// ============================================================
+// PUT /api/admin/categories/{categoryId}
+// 백엔드: AdminCategoryController.java → updateCategory()  (관리자만)
+// 기능: 카테고리 정보(이름/정렬순서/사용여부) 수정 — 필드는 선택적, 보낸 것만 반영됨.
+//   카테고리명을 다른 카테고리와 겹치게 바꾸면 400 에러(ApiError)로 거부됨
+//
+// 요청 JSON (body): { "categoryNm": "클래식", "sortOrder": 6, "useYn": "Y" }
+// 응답 JSON: { "success": true }
+// ============================================================
+export const updateCategory = (
+  categoryId: number,
+  data: Partial<{ categoryNm: string; sortOrder: number; useYn: string }>
+) => apiFetch<{ success: boolean }>(`/admin/categories/${categoryId}`, { method: "PUT", body: data });

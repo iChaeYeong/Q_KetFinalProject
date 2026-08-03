@@ -62,4 +62,23 @@ public class AdminCategoryController {
         categoryService.createCategory(body);
         return Map.of("success", true);
     }
+
+    /***********************************
+     * URL : "/admin/categories/{categoryId}"
+     * 이름 : 카테고리 수정
+     * 기능 : 관리자가 기존 등록된 공연 카테고리의 정보(이름/순서/사용여부)를 수정 (카테고리명 중복 시 수정 제한)
+     * method : Put
+     ************************************/
+    @PutMapping("/{categoryId}")
+    public Map<String, Object> updateCategory(@PathVariable Long categoryId, @RequestBody CategoryDTO body,
+            HttpSession session, HttpServletRequest request) {
+        UserDTO loginUser = getLoginUser(session);
+        if (!isAdmin(loginUser))
+            throw new BusinessException(ErrorCode.ADMIN_ONLY);
+        body.setCategoryId(categoryId);
+        body.setUptId(loginUser.getUserId());
+        body.setUptIp(WebUtil.getClientIp(request));
+        categoryService.updateCategory(body);
+        return Map.of("success", true);
+    }
 }

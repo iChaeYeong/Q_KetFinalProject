@@ -9,4 +9,5 @@ public interface CategoryService {
 
     List<CategoryDTO> getAllCategories();
     void createCategory(CategoryDTO categoryDTO);
+    void updateCategory(CategoryDTO categoryDTO);
 }

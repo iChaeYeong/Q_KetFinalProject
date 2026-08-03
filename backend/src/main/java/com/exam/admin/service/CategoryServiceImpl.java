@@ -33,4 +33,12 @@ public class CategoryServiceImpl implements CategoryService {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "이미 존재하는 카테고리명입니다.");
         categoryMapper.save(categoryDTO);
     }
+
+    @Override
+    public void updateCategory(CategoryDTO categoryDTO) {
+        if (categoryDTO.getCategoryNm() != null
+                && categoryMapper.existsByNameExcludingId(categoryDTO.getCategoryNm(), categoryDTO.getCategoryId()))
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "이미 존재하는 카테고리명입니다.");
+        categoryMapper.updateCategory(categoryDTO);
+    }
 }
