@@ -2,6 +2,7 @@ package com.exam.reservation.service;
 
 import com.exam.common.dto.PageResponse;
 import com.exam.reservation.dto.PerformanceDTO;
+import com.exam.reservation.dto.PerformanceRoundDTO;
 import com.exam.reservation.mapper.PerformanceMapper;
 import org.springframework.stereotype.Service;
 
@@ -47,6 +48,17 @@ public class PerformanceServiceImpl implements PerformanceService {
         return new PageResponse<>(content, safePage, safeSize, totalCount);
     }
 
+    /***********************************
+     *  이름      :   getRound
+     *  기능      :   회차 단건 조회 (공연명/장소/시간) — 결제 체크아웃 화면 예매 정보 표시용
+     *  param    :   Long
+     *  return   :   PerformanceRoundDTO
+     ************************************/
+    @Override
+    public PerformanceRoundDTO getRound(Long roundId) {
+        return performanceMapper.findRoundById(roundId);
+    }
+
 //    @Override
 //    public PerformanceDTO getPerformance(Long performanceId) {
 //        return performanceMapper.findById(performanceId);
@@ -55,10 +67,5 @@ public class PerformanceServiceImpl implements PerformanceService {
 //    @Override
 //    public List<PerformanceRoundDTO> getRounds(Long performanceId) {
 //        return performanceMapper.findRoundsByPerformanceId(performanceId);
-//    }
-
-//    @Override
-//    public PerformanceRoundDTO getRound(Long roundId) {
-//        return performanceMapper.findRoundById(roundId);
 //    }
 }

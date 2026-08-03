@@ -7,6 +7,7 @@ export type Payment = {
   payStatus: string;
   approvedAt: string;
   pTitle: string;
+  venueName: string;
   roundTime: string;
   seatRow: string;
   seatColume: string;

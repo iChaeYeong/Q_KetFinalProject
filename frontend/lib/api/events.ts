@@ -1,5 +1,5 @@
 import { apiFetch } from "./client";
-import type { Category, PageResponse, Performance } from "../data/types";
+import type { Category, PageResponse, Performance, RoundDetail } from "../data/types";
 
 // ============================================================
 // GET /api/events
@@ -118,4 +118,25 @@ export async function getCategories(): Promise<Category[]> {
 // ============================================================
 export async function getEvent(eventId: number): Promise<Performance> {
   return apiFetch<Performance>(`/events/${eventId}`);
+}
+
+// ============================================================
+// GET /api/events/rounds/{roundId}
+// 백엔드: PerformanceController.java → round()
+// 기능: 회차 단건 조회 (공연명/장소/시간) — 결제 체크아웃 화면에서 예매 정보 표시용
+//
+// 사용 예시:
+//   import { getRound } from "@/lib/api/events";
+//
+//   useEffect(() => {
+//     getRound(Number(roundId)).then(setRound).catch(() => setRound(null));
+//   }, [roundId]);
+//
+// 요청: path의 roundId만 사용
+// 응답 JSON (RoundDetail):
+//   { "roundId": 10, "performanceId": 1, "pTitle": "아이유 콘서트 - The Golden Hour",
+//     "pLocation": "고척스카이돔", "roundTime": "2026-08-15 19:00:00", "roundStatus": "OPEN" }
+// ============================================================
+export async function getRound(roundId: number): Promise<RoundDetail> {
+  return apiFetch<RoundDetail>(`/events/rounds/${roundId}`);
 }

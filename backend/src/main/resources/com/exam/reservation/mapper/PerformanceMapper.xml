@@ -171,4 +171,17 @@
         WHERE round_id = #{roundId}
     </update>
 
+    <select id="findRoundById" resultType="PerformanceRoundDTO" parameterType="Long">
+        SELECT pr.round_id       AS roundId,
+               pr.performance_id AS performanceId,
+               p.p_title         AS pTitle,
+               v.venue_name      AS pLocation,
+               pr.round_time     AS roundTime,
+               pr.round_status   AS roundStatus
+        FROM PERFORMANCE_ROUND pr
+                 JOIN PERFORMANCES p ON pr.performance_id = p.performance_id
+                 LEFT JOIN VENUE v ON p.venue_id = v.venue_id
+        WHERE pr.round_id = #{roundId}
+    </select>
+
 </mapper>

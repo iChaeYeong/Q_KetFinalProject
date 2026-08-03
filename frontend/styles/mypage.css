@@ -1,5 +1,5 @@
 /* ── MYPAGE ── */
-/* 마이페이지 전용 — app/mypage/page.tsx (내 정보 + 예매 내역) */
+/* 마이페이지 전용 — app/mypage/page.tsx (내 정보 + 결제 내역) */
 
 /* 왼쪽 프로필 카드(280px 고정) + 오른쪽 예매 목록으로 나누는 2단 그리드 */
 .mypageGrid {
@@ -48,55 +48,58 @@
   color: var(--text-2);
 }
 
-/* 오른쪽 예매 내역 카드들을 세로로 쌓는 목록 */
-.reservationList {
+/* 오른쪽 결제 내역 카드들을 세로로 쌓는 목록 */
+.paymentCardList {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* 예매 내역 카드 하나 */
-.reservationCard {
+/* 결제 내역 카드 하나 — 영수증처럼 라벨:값 행으로 정리(seat.css의 seatPanelRow 재사용) */
+.paymentCard {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  padding: 20px 24px;
   transition: border-color 0.15s;
 }
 
-.reservationCard:hover { border-color: var(--border-strong); }
+.paymentCard:hover { border-color: var(--border-strong); }
 
-.reservationInfo { flex: 1; min-width: 0; }
+/* 카드 상단 — 공연명 + 상태 뱃지 */
+.paymentCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
 
-.reservationTitle {
-  font-size: 15px;
+.paymentCardTitle {
+  font-size: 16px;
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 4px;
-  white-space: nowrap; /* 제목 길면 ... 처리 */
-  overflow: hidden;
-  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
 
-/* 예매 카드 하단의 부가 정보(날짜, 좌석 등급, 상태 뱃지 등)를 나열 */
-.reservationMeta {
-  font-size: 12px;
-  color: var(--text-2);
+/* 카드 하단 — 환불 요청/삭제 버튼 영역 */
+.paymentCardActions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
 }
 
-/* 환불완료된 결제 내역 카드의 작은 삭제(x) 버튼 — .adminModalClose와 동일한 스타일 */
+/* 환불완료된 결제 내역 카드의 삭제 버튼 — .adminModalClose와 같은 톤의 미니멀 텍스트 버튼 */
 .cardCloseBtn {
   background: none;
   border: none;
   color: var(--text-2);
-  font-size: 18px;
+  font-size: 12px;
+  font-weight: 600;
   line-height: 1;
   cursor: pointer;
   padding: 6px 10px;

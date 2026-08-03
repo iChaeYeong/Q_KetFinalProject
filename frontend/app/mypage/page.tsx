@@ -1,5 +1,5 @@
 // Client Component — "use client" 필요한 이유:
-//   1. 환불 요청 버튼 onClick 이벤트 핸들러 (handleCancelPayment)
+//   1. 환불 요청 버튼 onClick 이벤트 핸들러 (handleConfirmRefund)
 //   2. 로그인 세션 기반 사용자 정보 조회 (credentials: "include" 쿠키)
 //   * 이상적으로는 유저 정보 + 결제 목록 fetch 를 Server Component 에서 처리하고
 //     취소 버튼만 Client Component 로 분리하는 것이 좋지만,
@@ -14,6 +14,7 @@ import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import PageHeader from "@/components/ui/PageHeader";
 import StatusMessage from "@/components/ui/StatusMessage";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { getMyPayments, cancelPayment, deletePayment } from "@/lib/api/payments"
 
 // 결제 상태 표시 라벨/Badge variant
@@ -37,8 +38,12 @@ export default function MyPage() {
 
   // UI 상태
   const [loading, setLoading] = useState(true);
-  const [cancellingPayment, setCancellingPayment] = useState<number | null>(null); // 취소(환불) 중인 paymentId
   const [deletingPayment, setDeletingPayment] = useState<number | null>(null); // 삭제 중인 paymentId
+
+  // 환불 확인 모달 상태 — "환불 요청" 버튼은 바로 취소 API를 부르지 않고 이 값만 세팅해서 모달을 띄움
+  const [refundTarget, setRefundTarget] = useState<Payment | null>(null);
+  const [refunding, setRefunding] = useState(false);
+  const [refundError, setRefundError] = useState("");
 
   useEffect(() => {
     getMyPayments()
@@ -47,20 +52,22 @@ export default function MyPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // 결제 내역의 "환불 요청" 버튼 클릭 시 실행 — 토스 환불 + 좌석 반납까지 한 번에 처리됨
-  const handleCancelPayment = async (paymentId: number) => {
-    if (!confirm("결제를 취소하시겠습니까? 환불이 진행되고 좌석도 함께 취소됩니다.")) return;
+  // 환불 확인 모달의 "환불하기" 버튼 클릭 시 실행 — 토스 환불 + 좌석 반납까지 한 번에 처리됨
+  const handleConfirmRefund = async () => {
+    if (!refundTarget) return;
 
-    setCancellingPayment(paymentId);
+    setRefunding(true);
+    setRefundError("");
     try {
-      const canceled = await cancelPayment(paymentId);
+      const canceled = await cancelPayment(refundTarget.paymentId);
       setPayments(prev =>
-        prev.map(p => p.paymentId === paymentId ? canceled : p)
+        prev.map(p => p.paymentId === refundTarget.paymentId ? canceled : p)
       );
+      setRefundTarget(null);
     } catch (e: any) {
-      alert(e?.message ?? "결제 취소에 실패했습니다.");
+      setRefundError(e?.message ?? "결제 취소에 실패했습니다.");
     } finally {
-      setCancellingPayment(null);
+      setRefunding(false);
     }
   };
 
@@ -128,45 +135,63 @@ export default function MyPage() {
               </div>
             )}
 
-            <div className="reservationList">
+            <div className="paymentCardList">
               {payments.map(p => (
-                <div key={p.paymentId} className="reservationCard">
-                  <div className="reservationInfo">
-                    <p className="reservationTitle">{p.pTitle}</p>
-                    <div className="reservationMeta">
-                      <span>📅 {new Date(p.roundTime).toLocaleString("ko-KR", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-                      <span>💺 {p.seatRow}행 {p.seatColume}번</span>
-                      <span>🎟 {p.grade}</span>
-                      <span>💳 {p.amount.toLocaleString("ko-KR")}원</span>
-                      <span>🕒 {new Date(p.approvedAt).toLocaleString("ko-KR", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })} 승인</span>
-                    </div>
-                    <div style={{ marginTop: "var(--space-2)" }}>
-                      <Badge variant={PAYMENT_STATUS_VARIANT[p.payStatus] ?? "closed"}>
-                        {PAYMENT_STATUS_LABEL[p.payStatus] ?? p.payStatus}
-                      </Badge>
-                    </div>
+                <div key={p.paymentId} className="paymentCard">
+                  <div className="paymentCardHeader">
+                    <p className="paymentCardTitle">{p.pTitle}</p>
+                    <Badge variant={PAYMENT_STATUS_VARIANT[p.payStatus] ?? "closed"}>
+                      {PAYMENT_STATUS_LABEL[p.payStatus] ?? p.payStatus}
+                    </Badge>
+                  </div>
+
+                  <div className="seatPanelRow">
+                    <span className="seatPanelLabel">장소</span>
+                    <span className="seatPanelValue">{p.venueName}</span>
+                  </div>
+                  <div className="seatPanelRow">
+                    <span className="seatPanelLabel">공연 일시</span>
+                    <span className="seatPanelValue">
+                      {new Date(p.roundTime).toLocaleString("ko-KR", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  <div className="seatPanelRow">
+                    <span className="seatPanelLabel">좌석</span>
+                    <span className="seatPanelValue">
+                      {p.seatRow}{p.seatColume} <Badge variant={p.grade.toLowerCase() as "vip" | "r" | "s"}>{p.grade}</Badge>
+                    </span>
+                  </div>
+                  <div className="seatPanelRow">
+                    <span className="seatPanelLabel">결제 금액</span>
+                    <span className="seatPanelValue">{p.amount.toLocaleString("ko-KR")}원</span>
+                  </div>
+                  <div className="seatPanelRow">
+                    <span className="seatPanelLabel">결제 일시</span>
+                    <span className="seatPanelValue">
+                      {new Date(p.approvedAt).toLocaleString("ko-KR", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </span>
                   </div>
 
                   {p.payStatus === "DONE" && (
-                    <Button
-                      variant="danger"
-                      onClick={() => handleCancelPayment(p.paymentId)}
-                      disabled={cancellingPayment === p.paymentId}
-                    >
-                      {cancellingPayment === p.paymentId ? "처리 중..." : "환불 요청"}
-                    </Button>
+                    <div className="paymentCardActions">
+                      <Button variant="danger" onClick={() => setRefundTarget(p)}>
+                        환불 요청
+                      </Button>
+                    </div>
                   )}
 
                   {p.payStatus === "CANCELED" && (
-                    <button
-                      type="button"
-                      className="cardCloseBtn"
-                      title="목록에서 삭제"
-                      onClick={() => handleDeletePayment(p.paymentId)}
-                      disabled={deletingPayment === p.paymentId}
-                    >
-                      ×
-                    </button>
+                    <div className="paymentCardActions">
+                      <button
+                        type="button"
+                        className="cardCloseBtn"
+                        title="목록에서 삭제"
+                        onClick={() => handleDeletePayment(p.paymentId)}
+                        disabled={deletingPayment === p.paymentId}
+                      >
+                        × 목록에서 삭제
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -174,6 +199,21 @@ export default function MyPage() {
           </div>
         </div>
       </PageHeader>
+
+      <ConfirmDialog
+        open={refundTarget !== null}
+        title="결제를 취소하시겠습니까?"
+        description="환불이 진행되고 좌석도 함께 취소됩니다."
+        confirmLabel="환불하기"
+        confirmVariant="danger"
+        loading={refunding}
+        error={refundError}
+        onConfirm={handleConfirmRefund}
+        onCancel={() => {
+          setRefundTarget(null);
+          setRefundError("");
+        }}
+      />
     </>
   );
 }
