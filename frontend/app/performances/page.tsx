@@ -42,6 +42,11 @@ export default function AdminPerformancesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // 목록 필터 — 카테고리 선택은 즉시 재조회, 검색어는 검색 버튼/엔터로 재조회
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [keyword, setKeyword] = useState("");
+
   // 수정 모달
   const [editingPerf, setEditingPerf] = useState<Performance | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -74,6 +79,20 @@ export default function AdminPerformancesPage() {
       })
       .finally(() => setLoading(false));
   }, [isLoading, userSession]);
+
+  // 카테고리 선택 시 바로 재조회 (검색어는 그대로 유지)
+  const handleCategoryChange = (value: string) => {
+    setCategoryFilter(value);
+    getEvents(value ? Number(value) : undefined, keyword || undefined).then(setPerformances);
+  };
+
+  // 검색 버튼/엔터: 현재 선택된 카테고리 안에서 제목·공연장 검색
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const kw = searchInput.trim();
+    setKeyword(kw);
+    getEvents(categoryFilter ? Number(categoryFilter) : undefined, kw || undefined).then(setPerformances);
+  };
 
   const openEdit = (perf: Performance) => {
     setEditingPerf(perf);
@@ -214,47 +233,93 @@ export default function AdminPerformancesPage() {
         </Button>
       }
     >
+      {/* 카테고리 필터 + 검색 */}
+      <div style={{ display: "flex", gap: "var(--space-3)", marginBottom: "var(--space-4)", flexWrap: "wrap", alignItems: "flex-end" }}>
+        <FormField variant="admin" label="카테고리" style={{ marginBottom: 0, minWidth: 160 }}>
+          <select
+            className="adminInput"
+            value={categoryFilter}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+          >
+            <option value="">전체</option>
+            {categories.map(c => (
+              <option key={c.categoryId} value={c.categoryId}>{c.categoryNm}</option>
+            ))}
+          </select>
+        </FormField>
+        <form onSubmit={handleSearch} style={{ display: "flex", gap: "var(--space-2)", flex: "1 1 240px", alignItems: "flex-end" }}>
+          <FormField variant="admin" label="검색" style={{ marginBottom: 0, flex: 1 }}>
+            <Input
+              variant="admin"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="공연 제목 또는 공연장으로 검색"
+            />
+          </FormField>
+          <Button variant="secondary" type="submit">검색</Button>
+        </form>
+      </div>
+
       {performances.length === 0 && <StatusMessage variant="loading">등록된 공연이 없습니다.</StatusMessage>}
 
-      <div className="adminPerfGrid">
-        {performances.map(perf => {
-          const locked = isLocked(perf);
-          return (
-            <div key={perf.performanceId} className="adminPerfCard">
-              <div className="adminPerfPoster">
-                {perf.posterUrl
-                  ? <img src={perf.posterUrl} alt={perf.pTitle} />
-                  : <div className="adminPerfPosterEmpty" />}
-              </div>
-              <div className="adminPerfInfo">
-                <p className="adminPerfTitle">{perf.pTitle}</p>
-                <p className="adminPerfVenue">{perf.pLocation} · {perf.categoryNm}</p>
-                <p className="adminPerfRounds">{perf.rounds?.length ?? 0}회차</p>
-                {(perf.rounds ?? []).map((r) => {
-                  const roundLocked = new Date(r.openTime) <= new Date();
-                  return (
-                    <div key={r.roundId} className="adminPerfRoundDetail">
-                      <span>공연 {toInputDatetime(r.roundTime).replace("T", " ")}</span>
-                      <span>예매 {toInputDatetime(r.openTime).replace("T", " ")} {roundLocked && "🔒"}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="adminPerfActions">
-                <Button variant="secondary" onClick={() => openEdit(perf)}>수정</Button>
-                <Button
-                  variant="danger"
-                  onClick={() => handleDeletePerformance(perf)}
-                  disabled={locked}
-                  title={locked ? "예매 오픈된 회차가 있어 삭제할 수 없습니다." : ""}
-                >
-                  삭제
-                </Button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {performances.length > 0 && (
+        <div className="adminTableWrap">
+          <table className="adminTable">
+            <thead>
+              <tr>
+                <th>포스터</th>
+                <th>제목</th>
+                <th>장소</th>
+                <th>카테고리</th>
+                <th>회차</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {performances.map(perf => {
+                const locked = isLocked(perf);
+                return (
+                  <tr key={perf.performanceId}>
+                    <td>
+                      {perf.posterUrl
+                        ? <img src={perf.posterUrl} alt={perf.pTitle} className="adminPerfThumb" />
+                        : <div className="adminPerfThumbEmpty" />}
+                    </td>
+                    <td className="adminCellId">{perf.pTitle}</td>
+                    <td>{perf.pLocation}</td>
+                    <td>{perf.categoryNm}</td>
+                    <td>
+                      {(perf.rounds ?? []).length === 0 && "-"}
+                      {(perf.rounds ?? []).map((r) => {
+                        const roundLocked = new Date(r.openTime) <= new Date();
+                        return (
+                          <div key={r.roundId} className="adminPerfRoundDetail">
+                            <span>공연 {toInputDatetime(r.roundTime).replace("T", " ")}</span>
+                            <span>예매 {toInputDatetime(r.openTime).replace("T", " ")} {roundLocked && "🔒"}</span>
+                          </div>
+                        );
+                      })}
+                    </td>
+                    <td>
+                      <div className="adminPerfActions">
+                        <Button variant="secondary" onClick={() => openEdit(perf)}>수정</Button>
+                        <Button
+                          variant="danger"
+                          onClick={() => handleDeletePerformance(perf)}
+                          disabled={locked}
+                          title={locked ? "예매 오픈된 회차가 있어 삭제할 수 없습니다." : ""}
+                        >
+                          삭제
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* 수정 모달 */}
       {editingPerf && (
