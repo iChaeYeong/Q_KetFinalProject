@@ -48,32 +48,23 @@ jobs:
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
-      # 네임스페이스는 이제 Terraform(kubernetes_namespace)이 관리 — 여기서 안 건드림
-
-      # ConfigMap - GitHub Variables 에서 민감하지 않은 설정값 주입
-      # S3_BUCKET/CLOUDFRONT_DOMAIN은 여기 없음 — Terraform(module.storage_dev)이 직접 만든
-      # storage-config ConfigMap 쪽에 있음 (그 값들은 Terraform이 만든 리소스에서 나오는 값이라서).
-      # DB_HOST/REDIS_HOST도 마찬가지로 여기 없음 — ESO가 동기화하는 db-secrets/redis-secrets 쪽.
-      - name: 1. Apply ConfigMap
-        run: |
-          kubectl create configmap app-config \
-            --from-literal=DB_PORT=${{ vars.DEV_DB_PORT }} \
-            --from-literal=DB_NAME=${{ vars.DEV_DB_NAME }} \
-            --from-literal=REDIS_PORT=${{ vars.DEV_REDIS_PORT }} \
-            --from-literal=AWS_REGION=${{ env.AWS_REGION }} \
-            -n ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
-
-      # db-secrets / redis-secrets / aws-secrets 모두 여기서 안 만듦:
-      #   - db-secrets, redis-secrets → Terraform(module.eso_dev)의 External Secrets Operator가
+      # 네임스페이스는 이제 Terraform(kubernetes_namespace)이 관리 — 여기서 안 건드림.
+      #
+      # ConfigMap/Secret 전부 여기서 안 만듦 — 전부 Terraform이 직접 관리:
+      #   - app-config(DB_PORT/DB_NAME/REDIS_PORT/AWS_REGION) → 루트 app-config.tf.
+      #     전부 Terraform이 RDS/ElastiCache 만들 때 이미 아는 값이라 GitHub Variables에
+      #     따로 입력할 필요 자체가 없어짐 (레포 재생성 시 값 날아가는 사고 방지)
+      #   - storage-config(S3_BUCKET/CLOUDFRONT_DOMAIN) → module.storage_dev
+      #   - db-secrets/redis-secrets → module.eso_dev의 External Secrets Operator가
       #     Secrets Manager에서 1시간마다 자동 동기화
       #   - aws-secrets(AWS_ACCESS_KEY_ID 등) → 아예 필요 없어짐. 백엔드가 IRSA(qket-backend
       #     ServiceAccount, module.storage_dev가 생성)로 S3에 붙어서 고정 키 자체가 불필요.
       # 여기서 kubectl create로 다시 만들면 Terraform/ESO가 관리하는 리소스와 소유권 충돌.
 
-      - name: 2. Apply Ingress
+      - name: 1. Apply Ingress
         run: kubectl apply -f k8s/dev/ingress_https_qket_dev.yaml
 
-      - name: 3. Apply NetworkPolicy
+      - name: 2. Apply NetworkPolicy
         run: kubectl apply -f k8s/dev/networkpolicy_qKet_dev.yaml
 
   # 백엔드 빌드/배포 - backend/* 변경 시에만 실행
