@@ -12,8 +12,8 @@ import {
   deleteRound,
 } from "@/lib/api/manage";
 import { uploadImage } from "@/lib/api/common";
-import { getEvents, getCategories } from "@/lib/api/events";
-import type { Category, Performance, PerformanceRound } from "@/lib/data/types";
+import { getEventsPaged, getCategories } from "@/lib/api/events";
+import type { Category, PageResponse, Performance, PerformanceRound } from "@/lib/data/types";
 import Button from "@/components/ui/Button";
 import PageHeader from "@/components/ui/PageHeader";
 import FormField from "@/components/ui/FormField";
@@ -34,6 +34,9 @@ const toInputDatetime = (v: string) => {
 const isLocked = (perf: Performance) =>
   perf.rounds?.some(r => new Date(r.openTime) <= new Date()) ?? false;
 
+// 한 페이지에 보여줄 공연 개수
+const PAGE_SIZE = 10;
+
 export default function AdminPerformancesPage() {
   const router = useRouter();
   const { userSession, isLoading } = useAuth();
@@ -46,6 +49,10 @@ export default function AdminPerformancesPage() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [keyword, setKeyword] = useState("");
+
+  // 페이징 — 10개씩
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   // 수정 모달
   const [editingPerf, setEditingPerf] = useState<Performance | null>(null);
@@ -66,32 +73,43 @@ export default function AdminPerformancesPage() {
 
   const editTitleRef = useRef<HTMLInputElement>(null);
 
+  // 목록 재조회 — 카테고리/검색어/페이지 조합으로 호출
+  const loadPerformances = (p: number, catId?: number, kw?: string) =>
+    getEventsPaged(p, PAGE_SIZE, catId, kw).then((res: PageResponse<Performance>) => {
+      setPerformances(res.content);
+      setTotalPages(res.totalPages);
+      setPage(res.page);
+    });
+
   useEffect(() => {
     if (isLoading) return;
     if (!userSession || (userSession.roleId !== 2 && userSession.roleId !== 3)) {
       router.replace("/");
       return;
     }
-    Promise.all([getEvents(), getCategories()])
-      .then(([perfs, cats]) => {
-        setPerformances(perfs);
-        setCategories(cats);
-      })
+    Promise.all([loadPerformances(1), getCategories()])
+      .then(([, cats]) => setCategories(cats))
       .finally(() => setLoading(false));
   }, [isLoading, userSession]);
 
-  // 카테고리 선택 시 바로 재조회 (검색어는 그대로 유지)
+  // 카테고리 선택 시 바로 재조회 (검색어는 그대로 유지, 1페이지부터 다시)
   const handleCategoryChange = (value: string) => {
     setCategoryFilter(value);
-    getEvents(value ? Number(value) : undefined, keyword || undefined).then(setPerformances);
+    loadPerformances(1, value ? Number(value) : undefined, keyword || undefined);
   };
 
-  // 검색 버튼/엔터: 현재 선택된 카테고리 안에서 제목·공연장 검색
+  // 검색 버튼/엔터: 현재 선택된 카테고리 안에서 제목·공연장 검색 (1페이지부터 다시)
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const kw = searchInput.trim();
     setKeyword(kw);
-    getEvents(categoryFilter ? Number(categoryFilter) : undefined, kw || undefined).then(setPerformances);
+    loadPerformances(1, categoryFilter ? Number(categoryFilter) : undefined, kw || undefined);
+  };
+
+  // 페이지 이동 — 현재 카테고리/검색어 유지
+  const handlePageChange = (p: number) => {
+    if (p < 1 || p > totalPages || p === page) return;
+    loadPerformances(p, categoryFilter ? Number(categoryFilter) : undefined, keyword || undefined);
   };
 
   const openEdit = (perf: Performance) => {
@@ -267,6 +285,7 @@ export default function AdminPerformancesPage() {
           <table className="adminTable">
             <thead>
               <tr>
+                <th>번호</th>
                 <th>포스터</th>
                 <th>제목</th>
                 <th>장소</th>
@@ -276,10 +295,11 @@ export default function AdminPerformancesPage() {
               </tr>
             </thead>
             <tbody>
-              {performances.map(perf => {
+              {performances.map((perf, idx) => {
                 const locked = isLocked(perf);
                 return (
                   <tr key={perf.performanceId}>
+                    <td className="adminCellId">{(page - 1) * PAGE_SIZE + idx + 1}</td>
                     <td>
                       {perf.posterUrl
                         ? <img src={perf.posterUrl} alt={perf.pTitle} className="adminPerfThumb" />
@@ -319,6 +339,35 @@ export default function AdminPerformancesPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {totalPages > 1 && (
+        <nav className="pagination" aria-label="페이지 이동">
+          <button
+            type="button"
+            className={`paginationArrow${page <= 1 ? " paginationDisabled" : ""}`}
+            onClick={() => handlePageChange(page - 1)}
+          >
+            이전
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              type="button"
+              className={`paginationItem${p === page ? " paginationItemActive" : ""}`}
+              onClick={() => handlePageChange(p)}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            type="button"
+            className={`paginationArrow${page >= totalPages ? " paginationDisabled" : ""}`}
+            onClick={() => handlePageChange(page + 1)}
+          >
+            다음
+          </button>
+        </nav>
       )}
 
       {/* 수정 모달 */}
