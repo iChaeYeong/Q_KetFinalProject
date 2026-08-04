@@ -161,7 +161,67 @@ INSERT INTO PERFORMANCE_ROUND (performance_id, round_time, open_time, round_stat
   (9, '2026-09-12 14:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
   -- 태연 (venue=6)
   (10, '2026-11-01 19:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
-  (10, '2026-11-02 17:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1');
+  (10, '2026-11-02 17:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+
+  -- ── 달력 화면(PER02_DETAIL02) 확인용 추가 회차 (round_id 24~) ──
+  -- [주의] 공연별로 묶지 않고 "맨 뒤에" 붙인 이유:
+  --   round_id 는 AUTO_INCREMENT 라 중간에 끼워넣으면 그 뒤 회차들의 ID가 전부 밀린다.
+  --   아래 시드들이 회차를 ID로 직접 참조하고 있어서(캐스팅 10·11·12, 예매 1·2·3·7·10·13)
+  --   중간 삽입은 엉뚱한 회차에 예매/캐스팅이 붙는 결과가 된다. 새 회차는 항상 끝에 추가할 것.
+  -- 레미제라블(5): 기존 8/20~22 + 아래 9회차 = 총 12회차, 8월에 흩어져 있고 9월까지 이어짐
+  (5, '2026-08-06 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (5, '2026-08-07 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (5, '2026-08-13 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (5, '2026-08-14 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (5, '2026-08-22 19:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'), -- 8/22 하루 2회차(마티네+저녁)
+  (5, '2026-08-27 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (5, '2026-08-28 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (5, '2026-09-03 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (5, '2026-09-04 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  -- 오페라의 유령(9): 기존 9/10~12 + 아래 5회차 = 총 8회차, 9월→10월 달 이동 확인용
+  (9, '2026-09-17 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (9, '2026-09-18 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (9, '2026-09-19 14:00:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (9, '2026-10-01 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1'),
+  (9, '2026-10-02 19:30:00', '2025-01-01 10:00:00', 'OPEN', 'admin01', '127.0.0.1');
+
+-- =========================
+-- PERFORMANCE_CAST (공연 캐스팅) — PER02_DETAIL01 공연 상세 조회용
+--
+-- round_id NULL     = 전체 회차 공통 캐스팅
+-- round_id 값 있음   = 해당 회차 전용 (뮤지컬 더블/트리플 캐스팅)
+-- casting_nm NULL   = 배역 개념이 없는 공연(콘서트 등)
+--
+-- [화면 테스트 케이스]
+--  · 레미제라블(5)      : 공통 캐스팅 + 회차별 더블 캐스팅이 섞인 경우
+--  · 오페라의 유령(9)    : 전체 공통 캐스팅만 있는 경우
+--  · 아이유 콘서트(1)    : 배역명이 없는 경우(casting_nm NULL) + 특정 회차 게스트
+--  · 나머지 공연         : 캐스팅이 아예 없는 경우(빈 목록 UI 확인용)
+--
+-- 회차 ID 참고: 공연5 → 10,11,12 / 공연9 → 19,20,21 / 공연1 → 1,2
+-- =========================
+INSERT INTO PERFORMANCE_CAST (performance_id, round_id, actor_nm, casting_nm, sort_order, ins_id, ins_ip) VALUES
+  -- 뮤지컬 레미제라블 (공연 5) — 장발장/자베르는 회차별 캐스팅, 나머지 배역은 전체 공통
+  (5, 10,   '김민석', '장발장',     0, 'admin01', '127.0.0.1'),
+  (5, 11,   '이서준', '장발장',     0, 'admin01', '127.0.0.1'),
+  (5, 12,   '김민석', '장발장',     0, 'admin01', '127.0.0.1'),
+  (5, 10,   '박도현', '자베르',     1, 'admin01', '127.0.0.1'),
+  (5, 11,   '박도현', '자베르',     1, 'admin01', '127.0.0.1'),
+  (5, 12,   '강태영', '자베르',     1, 'admin01', '127.0.0.1'),
+  (5, NULL, '한지우', '판틴',       2, 'admin01', '127.0.0.1'),
+  (5, NULL, '윤소희', '코제트',     3, 'admin01', '127.0.0.1'),
+  (5, NULL, '최현우', '마리우스',   4, 'admin01', '127.0.0.1'),
+  (5, NULL, '오세영', '테나르디에', 5, 'admin01', '127.0.0.1'),
+
+  -- 뮤지컬 오페라의 유령 (공연 9) — 전체 회차 공통 캐스팅만
+  (9, NULL, '서지훈', '팬텀',       0, 'admin01', '127.0.0.1'),
+  (9, NULL, '임하늘', '크리스틴',   1, 'admin01', '127.0.0.1'),
+  (9, NULL, '정우진', '라울',       2, 'admin01', '127.0.0.1'),
+  (9, NULL, '문가영', '칼롯타',     3, 'admin01', '127.0.0.1'),
+
+  -- 아이유 콘서트 (공연 1) — 배역명 없음(NULL), 2회차에만 게스트 출연
+  (1, NULL, '아이유', NULL,         0, 'admin01', '127.0.0.1'),
+  (1, 2,    '이하은', NULL,         1, 'admin01', '127.0.0.1');
 
 -- =========================
 -- SEATS
@@ -381,7 +441,8 @@ INSERT INTO PROGRAMS (program_nm, url_path, program_type, ins_id, ins_ip) VALUES
   ('공연 등록',     '/performances/new','PAGE', 'SYSTEM', '127.0.0.1'),
   ('사용자 관리',   '/admin/users',    'MENU', 'SYSTEM', '127.0.0.1'),
   ('프로그램관리',  '/admin/programs', 'MENU', 'SYSTEM', '127.0.0.1'),
-  ('메뉴관리',      '/admin/menus',    'MENU', 'SYSTEM', '127.0.0.1');
+  ('메뉴관리',      '/admin/menus',    'MENU', 'SYSTEM', '127.0.0.1'),
+  ('카테고리관리',  '/admin/categories','MENU', 'SYSTEM', '127.0.0.1');
 
 -- ROLE_PROGRAMS: 1=USER, 2=MANAGER, 3=ADMIN
 INSERT INTO ROLE_PROGRAMS (role_id, program_id, ins_id, ins_ip)
@@ -389,7 +450,7 @@ SELECT r.role_id, p.program_id, 'SYSTEM', '127.0.0.1'
 FROM ROLES r CROSS JOIN PROGRAMS p
 WHERE (p.url_path IN ('/', '/mypage'))                                    -- 전체 role 공통
    OR (p.url_path IN ('/performances', '/performances/new') AND r.role_id IN (2, 3))  -- 매니저/관리자
-   OR (p.url_path IN ('/admin/users', '/admin/programs', '/admin/menus') AND r.role_id = 3);  -- 관리자만
+   OR (p.url_path IN ('/admin/users', '/admin/programs', '/admin/menus', '/admin/categories') AND r.role_id = 3);  -- 관리자만
 
 -- MENUS: 현재 SiteNav.tsx 순서 그대로, 등록 페이지는 메뉴 미노출
 INSERT INTO MENUS (program_id, parent_menu_id, menu_nm, sort_order, ins_id, ins_ip)
@@ -411,3 +472,6 @@ FROM PROGRAMS p, MENUS m WHERE p.url_path = '/admin/programs' AND m.menu_nm = '�
 INSERT INTO MENUS (program_id, parent_menu_id, menu_nm, sort_order, ins_id, ins_ip)
 SELECT p.program_id, m.menu_id, '메뉴관리', 3, 'SYSTEM', '127.0.0.1'
 FROM PROGRAMS p, MENUS m WHERE p.url_path = '/admin/menus' AND m.menu_nm = '관리자';
+INSERT INTO MENUS (program_id, parent_menu_id, menu_nm, sort_order, ins_id, ins_ip)
+SELECT p.program_id, m.menu_id, '카테고리관리', 4, 'SYSTEM', '127.0.0.1'
+FROM PROGRAMS p, MENUS m WHERE p.url_path = '/admin/categories' AND m.menu_nm = '관리자';

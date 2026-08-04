@@ -68,6 +68,50 @@
         ORDER BY A.created_per DESC
     </select>
 
+
+    <!-- 캐스팅 -->
+    <select id="findById" parameterType="Long" resultMap="performanceMap">
+        SELECT  A.performance_id,
+        A.venue_id,
+        A.p_title,
+        V.venue_name,
+        A.poster_url,
+        A.created_per,
+        B.round_id,
+        B.round_time,
+        B.open_time,
+        B.round_status
+        FROM PERFORMANCES A
+        LEFT OUTER JOIN VENUE V ON A.venue_id = V.venue_id
+        LEFT OUTER JOIN PERFORMANCE_ROUND B ON A.performance_id = B.performance_id
+        WHERE A.performance_id = #{performanceId}
+        ORDER BY B.round_time
+    </select>
+
+    <select id="findCastsByPerformanceId" parameterType="Long" resultType="CastDTO">
+        SELECT cast_id AS castId,
+               performance_id AS performanceId,
+               round_id AS roundId,
+               actor_nm AS actorName,
+               casting_nm AS castingNm,
+               sort_order AS sortOrder
+        FROM PERFORMANCE_CAST
+        WHERE performance_id = #{performanceId}
+        ORDER BY sort_order, cast_id
+    </select>
+
+    <select id="findRoundsByMonth" resultType="RoundDTO">
+        SELECT round_id AS roundId,
+                performance_id AS performanceId,
+                round_time AS roundTime,
+                open_time AS openTime,
+                round_status AS roundStatus
+        FROM PERFORMANCE_ROUND
+        WHERE performance_id = #{performanceId}
+            AND DATE_FORMAT(round_time, '%Y-%m') = #{month}
+        ORDER BY round_time
+    </select>
+
     <!-- 페이지네이션용: PERFORMANCES 를 먼저 LIMIT/OFFSET 으로 자른 뒤 회차(PERFORMANCE_ROUND)를 재조인.
          findAll처럼 조인 후에 바로 LIMIT을 걸면 회차가 여러 개인 공연이 페이지 경계에서 잘릴 수 있어서
          이렇게 서브쿼리로 공연 단위 페이지를 먼저 확정한다. -->
