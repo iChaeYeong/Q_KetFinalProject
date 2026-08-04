@@ -13,6 +13,8 @@ type Props = {
   openTime: string;
   roundTime: string;
   title: string;
+  location: string;
+  posterUrl?: string;
 };
 
 // [BOOK-STATE] 버튼 상태 3가지
@@ -23,7 +25,7 @@ type Props = {
 
 type ButtonState = "Before" | "pending" | "open" | "closed";
 
-export default function BookButton({ roundId, openTime, roundTime, title }: Props) {
+export default function BookButton({ roundId, openTime, roundTime, title, location, posterUrl }: Props) {
   const router = useRouter();
   const { userSession } = useAuth();
 
@@ -121,6 +123,8 @@ if (now >= round) {
         <QueueModal
           scheduleId={roundId}
           title={title}
+          location={location}
+          posterUrl={posterUrl}
           onClose={() => setShowQueue(false)}
         />
       )}
