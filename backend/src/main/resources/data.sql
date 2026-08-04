@@ -200,7 +200,7 @@ INSERT INTO PERFORMANCE_ROUND (performance_id, round_time, open_time, round_stat
 --
 -- 회차 ID 참고: 공연5 → 10,11,12 / 공연9 → 19,20,21 / 공연1 → 1,2
 -- =========================
-INSERT INTO PERFORMANCE_CAST (performance_id, round_id, actor_name, casting_nm, sort_order, ins_id, ins_ip) VALUES
+INSERT INTO PERFORMANCE_CAST (performance_id, round_id, actor_nm, casting_nm, sort_order, ins_id, ins_ip) VALUES
   -- 뮤지컬 레미제라블 (공연 5) — 장발장/자베르는 회차별 캐스팅, 나머지 배역은 전체 공통
   (5, 10,   '김민석', '장발장',     0, 'admin01', '127.0.0.1'),
   (5, 11,   '이서준', '장발장',     0, 'admin01', '127.0.0.1'),
@@ -441,7 +441,8 @@ INSERT INTO PROGRAMS (program_nm, url_path, program_type, ins_id, ins_ip) VALUES
   ('공연 등록',     '/performances/new','PAGE', 'SYSTEM', '127.0.0.1'),
   ('사용자 관리',   '/admin/users',    'MENU', 'SYSTEM', '127.0.0.1'),
   ('프로그램관리',  '/admin/programs', 'MENU', 'SYSTEM', '127.0.0.1'),
-  ('메뉴관리',      '/admin/menus',    'MENU', 'SYSTEM', '127.0.0.1');
+  ('메뉴관리',      '/admin/menus',    'MENU', 'SYSTEM', '127.0.0.1'),
+  ('카테고리관리',  '/admin/categories','MENU', 'SYSTEM', '127.0.0.1');
 
 -- ROLE_PROGRAMS: 1=USER, 2=MANAGER, 3=ADMIN
 INSERT INTO ROLE_PROGRAMS (role_id, program_id, ins_id, ins_ip)
@@ -449,7 +450,7 @@ SELECT r.role_id, p.program_id, 'SYSTEM', '127.0.0.1'
 FROM ROLES r CROSS JOIN PROGRAMS p
 WHERE (p.url_path IN ('/', '/mypage'))                                    -- 전체 role 공통
    OR (p.url_path IN ('/performances', '/performances/new') AND r.role_id IN (2, 3))  -- 매니저/관리자
-   OR (p.url_path IN ('/admin/users', '/admin/programs', '/admin/menus') AND r.role_id = 3);  -- 관리자만
+   OR (p.url_path IN ('/admin/users', '/admin/programs', '/admin/menus', '/admin/categories') AND r.role_id = 3);  -- 관리자만
 
 -- MENUS: 현재 SiteNav.tsx 순서 그대로, 등록 페이지는 메뉴 미노출
 INSERT INTO MENUS (program_id, parent_menu_id, menu_nm, sort_order, ins_id, ins_ip)
@@ -471,3 +472,6 @@ FROM PROGRAMS p, MENUS m WHERE p.url_path = '/admin/programs' AND m.menu_nm = '�
 INSERT INTO MENUS (program_id, parent_menu_id, menu_nm, sort_order, ins_id, ins_ip)
 SELECT p.program_id, m.menu_id, '메뉴관리', 3, 'SYSTEM', '127.0.0.1'
 FROM PROGRAMS p, MENUS m WHERE p.url_path = '/admin/menus' AND m.menu_nm = '관리자';
+INSERT INTO MENUS (program_id, parent_menu_id, menu_nm, sort_order, ins_id, ins_ip)
+SELECT p.program_id, m.menu_id, '카테고리관리', 4, 'SYSTEM', '127.0.0.1'
+FROM PROGRAMS p, MENUS m WHERE p.url_path = '/admin/categories' AND m.menu_nm = '관리자';

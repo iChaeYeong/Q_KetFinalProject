@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS PERFORMANCE_CAST (
     cast_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     performance_id BIGINT NOT NULL,
     round_id BIGINT NULL COMMENT 'NULL이면 전체 회차 공통, 값이 있으면 해당 회차 전용',
-    actor_name VARCHAR(100) NOT NULL COMMENT '배우 이름',
+    actor_nm VARCHAR(100) NOT NULL COMMENT '배우 이름',
     casting_nm VARCHAR(100) NULL COMMENT '배역명 (ERD 기준 컬럼명)',
     sort_order INT NOT NULL DEFAULT 0,
 
