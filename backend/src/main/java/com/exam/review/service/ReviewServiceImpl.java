@@ -2,6 +2,7 @@ package com.exam.review.service;
 
 import com.exam.common.exception.BusinessException;
 import com.exam.common.exception.ErrorCode;
+import com.exam.reservation.dto.ReservationDTO;
 import com.exam.reservation.service.ReservationService;
 import com.exam.review.dto.ReviewDTO;
 import com.exam.review.mapper.ReviewMapper;
@@ -23,25 +24,37 @@ public class ReviewServiceImpl implements ReviewService {
 
     /***********************************
      *  이름      :  write
-     *  기능      :  감상평 작성 — 예매자만 가능, 공연당 1개만 허용
-     *  param    :  Long, String, String, boolean, String
+     *  기능      :  감상평 작성 — 그 회차 예매자만 가능, 회차당 1개만 허용
+     *  param    :  Long, Long, String, String, int, boolean, String
      *  return   :  ReviewDTO
      ************************************/
     @Override
     @Transactional
-    public ReviewDTO write(Long performanceId, String userId, String content, int rating, boolean containsSpoiler, String clientIp) {
+    public ReviewDTO write(Long performanceId, Long roundId, String userId, String content, int rating, boolean containsSpoiler, String clientIp) {
         requireValidRating(rating);
-        if (!reservationService.hasReservation(userId, performanceId)) {
+        if (!reservationService.hasReservation(userId, roundId)) {
             throw new BusinessException(ErrorCode.REVIEW_WRITE_NOT_ALLOWED);
         }
-        boolean alreadyReviewed = reviewMapper.findByPerformanceId(performanceId).stream()
-                .anyMatch(r -> r.getUserId().equals(userId));
-        if (alreadyReviewed) {
-            throw new BusinessException(ErrorCode.REVIEW_ALREADY_EXISTS);
+
+        // round_id+user_id UNIQUE 제약이 use_yn과 무관하게 걸려있어서, 예전에 삭제(use_yn='N')했던
+        // 회차 리뷰가 있으면 새로 INSERT하지 않고 그 행을 되살림 (안 그러면 제약 위반으로 에러남)
+        ReviewDTO existing = reviewMapper.findByRoundAndUser(roundId, userId);
+        if (existing != null) {
+            if ("Y".equals(existing.getUseYn())) {
+                throw new BusinessException(ErrorCode.REVIEW_ALREADY_EXISTS);
+            }
+            existing.setContent(content);
+            existing.setRating(rating);
+            existing.setContainsSpoiler(containsSpoiler ? "Y" : "N");
+            existing.setUptId(userId);
+            existing.setUptIp(clientIp);
+            reviewMapper.update(existing);
+            return reviewMapper.findById(existing.getReviewId());
         }
 
         ReviewDTO review = new ReviewDTO();
         review.setPerformanceId(performanceId);
+        review.setRoundId(roundId);
         review.setUserId(userId);
         review.setContent(content);
         review.setRating(rating);
@@ -62,6 +75,17 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public List<ReviewDTO> list(Long performanceId) {
         return reviewMapper.findByPerformanceId(performanceId);
+    }
+
+    /***********************************
+     *  이름      :  reviewableRounds
+     *  기능      :  이 공연에서 사용자가 예매한 회차 목록 (감상평 작성 화면의 회차 선택용)
+     *  param    :  Long, String
+     *  return   :  List<ReservationDTO>
+     ************************************/
+    @Override
+    public List<ReservationDTO> reviewableRounds(Long performanceId, String userId) {
+        return reservationService.getReservedRounds(userId, performanceId);
     }
 
     /***********************************

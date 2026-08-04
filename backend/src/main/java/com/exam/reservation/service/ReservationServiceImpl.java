@@ -147,12 +147,23 @@ public class ReservationServiceImpl implements ReservationService {
 
     /***********************************
      *  이름      :  hasReservation
-     *  기능      :  해당 사용자가 이 공연을 실제로 예매했는지 여부 (감상평 작성 자격 체크용)
+     *  기능      :  해당 사용자가 이 회차를 실제로 예매했는지 여부 (감상평 작성 자격 체크용)
      *  param    :  String, Long
      *  return   :  boolean
      ************************************/
     @Override
-    public boolean hasReservation(String userId, Long performanceId) {
-        return reservationMapper.countReservation(userId, performanceId) > 0;
+    public boolean hasReservation(String userId, Long roundId) {
+        return reservationMapper.countReservationByRound(userId, roundId) > 0;
+    }
+
+    /***********************************
+     *  이름      :  getReservedRounds
+     *  기능      :  해당 공연에서 사용자가 예매한 회차 목록 (감상평 작성 시 회차 선택 드롭다운용)
+     *  param    :  String, Long
+     *  return   :  List<ReservationDTO>
+     ************************************/
+    @Override
+    public List<ReservationDTO> getReservedRounds(String userId, Long performanceId) {
+        return reservationMapper.findReservedRoundsByPerformance(userId, performanceId);
     }
 }

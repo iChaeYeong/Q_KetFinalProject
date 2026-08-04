@@ -4,6 +4,7 @@ import com.exam.auth.dto.UserDTO;
 import com.exam.common.exception.BusinessException;
 import com.exam.common.exception.ErrorCode;
 import com.exam.common.util.WebUtil;
+import com.exam.reservation.dto.ReservationDTO;
 import com.exam.review.dto.ReviewDTO;
 import com.exam.review.dto.ReviewRequest;
 import com.exam.review.service.ReviewService;
@@ -40,9 +41,21 @@ public class ReviewController {
     }
 
     /***********************************
+     *  URL      :  "/events/{performanceId}/reviews/rounds"
+     *  이름      :   감상평 작성 가능 회차 조회
+     *  기능      :   로그인한 사용자가 이 공연에서 예매한 회차 목록을 조회한다 (작성 화면의 회차 선택용)
+     *  method   :   GET
+     ************************************/
+    @GetMapping("/events/{performanceId}/reviews/rounds")
+    public List<ReservationDTO> reviewableRounds(@PathVariable Long performanceId, HttpSession session) {
+        UserDTO loginUser = requireLogin(session);
+        return reviewService.reviewableRounds(performanceId, loginUser.getUserId());
+    }
+
+    /***********************************
      *  URL      :  "/events/{performanceId}/reviews"
      *  이름      :   감상평 작성
-     *  기능      :   해당 공연을 예매한 사용자가 감상평을 작성한다 (공연당 1개만 허용)
+     *  기능      :   해당 회차를 예매한 사용자가 감상평을 작성한다 (회차당 1개만 허용)
      *  method   :   POST
      ************************************/
     @PostMapping("/events/{performanceId}/reviews")
@@ -51,8 +64,8 @@ public class ReviewController {
                             HttpSession session,
                             HttpServletRequest servletRequest) {
         UserDTO loginUser = requireLogin(session);
-        return reviewService.write(performanceId, loginUser.getUserId(), request.getContent(), request.getRating(),
-                request.isContainsSpoiler(), WebUtil.getClientIp(servletRequest));
+        return reviewService.write(performanceId, request.getRoundId(), loginUser.getUserId(), request.getContent(),
+                request.getRating(), request.isContainsSpoiler(), WebUtil.getClientIp(servletRequest));
     }
 
     /***********************************

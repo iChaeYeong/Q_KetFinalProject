@@ -3,11 +3,15 @@
 // 공연 상세 화면 "감상평" 탭 내용 (REV01). PerformanceTabs.tsx 에서 렌더링됨.
 // 마이페이지(app/mypage/page.tsx)의 리스트+본인만 액션 패턴을 그대로 따름:
 // 목록은 useState+useEffect로 불러오고, 삭제는 confirm() 후 실행, 실패는 alert()로 보여줌.
+//
+// 감상평은 "회차" 단위 — 같은 공연도 회차를 여러 번 예매해서 봤으면 회차별로 따로 쓸 수 있음.
+// 그래서 작성 폼에는 "예매했지만 아직 감상평 안 쓴 회차" 중에서 고르는 드롭다운이 있음.
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import type { Review } from "@/lib/data/types";
-import { getReviews, writeReview, updateReview, deleteReview } from "@/lib/api/reviews";
+import type { Review, ReviewableRound } from "@/lib/data/types";
+import { getReviews, getReviewableRounds, writeReview, updateReview, deleteReview } from "@/lib/api/reviews";
+import { formatRoundTime } from "@/lib/utils/datetime";
 import Button from "@/components/ui/Button";
 import FormField from "@/components/ui/FormField";
 import Textarea from "@/components/ui/Textarea";
@@ -20,8 +24,10 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
 }
 
-// 작성/수정 공용 폼
+// 작성/수정 공용 폼. rounds가 있으면(작성 모드) 회차 선택 드롭다운을 보여주고,
+// 없으면(수정 모드) 회차는 이미 고정이라 안 보여줌.
 function ReviewForm({
+  rounds,
   initialContent = "",
   initialRating = 5,
   initialSpoiler = false,
@@ -29,26 +35,32 @@ function ReviewForm({
   onSubmit,
   onCancel,
 }: {
+  rounds?: ReviewableRound[];
   initialContent?: string;
   initialRating?: number;
   initialSpoiler?: boolean;
   submitLabel: string;
-  onSubmit: (content: string, rating: number, containsSpoiler: boolean) => Promise<void>;
+  onSubmit: (content: string, rating: number, containsSpoiler: boolean, roundId?: number) => Promise<void>;
   onCancel?: () => void;
 }) {
+  const [roundId, setRoundId] = useState<number | "">(rounds?.[0]?.roundId ?? "");
   const [content, setContent] = useState(initialContent);
   const [rating, setRating] = useState(initialRating);
   const [spoiler, setSpoiler] = useState(initialSpoiler);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    if (rounds && roundId === "") {
+      alert("회차를 선택하세요.");
+      return;
+    }
     if (!content.trim()) {
       alert("감상평 내용을 입력하세요.");
       return;
     }
     setSubmitting(true);
     try {
-      await onSubmit(content, rating, spoiler);
+      await onSubmit(content, rating, spoiler, rounds ? Number(roundId) : undefined);
     } catch (e) {
       alert(e instanceof Error ? e.message : "처리에 실패했습니다.");
     } finally {
@@ -58,6 +70,22 @@ function ReviewForm({
 
   return (
     <div className="reviewForm">
+      {rounds && (
+        <FormField label="회차">
+          <select
+            className="fieldInput"
+            value={roundId}
+            onChange={(e) => setRoundId(Number(e.target.value))}
+          >
+            {rounds.map((r) => (
+              <option key={r.roundId} value={r.roundId}>
+                {formatRoundTime(r.roundTime)}
+              </option>
+            ))}
+          </select>
+        </FormField>
+      )}
+
       <FormField label="별점">
         <StarRating value={rating} onChange={setRating} />
       </FormField>
@@ -126,7 +154,9 @@ function ReviewCard({
         <div>
           <p className="reviewAuthor">{review.userNm}</p>
           <StarRating value={review.rating} />
-          <p className="reviewDate">{formatDate(review.insDe)}</p>
+          <p className="reviewDate">
+            {formatRoundTime(review.roundTime)} 관람 · {formatDate(review.insDe)} 작성
+          </p>
         </div>
 
         {isMine && (
@@ -155,6 +185,7 @@ function ReviewCard({
 export default function ReviewSection({ performanceId }: Props) {
   const { userSession } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [reservedRounds, setReservedRounds] = useState<ReviewableRound[]>([]);
   const [loading, setLoading] = useState(true);
   const [writing, setWriting] = useState(false);
 
@@ -165,11 +196,22 @@ export default function ReviewSection({ performanceId }: Props) {
       .finally(() => setLoading(false));
   }, [performanceId]);
 
-  // 내가 이미 쓴 감상평이 있으면 작성 폼 대신 그 카드의 "수정" 버튼으로 고치게 함 (공연당 1개 정책)
-  const myReview = reviews.find((r) => r.userId === userSession?.userId);
+  useEffect(() => {
+    if (!userSession) return;
+    getReviewableRounds(performanceId)
+      .then(setReservedRounds)
+      .catch(() => setReservedRounds([]));
+  }, [performanceId, userSession]);
 
-  const handleWrite = async (content: string, rating: number, containsSpoiler: boolean) => {
-    const created = await writeReview(performanceId, content, rating, containsSpoiler);
+  // 내가 이미 감상평을 쓴 회차들 — 예매 회차 목록에서 이걸 빼면 "아직 안 쓴 회차"만 남음
+  const myReviewedRoundIds = reviews
+    .filter((r) => r.userId === userSession?.userId)
+    .map((r) => r.roundId);
+  const availableRounds = reservedRounds.filter((r) => !myReviewedRoundIds.includes(r.roundId));
+
+  const handleWrite = async (content: string, rating: number, containsSpoiler: boolean, roundId?: number) => {
+    if (!roundId) return;
+    const created = await writeReview(performanceId, roundId, content, rating, containsSpoiler);
     setReviews((prev) => [created, ...prev]);
     setWriting(false);
   };
@@ -192,9 +234,14 @@ export default function ReviewSection({ performanceId }: Props) {
   return (
     <div>
       {userSession &&
-        !myReview &&
+        availableRounds.length > 0 &&
         (writing ? (
-          <ReviewForm submitLabel="등록" onCancel={() => setWriting(false)} onSubmit={handleWrite} />
+          <ReviewForm
+            rounds={availableRounds}
+            submitLabel="등록"
+            onCancel={() => setWriting(false)}
+            onSubmit={handleWrite}
+          />
         ) : (
           <Button
             variant="secondary"

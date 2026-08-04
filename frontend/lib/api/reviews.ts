@@ -1,5 +1,5 @@
 import { apiFetch } from "./client";
-import type { Review } from "../data/types";
+import type { Review, ReviewableRound } from "../data/types";
 
 // ============================================================
 // GET /api/events/{performanceId}/reviews
@@ -25,34 +25,53 @@ export async function getReviews(performanceId: number): Promise<Review[]> {
 }
 
 // ============================================================
+// GET /api/events/{performanceId}/reviews/rounds
+// 백엔드: ReviewController.java → reviewableRounds()  (로그인 필요)
+// 기능: 감상평 작성 화면의 회차 선택 드롭다운용 — 내가 이 공연에서 예매한 회차 목록
+//
+// 사용 예시:
+//   import { getReviewableRounds } from "@/lib/api/reviews";
+//
+//   const rounds = await getReviewableRounds(performanceId);
+//   // 이미 감상평 쓴 회차는 reviews 목록에서 내 review들의 roundId와 대조해 프론트에서 제외
+//
+// 요청: 파라미터 없음
+// 응답 JSON (ReviewableRound[]): [{ "roundId": 10, "roundTime": "2026-08-15T19:00:00" }]
+// ============================================================
+export async function getReviewableRounds(performanceId: number): Promise<ReviewableRound[]> {
+  return apiFetch<ReviewableRound[]>(`/events/${performanceId}/reviews/rounds`);
+}
+
+// ============================================================
 // POST /api/events/{performanceId}/reviews
-// 백엔드: ReviewController.java → write()  (로그인 필요, 예매자만 가능, 공연당 1개만)
+// 백엔드: ReviewController.java → write()  (로그인 필요, 그 회차 예매자만 가능, 회차당 1개만)
 // 기능: 감상평 작성
 //
 // 사용 예시:
 //   import { writeReview } from "@/lib/api/reviews";
 //
 //   try {
-//     const review = await writeReview(performanceId, content, rating, containsSpoiler);
+//     const review = await writeReview(performanceId, roundId, content, rating, containsSpoiler);
 //     setReviews(prev => [review, ...prev]);
 //   } catch (e: any) {
 //     alert(e.message); // 예매 이력 없음(REV003), 이미 작성함(REV002) 등
 //   }
 //
 // 요청 JSON (프론트 → 백엔드, body):
-//   { "content": "정말 좋았어요", "rating": 5, "containsSpoiler": false }
+//   { "roundId": 10, "content": "정말 좋았어요", "rating": 5, "containsSpoiler": false }
 //
-// 응답 JSON (Review): { "reviewId": 1, "performanceId": 1, "userId": "testuser01", "rating": 5, ... }
+// 응답 JSON (Review): { "reviewId": 1, "performanceId": 1, "roundId": 10, "userId": "testuser01", ... }
 // ============================================================
 export async function writeReview(
   performanceId: number,
+  roundId: number,
   content: string,
   rating: number,
   containsSpoiler: boolean
 ): Promise<Review> {
   return apiFetch<Review>(`/events/${performanceId}/reviews`, {
     method: "POST",
-    body: { content, rating, containsSpoiler },
+    body: { roundId, content, rating, containsSpoiler },
   });
 }
 
