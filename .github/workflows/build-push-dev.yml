@@ -1,0 +1,179 @@
+name: Build & Deploy DEV
+
+on:
+  push:
+    branches:
+      - dev # dev
+  workflow_dispatch:
+
+# 공통 환경변수 - 리전, ECR 경로, 클러스터명, 네임스페이스
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: team5/ecr/qket
+  EKS_CLUSTER_NAME: team5-qket-cluster
+  K8S_NAMESPACE: qket-dev
+
+jobs:
+  # 변경 감지 - backend/frontend/그외의것 변경 감지
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch' }}
+      frontend: ${{ steps.filter.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
+  # front 매니페스트 apply - 이미지 무관한 리소스들 (namespace, configmap, secret, ingress 등)
+  apply-manifests:
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+
+      # 네임스페이스는 이제 Terraform(kubernetes_namespace)이 관리 — 여기서 안 건드림
+
+      # ConfigMap - GitHub Variables 에서 민감하지 않은 설정값 주입
+      # S3_BUCKET/CLOUDFRONT_DOMAIN은 여기 없음 — Terraform(module.storage_dev)이 직접 만든
+      # storage-config ConfigMap 쪽에 있음 (그 값들은 Terraform이 만든 리소스에서 나오는 값이라서).
+      # DB_HOST/REDIS_HOST도 마찬가지로 여기 없음 — ESO가 동기화하는 db-secrets/redis-secrets 쪽.
+      - name: 1. Apply ConfigMap
+        run: |
+          kubectl create configmap app-config \
+            --from-literal=DB_PORT=${{ vars.DEV_DB_PORT }} \
+            --from-literal=DB_NAME=${{ vars.DEV_DB_NAME }} \
+            --from-literal=REDIS_PORT=${{ vars.DEV_REDIS_PORT }} \
+            --from-literal=AWS_REGION=${{ env.AWS_REGION }} \
+            -n ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+      # db-secrets / redis-secrets / aws-secrets 모두 여기서 안 만듦:
+      #   - db-secrets, redis-secrets → Terraform(module.eso_dev)의 External Secrets Operator가
+      #     Secrets Manager에서 1시간마다 자동 동기화
+      #   - aws-secrets(AWS_ACCESS_KEY_ID 등) → 아예 필요 없어짐. 백엔드가 IRSA(qket-backend
+      #     ServiceAccount, module.storage_dev가 생성)로 S3에 붙어서 고정 키 자체가 불필요.
+      # 여기서 kubectl create로 다시 만들면 Terraform/ESO가 관리하는 리소스와 소유권 충돌.
+
+      - name: 2. Apply Ingress
+        run: kubectl apply -f k8s/dev/ingress_https_qket_dev.yaml
+
+      - name: 3. Apply NetworkPolicy
+        run: kubectl apply -f k8s/dev/networkpolicy_qKet_dev.yaml
+
+  # 백엔드 빌드/배포 - backend/* 변경 시에만 실행
+  build-backend:
+    needs: [changes, apply-manifests]
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      # ECR 로그인
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 이미지 태그: backend-{커밋SHA:앞자리 7글자}
+      - name: Build and push backend image
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          TAG=backend-$(echo ${{ github.sha }} | cut -c1-7)
+          docker build -t $REGISTRY/$ECR_REPOSITORY:$TAG ./backend
+          docker push $REGISTRY/$ECR_REPOSITORY:$TAG
+          echo "Pushed image: $REGISTRY/$ECR_REPOSITORY:$TAG"
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+
+      # sed로 BACKEND_IMAGE 플레이스홀더를 실제 이미지로 치환 후 apply
+      - name: Deploy to EKS
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          TAG=backend-$(echo ${{ github.sha }} | cut -c1-7)
+          sed "s|BACKEND_IMAGE|$REGISTRY/$ECR_REPOSITORY:$TAG|" k8s/dev/deploy_https_qKet_backend_dev.yaml | kubectl apply -f -
+          kubectl rollout status deployment/qket-backend -n ${{ env.K8S_NAMESPACE }}
+
+      - name: Verify backend deployment
+        run: |
+          echo "************************************************************* start Deployment"
+          kubectl get deployment qket-backend -n ${{ env.K8S_NAMESPACE }}
+          echo *************************************************************  start Pods"
+          kubectl get pods -l app=qket-backend -n ${{ env.K8S_NAMESPACE }}
+          echo *************************************************************  start Image"
+          kubectl get pod -l app=qket-backend -n ${{ env.K8S_NAMESPACE }} \
+            -o jsonpath='{.items[0].spec.containers[0].image}'
+
+  # 프론트엔드 빌드/배포 - frontend/** 변경 시에만 실행
+  build-frontend:
+    needs: [changes, apply-manifests]
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 이미지 태그: frontend-{커밋SHA}
+      - name: Build and push frontend image
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          TAG=frontend-$(echo ${{ github.sha }} | cut -c1-7)
+          docker build -t $REGISTRY/$ECR_REPOSITORY:$TAG ./frontend
+          docker push $REGISTRY/$ECR_REPOSITORY:$TAG
+          echo "Pushed image: $REGISTRY/$ECR_REPOSITORY:$TAG"
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+
+      # FRONTEND_IMAGE 플레이스홀더를 실제 이미지로 치환 후 apply
+      - name: Deploy to EKS
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          TAG=frontend-$(echo ${{ github.sha }} | cut -c1-7)
+          sed "s|FRONTEND_IMAGE|$REGISTRY/$ECR_REPOSITORY:$TAG|" k8s/dev/deploy_https_qKet_frontend_dev.yaml | kubectl apply -f -
+          kubectl rollout status deployment/qket-frontend -n ${{ env.K8S_NAMESPACE }}
+
+      - name: Verify frontend deployment
+        run: |
+          echo "************************************************************* Deployment"
+          kubectl get deployment qket-frontend -n ${{ env.K8S_NAMESPACE }}
+          echo "************************************************************* Pods"
+          kubectl get pods -l app=qket-frontend -n ${{ env.K8S_NAMESPACE }}
+          echo "************************************************************* Image"
+          kubectl get pod -l app=qket-frontend -n ${{ env.K8S_NAMESPACE }} \
+            -o jsonpath='{.items[0].spec.containers[0].image}'
