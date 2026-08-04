@@ -28,3 +28,13 @@ backend/build/
 **/.claude/settings.local.json
 **/.claude/scheduled_tasks.lock
 **/.claude/*.log
+
+# ===== Terraform (terraform/) =====
+# state 파일엔 리소스 상세정보(민감 정보 포함 가능)가 그대로 들어있어서 커밋 금지
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
