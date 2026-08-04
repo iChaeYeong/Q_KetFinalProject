@@ -194,8 +194,11 @@
   padding: 0 var(--space-2);
   border-radius: 8px;
   border: 1px solid var(--border);
+  background: transparent; /* <button>으로 써도(관리자 페이지) 브라우저 기본 배경이 안 비치게 */
   color: var(--text-2);
+  font-family: inherit;
   font-size: var(--font-md);
+  cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
 
