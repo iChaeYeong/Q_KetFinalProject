@@ -1,38 +1,19 @@
 # =========================================================
 # 사용법:
-#   cp k8s/dev/env_qKet.example.yaml k8s/dev/env_qKet.yaml
-#   env_qKet.yaml 에 실제 값 채운 후 → kubectl apply -f k8s/dev/env_qKet.yaml
-#   env_qKet.yaml 은 .gitignore 에 추가할 것 (실제 값 Git 노출 금지)
+#   cp k8s/dev/env_qKet_dev.example.yaml k8s/dev/env_qKet_dev.yaml
+#   env_qKet_dev.yaml 에 실제 값 채운 후 → kubectl apply -f k8s/dev/env_qKet_dev.yaml
+#   env_qKet_dev.yaml 은 .gitignore 에 추가할 것 (실제 값 Git 노출 금지)
+#
+# 참고: db-secrets / redis-secrets / storage-config(S3_BUCKET, CLOUDFRONT_DOMAIN) /
+#      aws-secrets 는 이제 여기 없음 — 전부 Terraform이 관리함:
+#        - db-secrets, redis-secrets → module.eso_dev (External Secrets Operator가
+#          Secrets Manager에서 자동 동기화)
+#        - storage-config, 백엔드 S3 접근 → module.storage_dev (IRSA라 aws-secrets 자체가 불필요)
+#      자세한 내용은 docs/infra/README.html 참고.
 # =========================================================
 
 # =========================================================
-# Secret — 민감한 정보 (비밀번호, 엔드포인트)
-# =========================================================
-
-apiVersion: v1
-kind: Secret
-type: Opaque
-metadata:
-  name: db-secrets
-  namespace: qket-dev
-stringData:
-  DB_HOST: "" # RDS 엔드포인트 (application.yml: ${DB_HOST})
-  DB_USERNAME: "" # DB 유저명    (application.yml: ${DB_USERNAME})
-  DB_PASSWORD: "" # DB 비밀번호  (application.yml: ${DB_PASSWORD})
-
----
-apiVersion: v1
-kind: Secret
-type: Opaque
-metadata:
-  name: redis-secrets
-  namespace: qket-dev
-stringData:
-  REDIS_HOST: "" # ElastiCache 엔드포인트 (application.yml: ${REDIS_HOST})
-
----
-# =========================================================
-# ConfigMap — 민감하지 않은 일반 설정값
+# ConfigMap — CI(GitHub Variables)가 계속 직접 관리하는 값
 # =========================================================
 apiVersion: v1
 kind: ConfigMap
@@ -44,5 +25,3 @@ data:
   DB_NAME: ""
   REDIS_PORT: "" #6379
   AWS_REGION: "" # ex) ap-northeast-2
-  S3_BUCKET: "" # S3 버킷 이름 (포스터 이미지 업로드용)
-

@@ -42,8 +42,4 @@ resource "aws_elasticache_cluster" "this" {
 
   subnet_group_name  = aws_elasticache_subnet_group.this.name
   security_group_ids = [aws_security_group.redis.id]
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }

@@ -7,7 +7,7 @@ module "data_dev" {
   vpc_id                        = module.network.vpc_id
   private_data_subnet_ids       = module.network.private_data_subnet_ids
   eks_cluster_security_group_id = module.eks.cluster_security_group_id
-  bastion_security_group_id     = aws_security_group.ssm_bastion.id
+  bastion_security_group_id     = module.bastion.security_group_id
 
   db_name                  = var.db_name
   db_username              = var.db_username
@@ -32,7 +32,7 @@ module "data_dev" {
 #   vpc_id                        = module.network.vpc_id
 #   private_data_subnet_ids       = module.network.private_data_subnet_ids
 #   eks_cluster_security_group_id = module.eks.cluster_security_group_id
-#   bastion_security_group_id     = aws_security_group.ssm_bastion.id
+#   bastion_security_group_id     = module.bastion.security_group_id
 #
 #   db_name                  = var.db_name
 #   db_username              = var.db_username

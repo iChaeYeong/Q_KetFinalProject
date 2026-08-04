@@ -58,12 +58,9 @@ resource "aws_db_instance" "this" {
   multi_az = false
 
   backup_retention_period = 7
-  skip_final_snapshot     = false
-  final_snapshot_identifier = "${var.project_name}-mysql-${var.environment}-final-snapshot"
-  deletion_protection       = false
-
-  # terraform destroy를 포함해 어떤 경우에도 이 리소스만큼은 실수로 삭제되지 않게 막음
-  lifecycle {
-    prevent_destroy = true
-  }
+  # dev는 자주 destroy/재생성하는 샌드박스라 삭제할 때마다 최종 스냅샷 만들면
+  # 이름 충돌로 삭제 자체가 막힘 — 그래서 스냅샷 안 만들고 그냥 삭제되게 함.
+  # prod 만들 때는 skip_final_snapshot = false로 바꿔서 안전망을 켤 것.
+  skip_final_snapshot = true
+  deletion_protection = false
 }

@@ -18,6 +18,21 @@ output "cluster_certificate_authority" {
   value       = aws_eks_cluster.this.certificate_authority[0].data
 }
 
+output "cluster_oidc_issuer_url" {
+  description = "IRSA(OIDC 프로바이더) 설정에 쓰는 클러스터 OIDC 발급자 URL"
+  value       = aws_eks_cluster.this.identity[0].oidc[0].issuer
+}
+
+output "oidc_provider_arn" {
+  description = "IRSA용 OIDC 프로바이더 ARN"
+  value       = aws_iam_openid_connect_provider.this.arn
+}
+
+output "oidc_provider_url" {
+  description = "IRSA용 OIDC 프로바이더 URL"
+  value       = aws_iam_openid_connect_provider.this.url
+}
+
 output "cluster_security_group_id" {
   description = "EKS가 자동 생성한 클러스터 보안 그룹 ID"
   value       = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id

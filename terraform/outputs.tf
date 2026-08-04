@@ -83,9 +83,19 @@ output "eks_node_role_arn" {
   value       = module.eks.node_role_arn
 }
 
+output "alb_controller_role_arn" {
+  description = "ALB Controller IRSA IAM 역할 ARN"
+  value       = module.alb_controller.role_arn
+}
+
+output "oidc_provider_arn" {
+  description = "EKS 클러스터 OIDC 프로바이더 ARN"
+  value       = module.eks.oidc_provider_arn
+}
+
 output "ssm_bastion_instance_id" {
   description = "SSM 세션 연결에 쓸 bastion 인스턴스 ID (aws ssm start-session --target <이값>)"
-  value       = aws_instance.ssm_bastion.id
+  value       = module.bastion.instance_id
 }
 
 output "rds_dev_endpoint" {
@@ -101,4 +111,29 @@ output "rds_dev_master_user_secret_arn" {
 output "redis_dev_endpoint" {
   description = "dev ElastiCache Redis 엔드포인트 (REDIS_HOST)"
   value       = module.data_dev.redis_endpoint
+}
+
+output "eso_role_arn" {
+  description = "External Secrets Operator IRSA IAM 역할 ARN"
+  value       = module.eso_dev.role_arn
+}
+
+output "eso_connection_secret_arn" {
+  description = "DB_HOST/REDIS_HOST를 담은 커스텀 Secrets Manager ARN"
+  value       = module.eso_dev.connection_secret_arn
+}
+
+output "s3_bucket_name_dev" {
+  description = "dev 포스터 S3 버킷 이름"
+  value       = module.storage_dev.bucket_name
+}
+
+output "cloudfront_domain_dev" {
+  description = "dev CloudFront 도메인"
+  value       = module.storage_dev.cloudfront_domain
+}
+
+output "backend_irsa_role_arn_dev" {
+  description = "dev 백엔드 IRSA IAM 역할 ARN"
+  value       = module.storage_dev.backend_role_arn
 }
