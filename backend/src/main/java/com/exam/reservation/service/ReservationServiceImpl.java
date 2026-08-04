@@ -144,4 +144,15 @@ public class ReservationServiceImpl implements ReservationService {
 
         return Map.of("success", true, "message", "예매가 취소되었습니다.");
     }
+
+    /***********************************
+     *  이름      :  hasReservation
+     *  기능      :  해당 사용자가 이 공연을 실제로 예매했는지 여부 (감상평 작성 자격 체크용)
+     *  param    :  String, Long
+     *  return   :  boolean
+     ************************************/
+    @Override
+    public boolean hasReservation(String userId, Long performanceId) {
+        return reservationMapper.countReservation(userId, performanceId) > 0;
+    }
 }

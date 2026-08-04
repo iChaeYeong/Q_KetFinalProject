@@ -297,4 +297,26 @@ CREATE TABLE IF NOT EXISTS PAYMENTS (
     UNIQUE KEY uk_payments_payment_key (payment_key)
 );
 
+-- REVIEWS: 공연 감상평(REV01). 공연당 사용자 1인 1개만 허용(UNIQUE). 삭제는 물리삭제 아니고 use_yn='N' 소프트 삭제
+CREATE TABLE IF NOT EXISTS REVIEWS (
+    review_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    performance_id BIGINT NOT NULL,
+    user_id VARCHAR(50) NOT NULL,
+    content TEXT NOT NULL,
+    rating TINYINT NOT NULL DEFAULT 5 CHECK (rating BETWEEN 1 AND 5),
+    contains_spoiler CHAR(1) NOT NULL DEFAULT 'N',
+    use_yn CHAR(1) NOT NULL DEFAULT 'Y',
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (performance_id) REFERENCES PERFORMANCES (performance_id),
+    FOREIGN KEY (user_id) REFERENCES USERS (user_id),
+    UNIQUE KEY uk_reviews_performance_user (performance_id, user_id)
+);
+
 SHOW TABLES;

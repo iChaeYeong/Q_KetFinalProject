@@ -74,4 +74,12 @@
         WHERE reservation_id = #{reservationId}
     </update>
 
+    <select id="countReservation" resultType="int">
+        SELECT COUNT(*)
+        FROM RESERVATIONS
+        WHERE user_id = #{userId}
+          AND performance_id = #{performanceId}
+          AND reserved_status = 'RESERVED'
+    </select>
+
 </mapper>

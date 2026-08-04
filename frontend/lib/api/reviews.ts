@@ -1,0 +1,101 @@
+import { apiFetch } from "./client";
+import type { Review } from "../data/types";
+
+// ============================================================
+// GET /api/events/{performanceId}/reviews
+// 백엔드: ReviewController.java → list()
+// 기능: 해당 공연의 감상평 목록 조회 (공개, 로그인 불필요)
+//
+// 사용 예시:
+//   import { getReviews } from "@/lib/api/reviews";
+//
+//   useEffect(() => {
+//     getReviews(performanceId).then(setReviews).finally(() => setLoading(false));
+//   }, [performanceId]);
+//
+// 요청: 파라미터 없음
+// 응답 JSON (Review[]):
+//   [
+//     { "reviewId": 1, "performanceId": 1, "userId": "testuser01", "userNm": "테스트유저01",
+//       "content": "정말 좋았어요", "rating": 5, "containsSpoiler": "N", "insDe": "2026-08-04T12:00:00" }
+//   ]
+// ============================================================
+export async function getReviews(performanceId: number): Promise<Review[]> {
+  return apiFetch<Review[]>(`/events/${performanceId}/reviews`);
+}
+
+// ============================================================
+// POST /api/events/{performanceId}/reviews
+// 백엔드: ReviewController.java → write()  (로그인 필요, 예매자만 가능, 공연당 1개만)
+// 기능: 감상평 작성
+//
+// 사용 예시:
+//   import { writeReview } from "@/lib/api/reviews";
+//
+//   try {
+//     const review = await writeReview(performanceId, content, rating, containsSpoiler);
+//     setReviews(prev => [review, ...prev]);
+//   } catch (e: any) {
+//     alert(e.message); // 예매 이력 없음(REV003), 이미 작성함(REV002) 등
+//   }
+//
+// 요청 JSON (프론트 → 백엔드, body):
+//   { "content": "정말 좋았어요", "rating": 5, "containsSpoiler": false }
+//
+// 응답 JSON (Review): { "reviewId": 1, "performanceId": 1, "userId": "testuser01", "rating": 5, ... }
+// ============================================================
+export async function writeReview(
+  performanceId: number,
+  content: string,
+  rating: number,
+  containsSpoiler: boolean
+): Promise<Review> {
+  return apiFetch<Review>(`/events/${performanceId}/reviews`, {
+    method: "POST",
+    body: { content, rating, containsSpoiler },
+  });
+}
+
+// ============================================================
+// PUT /api/reviews/{reviewId}
+// 백엔드: ReviewController.java → update()  (로그인 필요, 본인 감상평만)
+// 기능: 감상평 수정
+//
+// 사용 예시:
+//   const updated = await updateReview(reviewId, content, rating, containsSpoiler);
+//   setReviews(prev => prev.map(r => r.reviewId === reviewId ? updated : r));
+//
+// 요청 JSON (프론트 → 백엔드, body):
+//   { "content": "수정된 내용", "rating": 4, "containsSpoiler": true }
+//
+// 응답 JSON (Review)
+// ============================================================
+export async function updateReview(
+  reviewId: number,
+  content: string,
+  rating: number,
+  containsSpoiler: boolean
+): Promise<Review> {
+  return apiFetch<Review>(`/reviews/${reviewId}`, {
+    method: "PUT",
+    body: { content, rating, containsSpoiler },
+  });
+}
+
+// ============================================================
+// DELETE /api/reviews/{reviewId}
+// 백엔드: ReviewController.java → delete()  (로그인 필요, 본인 감상평만, 소프트 삭제)
+// 기능: 감상평 삭제
+//
+// 사용 예시:
+//   if (confirm("감상평을 삭제하시겠습니까?")) {
+//     await deleteReview(reviewId);
+//     setReviews(prev => prev.filter(r => r.reviewId !== reviewId));
+//   }
+//
+// 요청: 파라미터 없음
+// 응답: 본문 없음 (성공 시 204/200)
+// ============================================================
+export async function deleteReview(reviewId: number): Promise<void> {
+  await apiFetch<void>(`/reviews/${reviewId}`, { method: "DELETE" });
+}
