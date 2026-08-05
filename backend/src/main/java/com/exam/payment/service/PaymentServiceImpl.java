@@ -121,16 +121,33 @@ public class PaymentServiceImpl implements PaymentService {
         if (payment == null || !payment.getUserId().equals(userId)) {
             throw new BusinessException(ErrorCode.PAYMENT_NOT_FOUND);
         }
+        return doCancel(payment, userId, userId, clientIp, "고객 요청에 의한 결제 취소");
+    }
+
+    @Override
+    @Transactional
+    public PaymentDTO adminCancelPayment(Long paymentId, String actorId, String clientIp) {
+        PaymentDTO payment = paymentMapper.findById(paymentId);
+        if (payment == null) {
+            throw new BusinessException(ErrorCode.PAYMENT_NOT_FOUND);
+        }
+        // 소유자 체크 없이 관리자가 임의 결제 건을 취소 — 접근 권한 자체는 컨트롤러에서 이미 admin(3)으로 막아둠
+        return doCancel(payment, payment.getUserId(), actorId, clientIp, "관리자(" + actorId + ")에 의한 환불 처리");
+    }
+
+    // reservationOwnerId: ReservationService.cancel()이 예매 소유자와 일치해야만 취소를 허용하므로 항상 결제 당사자여야 함
+    // actorId: 이번 취소를 실제로 수행한 사람(본인 또는 관리자) — PAYMENTS 감사 컬럼(upt_id)에 기록됨
+    private PaymentDTO doCancel(PaymentDTO payment, String reservationOwnerId, String actorId, String clientIp, String cancelReason) {
         if (!"DONE".equals(payment.getPayStatus())) {
             throw new BusinessException(ErrorCode.PAYMENT_ALREADY_CANCELED);
         }
 
-        // 사용자가 직접 요청한 취소라 확실히 실패를 알려줘야 함 — confirm()의 자동취소(cancelWithToss)와
-        // 달리 여기서는 예외를 삼키지 않고 그대로 던져서 "취소가 안 됐다"는 걸 사용자가 알 수 있게 함
+        // 사용자가 직접 요청한 취소든 관리자 처리든 확실히 실패를 알려줘야 함 — confirm()의 자동취소(cancelWithToss)와
+        // 달리 여기서는 예외를 삼키지 않고 그대로 던져서 "취소가 안 됐다"는 걸 호출한 쪽이 알 수 있게 함
         try {
             restTemplate.postForEntity(
                     TOSS_API_BASE + "/" + payment.getPaymentKey() + "/cancel",
-                    new HttpEntity<>(Map.of("cancelReason", "고객 요청에 의한 결제 취소"), buildAuthHeaders()),
+                    new HttpEntity<>(Map.of("cancelReason", cancelReason), buildAuthHeaders()),
                     Map.class
             );
         } catch (HttpClientErrorException e) {
@@ -139,9 +156,9 @@ public class PaymentServiceImpl implements PaymentService {
 
         // 결제 취소가 끝난 뒤 좌석도 함께 반납 — 이미 취소된 예매 등으로 실패해도 결제 취소 자체는 되돌리지 않음
         // (환불은 이미 토스에 확정됐으므로, 좌석 반납 실패는 별도로 확인이 필요한 상황이지 결제 취소를 무효화할 사유는 아님)
-        reservationService.cancel(payment.getReservationId(), userId, clientIp);
+        reservationService.cancel(payment.getReservationId(), reservationOwnerId, clientIp);
 
-        paymentMapper.updateStatus(paymentId, "CANCELED", userId, clientIp);
+        paymentMapper.updateStatus(payment.getPaymentId(), "CANCELED", actorId, clientIp);
         payment.setPayStatus("CANCELED");
         return payment;
     }

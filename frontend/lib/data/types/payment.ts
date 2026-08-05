@@ -13,3 +13,9 @@ export type Payment = {
   seatColume: string;
   grade: string;
 };
+
+// 관리자 결제 내역 필터 조회용 — 일반 Payment에 결제자 정보(userId/userNm)가 추가된 형태
+export type AdminPayment = Payment & {
+  userId: string;
+  userNm: string;
+};
