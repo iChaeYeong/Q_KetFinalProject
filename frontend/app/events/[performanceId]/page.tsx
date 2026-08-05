@@ -91,7 +91,11 @@ export default async function PerformanceDetailPage({
       />
 
       {/* 출연진 / 감상평 탭 */}
-      <PerformanceTabs commonCasts={commonCasts} roundCasts={roundCasts} />
+      <PerformanceTabs
+        performanceId={detail.performanceId}
+        commonCasts={commonCasts}
+        roundCasts={roundCasts}
+      />
     </PageHeader>
   );
 }

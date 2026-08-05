@@ -13,4 +13,6 @@ public interface ReservationMapper {
     List<ReservationDTO> findByUserId(String userId);
     ReservationDTO findById(Long reservationId);
     int cancel(@Param("reservationId") Long reservationId, @Param("uptId") String uptId, @Param("uptIp") String uptIp);
+    int countReservationByRound(@Param("userId") String userId, @Param("roundId") Long roundId);
+    List<ReservationDTO> findReservedRoundsByPerformance(@Param("userId") String userId, @Param("performanceId") Long performanceId);
 }
