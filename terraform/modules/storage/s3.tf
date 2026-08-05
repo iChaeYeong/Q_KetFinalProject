@@ -2,6 +2,10 @@
 # 버킷 직접 URL로는 절대 접근 불가, 항상 CloudFront 도메인을 거쳐야 함.
 resource "aws_s3_bucket" "posters" {
   bucket = "${var.project_name}-posters-${var.environment}"
+
+  # dev는 자주 destroy/재생성하는 샌드박스라, 안에 업로드된 파일이 있어도(비어있지 않아도)
+  # 삭제가 막히지 않게 함. prod 만들 때는 false로 바꿔서 실수 삭제 방지할 것.
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_public_access_block" "posters" {

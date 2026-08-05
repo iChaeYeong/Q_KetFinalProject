@@ -8,6 +8,6 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: qket-dev
+  name: qket-release
   labels:
-    name: qket-dev
+    name: qket-release

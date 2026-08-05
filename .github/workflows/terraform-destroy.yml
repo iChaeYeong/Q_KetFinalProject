@@ -1,0 +1,73 @@
+name: Terraform Destroy (manual)
+
+# push/PR로는 절대 안 걸리고 오직 workflow_dispatch(수동 실행)로만 동작.
+# 실수 방지를 위해 confirm 입력값이 정확히 "destroy"일 때만 실제로 destroy job이 돎.
+# terraform/release root만 지움 — platform(network/eks)이나 prod는 안 건드림.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: '정말로 인프라를 전부 삭제하려면 정확히 "destroy"를 입력하세요'
+        required: true
+        type: string
+
+defaults:
+  run:
+    working-directory: terraform/release
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-2
+  TF_VERSION: "1.15.8"
+  EKS_CLUSTER_NAME: team5-qket-cluster
+
+jobs:
+  confirm:
+    name: Validate confirmation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check confirm input
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "destroy" ]; then
+            echo "::error::confirm 입력값이 'destroy'가 아닙니다. 취소합니다."
+            exit 1
+          fi
+
+  destroy:
+    name: Terraform Destroy
+    needs: confirm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Configure kubectl
+        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+        continue-on-error: true
+
+      # ALB Controller가 만든 ALB는 Terraform state에 없어서 destroy가 절대 못 지움 —
+      # 놔두면 나중에 IGW/VPC를 뗄 때 "public 주소가 매핑돼있다"는 DependencyViolation으로 막힘.
+      # 그래서 Ingress를 먼저 지워 컨트롤러가 ALB 자체를 정리하게 한 뒤 terraform destroy로 넘어감.
+      - name: Delete Ingress first (ALB Controller가 만든 ALB 정리)
+        run: kubectl delete ingress --all -n qket-release --ignore-not-found=true
+        continue-on-error: true
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Destroy
+        run: terraform destroy -input=false -auto-approve

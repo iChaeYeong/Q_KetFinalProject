@@ -1,0 +1,127 @@
+name: Terraform Platform Plan & Apply (Manual Approval)
+
+# platform root(network/eks/bastion/alb-controller, dev/prod 공유 싱글턴) 전용.
+# - PR -> main : plan만 돌려서 PR 코멘트로 결과 남김
+# - push -> main : apply job이 도는데, environment(platform-production)에
+#   Required reviewers가 걸려있어서 승인 전까진 "Waiting" 상태로 멈춰있음.
+#   담당자가 GitHub Actions 화면에서 plan 결과 보고 Approve해야 실제 apply가 실행됨.
+# (repo Settings에서 이 environment를 미리 만들고 Required reviewers를 지정해둬야
+#  이 gate가 실제로 동작함 — 아래 안내 참고)
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "terraform/platform/**"
+      - "terraform/modules/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "terraform/platform/**"
+      - "terraform/modules/**"
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: terraform/platform
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  AWS_REGION: ap-northeast-2
+  TF_VERSION: "1.15.8"
+
+jobs:
+  plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: true
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -input=false -no-color
+        continue-on-error: true
+
+      - name: Comment plan result on PR
+        uses: actions/github-script@v7
+        env:
+          PLAN: "${{ steps.plan.outputs.stdout }}"
+        with:
+          script: |
+            const output = `#### Terraform Plan — platform (\`${{ steps.plan.outcome }}\`)
+            <details><summary>plan 결과 펼치기</summary>
+
+            \`\`\`
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output,
+            });
+
+      - name: Fail job if plan failed
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+  apply:
+    name: Terraform Apply (승인 후 실행)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    environment: platform-production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      # push(PR merge)든 workflow_dispatch(수동 실행)든, 승인 이후 실제로 뭘 적용하는지
+      # 이 job의 로그에 남겨서 apply 전에 확인할 수 있게 함. plan 자체가 실패하면
+      # (continue-on-error 없음) 여기서 바로 멈추고 apply는 실행 안 됨.
+      - name: Terraform Plan (검토용)
+        run: terraform plan -input=false -no-color
+
+      - name: Terraform Apply
+        run: terraform apply -input=false -auto-approve

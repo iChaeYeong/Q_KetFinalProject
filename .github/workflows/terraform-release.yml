@@ -1,0 +1,122 @@
+name: Terraform Plan & Apply
+
+# terraform/ root를 platform(network+eks+bastion+alb-controller, 공유 싱글턴) / release / prod로 분리함
+# (state도 각각 S3의 platform·release·prod/terraform.tfstate로 독립).
+# - PR -> release/main : release root에 대해 plan만 돌려서 PR 코멘트로 결과 남김 (실제 apply는 안 함)
+# - push -> release    : release root에 apply 자동 실행 (terraform/release, terraform/modules 변경 시만)
+# - main push는 아직 안 걸어둠: prod root(terraform/prod)는 아직 실제 리소스가 없는 스캐폴드 상태라,
+#   data_prod/eso_prod 모듈을 실제로 켠 뒤에 main -> prod apply를 추가할 것.
+# - platform root(terraform/platform)도 아직 별도 트리거 없음 — network/eks는 거의 안 바뀌는
+#   공유 싱글턴이라 지금은 로컬에서 수동으로 apply (나중에 필요하면 별도 워크플로우로 분리 예정).
+on:
+  pull_request:
+    branches:
+      - release
+      - main
+    paths:
+      - "terraform/release/**"
+      - "terraform/modules/**"
+  push:
+    branches:
+      - release
+    paths:
+      - "terraform/release/**"
+      - "terraform/modules/**"
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: terraform/release
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  AWS_REGION: ap-northeast-2
+  TF_VERSION: "1.15.8"
+
+jobs:
+  plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: true
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -input=false -no-color
+        continue-on-error: true
+
+      - name: Comment plan result on PR
+        uses: actions/github-script@v7
+        env:
+          PLAN: "${{ steps.plan.outputs.stdout }}"
+        with:
+          script: |
+            const output = `#### Terraform Plan (\`${{ steps.plan.outcome }}\`) — target: \`${{ github.base_ref }}\`
+            <details><summary>plan 결과 펼치기</summary>
+
+            \`\`\`
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output,
+            });
+
+      - name: Fail job if plan failed
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+  apply:
+    name: Terraform Apply (release -> release 환경)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Apply
+        run: terraform apply -input=false -auto-approve
