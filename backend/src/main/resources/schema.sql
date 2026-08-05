@@ -120,17 +120,19 @@ CREATE TABLE IF NOT EXISTS PERFORMANCE_ROUND (
     FOREIGN KEY (performance_id) REFERENCES PERFORMANCES (performance_id)
 );
 
--- PERFORMANCE_CAST: 공연 캐스팅(출연 배우/배역) — PER02_DETAIL01(공연 상세 조회)
--- 캐스팅표 엑셀 업로드는 이 테이블에 여러 행을 bulk insert 하는 API로 처리 (스키마는 동일)
--- round_id: NULL 이면 전체 회차 공통 캐스팅, 값이 있으면 그 회차 전용(더블/트리플 캐스팅 대응)
--- [주의] round_id 는 nullable FK — MyBatis update 문에서 <if test="roundId != null"> 가드를 쓰면 안 됨
---   ("전체 회차 공통으로 되돌리기"가 정상 케이스라 부분요청과 구분이 안 됨. CLAUDE.md 참고)
-CREATE TABLE IF NOT EXISTS PERFORMANCE_CAST (
+-- PERFORMANCE_CAST_COMMON / PERFORMANCE_CAST_ROUND: 공연 캐스팅(출연 배우/배역) — PER02_DETAIL01(공연 상세 조회)
+-- 원래 PERFORMANCE_CAST 단일 테이블(performance_id + nullable round_id)이었으나,
+-- round_id가 있는 행은 performance_id가 PERFORMANCE_ROUND를 통해 이행적으로 종속되는
+-- 정규화 위반(3NF 위반)이라 두 테이블로 분리함:
+--   PERFORMANCE_CAST_COMMON: 전체 회차 공통 캐스팅 (performance_id만 가짐)
+--   PERFORMANCE_CAST_ROUND : 해당 회차 전용 캐스팅, 더블/트리플 캐스팅 대응 (round_id만 가짐,
+--                            performance_id는 PERFORMANCE_ROUND 조인으로 조회)
+-- 캐스팅표 엑셀 업로드는 이 두 테이블에 각각 bulk insert 하는 API로 처리 예정
+CREATE TABLE IF NOT EXISTS PERFORMANCE_CAST_COMMON (
     cast_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     performance_id BIGINT NOT NULL,
-    round_id BIGINT NULL COMMENT 'NULL이면 전체 회차 공통, 값이 있으면 해당 회차 전용',
     actor_nm VARCHAR(100) NOT NULL COMMENT '배우 이름',
-    casting_nm VARCHAR(100) NULL COMMENT '배역명 (ERD 기준 컬럼명)',
+    casting_nm VARCHAR(100) NULL COMMENT '배역명',
     sort_order INT NOT NULL DEFAULT 0,
 
     ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
@@ -141,9 +143,26 @@ CREATE TABLE IF NOT EXISTS PERFORMANCE_CAST (
     upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (performance_id) REFERENCES PERFORMANCES (performance_id),
-    FOREIGN KEY (round_id) REFERENCES PERFORMANCE_ROUND (round_id),
     KEY idx_cast_performance (performance_id, sort_order)
 );
+
+CREATE TABLE IF NOT EXISTS PERFORMANCE_CAST_ROUND (
+    cast_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    round_id BIGINT NOT NULL,
+    actor_nm VARCHAR(100) NOT NULL COMMENT '배우 이름',
+    casting_nm VARCHAR(100) NULL COMMENT '배역명',
+    sort_order INT NOT NULL DEFAULT 0,
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (round_id) REFERENCES PERFORMANCE_ROUND (round_id),
+    KEY idx_cast_performance (round_id, sort_order)
+    );
 
 -- PERFORMANCE_PRICE: 공연별 좌석 등급 가격표. SEATS.grade(VIP/R/S)는 좌석 등급만 나타내고
 -- 가격은 없음 — 같은 좌석(같은 venue)이라도 공연마다 가격이 다를 수 있어서 별도 테이블로 관리.
