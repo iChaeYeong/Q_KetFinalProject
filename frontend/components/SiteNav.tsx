@@ -34,6 +34,11 @@ export default function SiteNav() {
     router.push("/");
   };
 
+  // 결제 화면은 이탈을 줄이려고 네비를 숨긴다(결제창 UX 관례).
+  // 대신 화면 안에 브랜드 표시 + "좌석 선택으로" 버튼을 따로 두므로 갇히지는 않음.
+  // 훅 호출 순서가 깨지지 않도록 useEffect 아래에서 판단해야 함.
+  if (pathname === "/payments/checkout") return null;
+
   return (
     <nav className="siteNav">
       <div className="siteNavInner">

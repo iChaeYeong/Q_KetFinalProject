@@ -32,6 +32,11 @@ export default function SeatsPage() {
   const { scheduleId } = useParams<{ scheduleId: string }>();
   const searchParams = useSearchParams();
   const queueToken = searchParams.get("queueToken") ?? undefined;
+  // QueueModal이 실어 보낸 공연 정보 — 좌석 화면 자체엔 아직 안 쓰지만 결제 화면(왼쪽 요약 패널의
+  // 포스터/공연명/장소)까지 그대로 들고 가야 해서 여기서 받아 handleReserve에서 다시 실어보냄
+  const pTitle = searchParams.get("pTitle") ?? "";
+  const pLocation = searchParams.get("pLocation") ?? "";
+  const posterUrl = searchParams.get("posterUrl") ?? "";
   const router = useRouter();
 
   // 좌석 목록
@@ -95,6 +100,9 @@ export default function SeatsPage() {
     if (queueToken) {
       params.set("queueToken", queueToken);
     }
+    if (pTitle) params.set("pTitle", pTitle);
+    if (pLocation) params.set("pLocation", pLocation);
+    if (posterUrl) params.set("posterUrl", posterUrl);
 
     router.push(`/payments/checkout?${params.toString()}`);
   };

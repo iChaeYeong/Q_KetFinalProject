@@ -29,6 +29,8 @@ type Props = {
   performanceId: number;
   rounds: PerformanceRound[];
   title: string;
+  location: string;
+  posterUrl?: string;
 };
 
 type DatedRound = PerformanceRound & {
@@ -37,7 +39,7 @@ type DatedRound = PerformanceRound & {
   day: number;
 };
 
-export default function RoundCalendar({ performanceId, rounds, title }: Props) {
+export default function RoundCalendar({ performanceId, rounds, title, location, posterUrl }: Props) {
   // 회차마다 연/월/일을 미리 뽑아둔다 (달력 칸과 대조할 때 매번 파싱하지 않도록)
   const dated: DatedRound[] = useMemo(
     () =>
@@ -275,6 +277,8 @@ export default function RoundCalendar({ performanceId, rounds, title }: Props) {
                     roundTime={round.roundTime}
                     openTime={round.openTime}
                     title={title}
+                    location={location}
+                    posterUrl={posterUrl}
                   />
                 </div>
               ))

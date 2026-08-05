@@ -86,6 +86,8 @@ export default async function PerformanceDetailPage({
         performanceId={detail.performanceId}
         rounds={detail.rounds}
         title={detail.pTitle}
+        location={detail.pLocation}
+        posterUrl={detail.posterUrl}
       />
 
       {/* 출연진 / 감상평 탭 */}

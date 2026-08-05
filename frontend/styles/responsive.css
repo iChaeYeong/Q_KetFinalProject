@@ -11,6 +11,9 @@
   .detailTop { flex-direction: column; }         /* 공연 상세: 포스터 + 정보를 세로로 쌓음 */
   .detailPoster { width: 160px; }                /* 세로 배치라 포스터도 조금 줄임 */
   .calendarLayout { grid-template-columns: 1fr; gap: var(--space-4); } /* 달력 + 회차목록을 세로로 */
+  .checkoutPanel { grid-template-columns: 1fr; }  /* 결제: 요약(위) + 결제(아래) 1단으로 */
+  .checkoutWrap  { justify-content: flex-start; } /* 1단이라 세로가 길어져 중앙정렬 해제 */
+  .checkoutTotal { margin-top: var(--space-4); }  /* 1단에서는 아래로 밀 필요 없음 */
   .calendarListPane {                            /* 세로 배치라 구분선을 세로선 → 가로선으로 */
     padding-left: 0;
     border-left: none;

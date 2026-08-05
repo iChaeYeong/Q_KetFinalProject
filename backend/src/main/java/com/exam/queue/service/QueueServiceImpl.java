@@ -23,7 +23,7 @@ import java.util.UUID;
 @Service
 public class QueueServiceImpl implements QueueService {
 
-        //private static final int MAX_ACTIVE_USERS = 0; // TEMP: 순번 화면 테스트용
+        // private static final int MAX_ACTIVE_USERS = 0; // TEMP: 순번 화면 테스트용
         private static final int MAX_ACTIVE_USERS = 10;
 
         private static final Duration WAITING_TTL = Duration.ofMinutes(30);

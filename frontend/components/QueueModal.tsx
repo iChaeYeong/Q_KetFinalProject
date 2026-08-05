@@ -20,10 +20,12 @@ import StatusMessage from "@/components/ui/StatusMessage";
 type Props = {
   scheduleId: number;
   title: string;
+  location: string;
+  posterUrl?: string;
   onClose: () => void;
 };
 
-export default function QueueModal({ scheduleId, title, onClose }: Props) {
+export default function QueueModal({ scheduleId, title, location, posterUrl, onClose }: Props) {
   const router = useRouter();
 
   const [status, setStatus] = useState<QueueStatus | null>(null);
@@ -56,7 +58,11 @@ export default function QueueModal({ scheduleId, title, onClose }: Props) {
           if (cancelledRef.current) return;
           // push 대신 replace: 대기열 화면을 히스토리에 남기지 않아야
           // 좌석 선택 화면에서 "뒤로가기"를 눌러도 대기열로 돌아가서 자동 재입장되는 문제가 안 생김
-          router.replace(`/seats/${scheduleId}?queueToken=${token}`);
+          // pTitle/pLocation/posterUrl 은 여기서 API로 다시 조회하지 않고 그대로 실어 보냄 —
+          // 좌석 화면과 결제 화면 모두 이 값들을 표시용으로만 쓰고 roundId로 이미 확정된 공연이라 재검증 불필요
+          const forwardParams = new URLSearchParams({ queueToken: token, pTitle: title, pLocation: location });
+          if (posterUrl) forwardParams.set("posterUrl", posterUrl);
+          router.replace(`/seats/${scheduleId}?${forwardParams.toString()}`);
         }, 1500);
       } else if (result.status === "EXPIRED") {
         stopPolling();

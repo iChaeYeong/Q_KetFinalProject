@@ -36,6 +36,12 @@ function CheckoutContent() {
   const grade = searchParams.get("grade") ?? "";
   const amount = GRADE_PRICE[grade] ?? 0;
 
+  // 좌석 선택 화면까지 QueueModal → seats page를 거쳐 그대로 실려온 공연 정보.
+  // 직접 URL을 조작해 들어오는 등 없는 경우도 있으니 있으면만 보여준다 (필수 값 아님 — isValid 판정엔 안 씀)
+  const pTitle = searchParams.get("pTitle") ?? "";
+  const pLocation = searchParams.get("pLocation") ?? "";
+  const posterUrl = searchParams.get("posterUrl") ?? "";
+
   const isValid = Boolean(
     reservationId &&
     roundId &&
@@ -94,6 +100,12 @@ function CheckoutContent() {
     });
   }, [amount, isValid]);
 
+  const GRADE_LABEL: Record<string, string> = {
+    VIP: "VIP석",
+    R: "R석",
+    S: "S석",
+  };
+
   if (!isValid) {
     return (
       <div className="pageWrap">
@@ -132,80 +144,124 @@ function CheckoutContent() {
   }
 };
 
+  // 레이아웃 의도는 styles/checkout.css 상단 주석 참고
+  // (요약은 우리 다크 테마, 결제는 토스 위젯에 맞춘 라이트 테마로 면을 분리)
   return (
-    <div className="pageWrap">
-      <div className="pageHeader">
-        <h1 className="pageTitle">
-          결제 수단 선택
-        </h1>
-
-        <p className="pageSubtitle">
-          예매 정보와 결제 금액을 확인해주세요.
-        </p>
-      </div>
-
-      <div
-        className="seatPanel"
-        style={{
-          width: "100%",
-          maxWidth: 700,
-          margin: "0 auto",
-        }}
-      >
-        <p className="seatPanelTitle">
-          예매 정보
-        </p>
-
-        <div className="seatPanelRow">
-          <span className="seatPanelLabel">
-            좌석
-          </span>
-
-          <span className="seatPanelValue">
-            {seatRow}{seatColume}
-          </span>
-        </div>
-
-        <div className="seatPanelRow">
-          <span className="seatPanelLabel">
-            등급
-          </span>
-
-          <span className="seatPanelValue">
-            {grade}
-          </span>
-        </div>
-
-        <div className="seatPanelRow">
-          <span className="seatPanelLabel">
-            결제 금액
-          </span>
-
-          <span className="seatPanelValue">
-            {amount.toLocaleString("ko-KR")}원
-          </span>
-        </div>
-
-        <hr className="seatPanelDivider" />
-
-        {error && (
-          <p className="errorMsg">{error}</p>
-        )}
-
-        <div id="payment-method" />
-        <div id="agreement" />
+    <div className="checkoutWrap">
+      <div className="checkoutTopBar">
+        <span className="checkoutBrand">Q-Ket</span>
 
         <button
           type="button"
-          className="btnPrimary"
-          style={{ width: "100%" }}
-          disabled={!ready}
-          onClick={handlePayment}
+          className="checkoutBack"
+          onClick={() => router.back()}
         >
-          {ready
-            ? `${amount.toLocaleString("ko-KR")}원 결제하기`
-            : "결제위젯 불러오는 중..."}
+          ← 좌석 선택으로
         </button>
+      </div>
+
+      <div className="checkoutPanel">
+        {/* 왼쪽 — 예매 요약 (다크) */}
+        <div className="checkoutSummary">
+          <p className="checkoutSummaryTitle">
+            예매 정보
+          </p>
+
+          {(pTitle || posterUrl) && (
+            <div className="checkoutEventCard">
+              <div className="checkoutPoster">
+                {posterUrl
+                  ? <img src={posterUrl} alt={pTitle} />
+                  : <div className="checkoutPosterEmpty" />}
+              </div>
+
+              <div className="checkoutEventInfo">
+                {pTitle && <p className="checkoutEventTitle">{pTitle}</p>}
+                {pLocation && <p className="checkoutEventLocation">{pLocation}</p>}
+              </div>
+            </div>
+          )}
+
+          <div className="checkoutSummaryRow">
+            <span className="checkoutSummaryLabel">
+              좌석
+            </span>
+
+            <span className="checkoutSummaryValue checkoutSeatValue">
+              {seatRow}{seatColume}
+            </span>
+          </div>
+
+          <div className="checkoutSummaryRow">
+            <span className="checkoutSummaryLabel">
+              등급
+            </span>
+
+            <span className="checkoutSummaryValue">
+              {GRADE_LABEL[grade] ?? grade}
+            </span>
+          </div>
+
+          <hr className="checkoutSummaryDivider" />
+
+          <div className="checkoutSummaryRow">
+            <span className="checkoutSummaryLabel">
+              예매번호
+            </span>
+
+            <span className="checkoutSummaryValue">
+              {reservationId}
+            </span>
+          </div>
+
+          <div className="checkoutTotal">
+            <p className="checkoutTotalLabel">
+              총 결제금액
+            </p>
+
+            <p className="checkoutTotalValue">
+              {amount.toLocaleString("ko-KR")}
+              <span className="checkoutTotalUnit">원</span>
+            </p>
+          </div>
+        </div>
+
+        {/* 오른쪽 — 결제 (라이트, 토스 위젯 영역) */}
+        <div className="checkoutPayment">
+          <p className="checkoutPaymentTitle">
+            결제 수단
+          </p>
+
+          <p className="checkoutPaymentSubtitle">
+            원하시는 결제 방법을 선택해주세요.
+          </p>
+
+          {error && (
+            <p className="checkoutErrorMsg">{error}</p>
+          )}
+
+          <div className="checkoutWidgetSlot">
+            <div id="payment-method" />
+            <div id="agreement" />
+          </div>
+
+          <div className="checkoutPayAction">
+            <button
+              type="button"
+              className="checkoutPayBtn"
+              disabled={!ready}
+              onClick={handlePayment}
+            >
+              {ready
+                ? `${amount.toLocaleString("ko-KR")}원 결제하기`
+                : "결제위젯 불러오는 중..."}
+            </button>
+
+            <p className="checkoutSecureNote">
+              토스페이먼츠를 통해 안전하게 결제됩니다
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
