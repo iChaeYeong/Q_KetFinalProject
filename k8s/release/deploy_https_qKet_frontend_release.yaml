@@ -1,11 +1,11 @@
 # =========================================================
-# dev Frontend Deployment
+# release Frontend Deployment
 # =========================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: qket-frontend
-  namespace: qket-dev
+  namespace: qket-release
 spec:
   revisionHistoryLimit: 2
   replicas: 1
@@ -39,7 +39,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: qket-frontend-service
-  namespace: qket-dev
+  namespace: qket-release
 spec:
   type: ClusterIP
   ports:

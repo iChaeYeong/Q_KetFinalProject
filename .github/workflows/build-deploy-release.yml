@@ -1,9 +1,15 @@
-name: Build & Deploy DEV
+# #######################################
+# build-deploy-release.yml
+# release 브렌치에 푸쉬 시
+# 백엔드, 프론트엔드 수정사항별 빌드
+# -n qket-release 에 관련된 요소들 빌드및 배포(롤아웃)
+# #######################################
+name: Build & Deploy RELEASE
 
 on:
   push:
     branches:
-      - dev # dev
+      - release # release 환경(qket-release)으로 배포되는 트리거 브랜치
   workflow_dispatch:
 
 # 공통 환경변수 - 리전, ECR 경로, 클러스터명, 네임스페이스
@@ -11,7 +17,7 @@ env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: team5/ecr/qket
   EKS_CLUSTER_NAME: team5-qket-cluster
-  K8S_NAMESPACE: qket-dev
+  K8S_NAMESPACE: qket-release
 
 jobs:
   # 변경 감지 - backend/frontend/그외의것 변경 감지
@@ -54,18 +60,18 @@ jobs:
       #   - app-config(DB_PORT/DB_NAME/REDIS_PORT/AWS_REGION) → 루트 app-config.tf.
       #     전부 Terraform이 RDS/ElastiCache 만들 때 이미 아는 값이라 GitHub Variables에
       #     따로 입력할 필요 자체가 없어짐 (레포 재생성 시 값 날아가는 사고 방지)
-      #   - storage-config(S3_BUCKET/CLOUDFRONT_DOMAIN) → module.storage_dev
-      #   - db-secrets/redis-secrets → module.eso_dev의 External Secrets Operator가
+      #   - storage-config(S3_BUCKET/CLOUDFRONT_DOMAIN) → module.storage_release
+      #   - db-secrets/redis-secrets → module.eso_release의 External Secrets Operator가
       #     Secrets Manager에서 1시간마다 자동 동기화
       #   - aws-secrets(AWS_ACCESS_KEY_ID 등) → 아예 필요 없어짐. 백엔드가 IRSA(qket-backend
-      #     ServiceAccount, module.storage_dev가 생성)로 S3에 붙어서 고정 키 자체가 불필요.
+      #     ServiceAccount, module.storage_release가 생성)로 S3에 붙어서 고정 키 자체가 불필요.
       # 여기서 kubectl create로 다시 만들면 Terraform/ESO가 관리하는 리소스와 소유권 충돌.
 
       - name: 1. Apply Ingress
-        run: kubectl apply -f k8s/dev/ingress_https_qket_dev.yaml
+        run: kubectl apply -f k8s/release/ingress_https_qket_release.yaml
 
       - name: 2. Apply NetworkPolicy
-        run: kubectl apply -f k8s/dev/networkpolicy_qKet_dev.yaml
+        run: kubectl apply -f k8s/release/networkpolicy_qKet_release.yaml
 
   # 백엔드 빌드/배포 - backend/* 변경 시에만 실행
   build-backend:
@@ -104,8 +110,8 @@ jobs:
         env:
           REGISTRY: ${{ steps.ecr-login.outputs.registry }}
         run: |
-          TAG=backend-$(echo ${{ github.sha }} | cut -c1-7)
-          sed "s|BACKEND_IMAGE|$REGISTRY/$ECR_REPOSITORY:$TAG|" k8s/dev/deploy_https_qKet_backend_dev.yaml | kubectl apply -f -
+          TAG=backend-relese-<$(echo ${{ github.sha }} | cut -c1-7)>
+          sed "s|BACKEND_IMAGE|$REGISTRY/$ECR_REPOSITORY:$TAG|" k8s/release/deploy_https_qKet_backend_release.yaml | kubectl apply -f -
           kubectl rollout status deployment/qket-backend -n ${{ env.K8S_NAMESPACE }}
 
       - name: Verify backend deployment
@@ -156,7 +162,7 @@ jobs:
           REGISTRY: ${{ steps.ecr-login.outputs.registry }}
         run: |
           TAG=frontend-$(echo ${{ github.sha }} | cut -c1-7)
-          sed "s|FRONTEND_IMAGE|$REGISTRY/$ECR_REPOSITORY:$TAG|" k8s/dev/deploy_https_qKet_frontend_dev.yaml | kubectl apply -f -
+          sed "s|FRONTEND_IMAGE|$REGISTRY/$ECR_REPOSITORY:$TAG|" k8s/release/deploy_https_qKet_frontend_release.yaml | kubectl apply -f -
           kubectl rollout status deployment/qket-frontend -n ${{ env.K8S_NAMESPACE }}
 
       - name: Verify frontend deployment

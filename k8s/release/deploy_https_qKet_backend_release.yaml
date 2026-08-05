@@ -1,11 +1,11 @@
 # =========================================================
-# dev Backend Deployment
+# release Backend Deployment
 # =========================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: qket-backend
-  namespace: qket-dev
+  namespace: qket-release
 spec:
   replicas: 1
   selector:
@@ -16,7 +16,7 @@ spec:
       labels:
         app: qket-backend
     spec:
-      # S3 업로드용 IRSA — Terraform(module.storage_dev)이 만든 서비스어카운트.
+      # S3 업로드용 IRSA — Terraform(module.storage_release)이 만든 서비스어카운트.
       # 이걸로 뜨면 S3Client가 고정 키 없이 자동으로 이 역할의 임시 자격증명을 씀.
       serviceAccountName: qket-backend
       containers:
@@ -48,7 +48,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: qket-backend-service
-  namespace: qket-dev
+  namespace: qket-release
 spec:
   type: ClusterIP
   selector:

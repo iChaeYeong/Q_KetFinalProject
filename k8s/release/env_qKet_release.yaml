@@ -1,7 +1,7 @@
 # =========================================================
 # 사용법:
-#   cp k8s/dev/env_qKet.example.yaml k8s/dev/env_qKet.yaml
-#   env_qKet.yaml 에 실제 값 채운 후 → kubectl apply -f k8s/dev/env_qKet.yaml
+#   cp k8s/release/env_qKet.example.yaml k8s/release/env_qKet.yaml
+#   env_qKet.yaml 에 실제 값 채운 후 → kubectl apply -f k8s/release/env_qKet.yaml
 #   env_qKet.yaml 은 .gitignore 에 추가할 것 (실제 값 Git 노출 금지)
 # =========================================================
 
@@ -14,7 +14,7 @@ kind: Secret
 type: Opaque
 metadata:
   name: db-secrets
-  namespace: qket-dev
+  namespace: qket-release
 stringData:
   DB_HOST: ""       # RDS 엔드포인트 (application.yml: ${DB_HOST})
   DB_USERNAME: ""   # DB 유저명    (application.yml: ${DB_USERNAME})
@@ -26,7 +26,7 @@ kind: Secret
 type: Opaque
 metadata:
   name: redis-secrets
-  namespace: qket-dev
+  namespace: qket-release
 stringData:
   REDIS_HOST: ""    # ElastiCache 엔드포인트 (application.yml: ${REDIS_HOST})
 
@@ -38,7 +38,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: app-config
-  namespace: qket-dev
+  namespace: qket-release
 data:
   DB_PORT: "3306"
   DB_NAME: "qket"

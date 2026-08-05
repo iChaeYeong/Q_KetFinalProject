@@ -1,9 +1,17 @@
+# #######################################
+# pr-build-check.yml
+# dev,release,main 브렌치 PR 생성시 동작
+# 프론트앤드 Node.js 20, 백엔드 JAVA21으로 빌드 잘 되는지 체킹
+# #######################################
+
 name: PR Build Check
 
 on:
   pull_request:
     branches:
-      - dev
+      - dev # feature -> dev
+      - release # dev -> release
+      - main # release -> main
 
 permissions:
   contents: read
