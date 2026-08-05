@@ -47,7 +47,7 @@ public enum ErrorCode {
     PAYMENT_CANCEL_FAILED(HttpStatus.BAD_REQUEST, "PAY005", "결제 취소에 실패했습니다."),
     PAYMENT_DELETE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "PAY006", "취소(환불)된 결제만 삭제할 수 있습니다."),
 
-    // Review (ReviewController)
+    // 리뷰 (리뷰컨트롤러)
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REV001", "감상평을 찾을 수 없습니다."),
     REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "REV002", "이미 이 공연에 감상평을 작성하셨습니다."),
     REVIEW_WRITE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "REV003", "예매한 공연만 감상평을 작성할 수 있습니다.");
