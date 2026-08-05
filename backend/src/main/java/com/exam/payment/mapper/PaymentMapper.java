@@ -1,6 +1,7 @@
 package com.exam.payment.mapper;
 
 import com.exam.payment.dto.PaymentDTO;
+import com.exam.payment.dto.RefundDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -19,4 +20,7 @@ public interface PaymentMapper {
 
     // 관리자 결제 내역 필터 조회
     List<PaymentDTO> findAllForAdmin(@Param("payStatus") String payStatus, @Param("keyword") String keyword);
+
+    // 환불 이력 저장 (결제 취소 시 토스 취소 API 응답 기록)
+    int saveRefund(RefundDTO refundDTO);
 }

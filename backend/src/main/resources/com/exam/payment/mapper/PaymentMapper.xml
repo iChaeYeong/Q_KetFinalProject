@@ -9,6 +9,11 @@
         VALUES (#{reservationId}, #{userId}, #{orderId}, #{paymentKey}, #{amount}, #{payStatus}, #{approvedAt}, #{insId}, #{insIp})
     </insert>
 
+    <insert id="saveRefund" parameterType="RefundDTO" useGeneratedKeys="true" keyProperty="refundId">
+        INSERT INTO REFUND (payment_id, cancel_amount, cancel_reason, toss_transaction_key, canceled_at, ins_id, ins_ip)
+        VALUES (#{paymentId}, #{cancelAmount}, #{cancelReason}, #{tossTransactionKey}, #{canceledAt}, #{insId}, #{insIp})
+    </insert>
+
     <select id="findByOrderId" resultType="PaymentDTO" parameterType="String">
         SELECT payment_id     AS paymentId,
                reservation_id AS reservationId,

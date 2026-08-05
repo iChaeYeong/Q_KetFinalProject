@@ -4,6 +4,7 @@ import com.exam.common.exception.BusinessException;
 import com.exam.common.exception.ErrorCode;
 import com.exam.payment.dto.PaymentConfirmRequestDTO;
 import com.exam.payment.dto.PaymentDTO;
+import com.exam.payment.dto.RefundDTO;
 import com.exam.payment.mapper.PaymentMapper;
 import com.exam.reservation.dto.SeatDTO;
 import com.exam.reservation.mapper.SeatMapper;
@@ -19,6 +20,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -144,12 +146,14 @@ public class PaymentServiceImpl implements PaymentService {
 
         // 사용자가 직접 요청한 취소든 관리자 처리든 확실히 실패를 알려줘야 함 — confirm()의 자동취소(cancelWithToss)와
         // 달리 여기서는 예외를 삼키지 않고 그대로 던져서 "취소가 안 됐다"는 걸 호출한 쪽이 알 수 있게 함
+        Map<String, Object> tossResponse;
         try {
-            restTemplate.postForEntity(
+            ResponseEntity<Map> response = restTemplate.postForEntity(
                     TOSS_API_BASE + "/" + payment.getPaymentKey() + "/cancel",
                     new HttpEntity<>(Map.of("cancelReason", cancelReason), buildAuthHeaders()),
                     Map.class
             );
+            tossResponse = response.getBody();
         } catch (HttpClientErrorException e) {
             throw new BusinessException(ErrorCode.PAYMENT_CANCEL_FAILED, extractTossMessage(e, ErrorCode.PAYMENT_CANCEL_FAILED.getMessage()));
         }
@@ -159,8 +163,46 @@ public class PaymentServiceImpl implements PaymentService {
         reservationService.cancel(payment.getReservationId(), reservationOwnerId, clientIp);
 
         paymentMapper.updateStatus(payment.getPaymentId(), "CANCELED", actorId, clientIp);
+        saveRefundRecord(payment, tossResponse, cancelReason, actorId, clientIp);
         payment.setPayStatus("CANCELED");
         return payment;
+    }
+
+    // 토스 취소 응답(cancels 배열의 마지막 항목)에서 취소 금액/거래키/취소 시각을 뽑아 REFUND에 저장.
+    // 응답 파싱에 실패해도 결제 취소 자체(위에서 이미 완료됨)는 되돌리지 않고, 금액만 결제 전액으로 폴백
+    @SuppressWarnings("unchecked")
+    private void saveRefundRecord(PaymentDTO payment, Map<String, Object> tossResponse,
+                                   String cancelReason, String actorId, String clientIp) {
+        RefundDTO refund = new RefundDTO();
+        refund.setPaymentId(payment.getPaymentId());
+        refund.setCancelReason(cancelReason);
+        refund.setInsId(actorId);
+        refund.setInsIp(clientIp);
+        refund.setCancelAmount(payment.getAmount());
+
+        List<Map<String, Object>> cancels = tossResponse != null
+                ? (List<Map<String, Object>>) tossResponse.get("cancels") : null;
+        if (cancels != null && !cancels.isEmpty()) {
+            Map<String, Object> lastCancel = cancels.get(cancels.size() - 1);
+            Object cancelAmount = lastCancel.get("cancelAmount");
+            if (cancelAmount instanceof Number) {
+                refund.setCancelAmount(((Number) cancelAmount).longValue());
+            }
+            Object transactionKey = lastCancel.get("transactionKey");
+            if (transactionKey != null) {
+                refund.setTossTransactionKey(String.valueOf(transactionKey));
+            }
+            Object canceledAt = lastCancel.get("canceledAt");
+            if (canceledAt != null) {
+                try {
+                    refund.setCanceledAt(OffsetDateTime.parse(String.valueOf(canceledAt)).toLocalDateTime());
+                } catch (Exception ignore) {
+                    // 토스 응답 시각 형식이 예상과 다르면 파싱만 건너뜀 — 이 컬럼은 nullable이라 취소 처리 자체엔 영향 없음
+                }
+            }
+        }
+
+        paymentMapper.saveRefund(refund);
     }
 
     @Override

@@ -350,6 +350,27 @@ CREATE TABLE IF NOT EXISTS PAYMENTS (
     UNIQUE KEY uk_payments_payment_key (payment_key)
 );
 
+-- REFUND: 결제 취소(환불) 이력. PAYMENTS.pay_status='CANCELED' 하나만으로는
+-- "언제/얼마를/왜/누가 취소했는지" 감사 추적이 안 되고, 토스 취소 API 응답(거래키, 취소 시각, 취소 금액)이
+-- 그대로 버려지고 있었음 — 그 응답을 저장해서 이력으로 남기기 위한 테이블
+CREATE TABLE IF NOT EXISTS REFUND (
+    refund_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    payment_id BIGINT NOT NULL,
+    cancel_amount BIGINT NOT NULL COMMENT '실제 취소된 금액(토스 cancelAmount) — 지금은 전액취소만 지원하지만 부분환불 대비 별도 저장',
+    cancel_reason VARCHAR(255) NOT NULL,
+    toss_transaction_key VARCHAR(200) NULL COMMENT '토스 취소 거래 식별자(cancels[].transactionKey)',
+    canceled_at DATETIME NULL COMMENT '토스가 응답한 실제 취소 처리 시각(cancels[].canceledAt)',
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM' COMMENT '취소를 실행한 사람 — 본인 또는 관리자',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (payment_id) REFERENCES PAYMENTS (payment_id)
+);
+
 -- REVIEWS: 공연 감상평(REV01). 회차(round) 단위로 사용자 1인 1개만 허용(UNIQUE) — 같은 공연도
 -- 회차를 여러 번 예매해서 봤으면 회차별로 따로 작성 가능. performance_id는 조회 편의를 위한 비정규화
 -- 컬럼(RESERVATIONS 테이블과 동일한 패턴). 삭제는 물리삭제 아니고 use_yn='N' 소프트 삭제
