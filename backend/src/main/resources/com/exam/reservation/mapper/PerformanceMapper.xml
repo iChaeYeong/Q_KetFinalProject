@@ -68,6 +68,10 @@
         ORDER BY A.created_per DESC
     </select>
 
+    <!-- round_no view 테이블로 추가해놨습니다. 만약 회차 표시가 필요해지면
+         PERFORMANCE_ROUND -> PERFORMANCE_ROUND_VIEW로 교체하고 아래 SELECT에
+         round_no AS roundNo 추가하면됩니다.
+         -->
 
     <!-- 캐스팅 -->
     <select id="findById" parameterType="Long" resultMap="performanceMap">

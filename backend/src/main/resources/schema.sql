@@ -120,10 +120,21 @@ CREATE TABLE IF NOT EXISTS PERFORMANCE_ROUND (
     FOREIGN KEY (performance_id) REFERENCES PERFORMANCES (performance_id)
 );
 
+CREATE OR REPLACE VIEW PERFORMANCE_ROUND_VIEW AS
+SELECT
+       round_id,
+       performance_id,
+       round_time,
+       open_time,
+       round_status,
+       ROW_NUMBER() OVER (PARTITION BY performance_id ORDER BY round_time) AS round_no
+FROM PERFORMANCE_ROUND;
+
+
 -- PERFORMANCE_CAST_COMMON / PERFORMANCE_CAST_ROUND: 공연 캐스팅(출연 배우/배역) — PER02_DETAIL01(공연 상세 조회)
 -- 원래 PERFORMANCE_CAST 단일 테이블(performance_id + nullable round_id)이었으나,
 -- round_id가 있는 행은 performance_id가 PERFORMANCE_ROUND를 통해 이행적으로 종속되는
--- 정규화 위반(3NF 위반)이라 두 테이블로 분리함:
+-- 정규화 위반이라 두 테이블로 분리함:
 --   PERFORMANCE_CAST_COMMON: 전체 회차 공통 캐스팅 (performance_id만 가짐)
 --   PERFORMANCE_CAST_ROUND : 해당 회차 전용 캐스팅, 더블/트리플 캐스팅 대응 (round_id만 가짐,
 --                            performance_id는 PERFORMANCE_ROUND 조인으로 조회)

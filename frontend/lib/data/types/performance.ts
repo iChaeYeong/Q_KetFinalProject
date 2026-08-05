@@ -1,9 +1,11 @@
+// 회차를 반환하는 모든 쿼리가 VIEW로 바뀐다면 roundNo에 옵셔널 없애도됌
 export type PerformanceRound = {
   roundId: number;
   performanceId: number;
   roundTime: string;
   openTime: string;
   roundStatus: "OPEN" | "CLOSED" | "SOLDOUT";
+  roundNo?: number;
 };
 
 // GET /events/rounds/{roundId} 응답 — 결제 체크아웃 화면에서 예매 정보(공연명/장소/시간) 표시용
