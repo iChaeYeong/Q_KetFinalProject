@@ -1,0 +1,80 @@
+/* ── PAYMENT ── */
+/* 결제 체크아웃/승인/실패 화면 전용 — app/payments/*/page.tsx */
+/* 화면 전체를 세로/가로 가운데 정렬하는 카드 레시피는 auth.css의 authWrap/authBox와 동일한 패턴 */
+
+/* 이 파일의 "첫 번째 규칙"이 컴파일된 CSS 번들에서 원인 불명으로 누락되는 문제가 있어서
+   (실제 스타일 없는) 더미 규칙을 맨 앞에 둬서 진짜 규칙들이 두 번째 이후에 오게 함 */
+._paymentCssBundleGuard {}
+
+/* 결제 수단 선택 / 승인 / 실패 화면 공통 카드 */
+.paymentBox {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px 36px 36px;
+  text-align: center;
+}
+
+/* 승인 처리 중 표시하는 원형 스피너 */
+.paymentSpinner {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  border: 3px solid var(--accent-dim);
+  border-top-color: var(--accent);
+  animation: paymentSpin 0.8s linear infinite;
+}
+
+@keyframes paymentSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* 승인 완료/실패 시 표시하는 원형 상태 아이콘 */
+.paymentIcon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.paymentIconSuccess { background: var(--success-bg); color: var(--success); }
+.paymentIconError   { background: var(--error-bg);   color: var(--error); }
+
+.paymentTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.paymentDesc {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 24px;
+}
+
+/* 체크아웃/승인 화면의 예매정보 요약 — 안의 행들은 seat.css의 seatPanelRow/Label/Value를 그대로 재사용.
+   paymentBox 전체는 가운데 정렬(text-align:center)이라 이 블록만 왼쪽 정렬로 되돌림 */
+.paymentSummary {
+  text-align: left;
+  margin-bottom: 4px;
+}
+
+/* 실패/완료 화면 하단 버튼 2개를 나란히 배치 */
+.paymentActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.paymentActions > * { flex: 1; }

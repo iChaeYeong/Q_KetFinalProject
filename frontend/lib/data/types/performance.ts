@@ -6,6 +6,16 @@ export type PerformanceRound = {
   roundStatus: "OPEN" | "CLOSED" | "SOLDOUT";
 };
 
+// GET /events/rounds/{roundId} 응답 — 결제 체크아웃 화면에서 예매 정보(공연명/장소/시간) 표시용
+export type RoundDetail = {
+  roundId: number;
+  performanceId: number;
+  pTitle: string;
+  pLocation: string;
+  roundTime: string;
+  roundStatus: string;
+};
+
 export type Performance = {
   performanceId: number;
   pTitle: string;

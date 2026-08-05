@@ -35,12 +35,14 @@
                s.seat_colume    AS seatColume,
                s.grade,
                perf.p_title     AS pTitle,
+               v.venue_name     AS venueName,
                pr.round_time    AS roundTime
         FROM PAYMENTS p
                  JOIN RESERVATIONS r ON p.reservation_id = r.reservation_id
                  JOIN SEATS s ON r.seat_id = s.seat_id
                  JOIN PERFORMANCE_ROUND pr ON r.round_id = pr.round_id
                  JOIN PERFORMANCES perf ON pr.performance_id = perf.performance_id
+                 LEFT JOIN VENUE v ON perf.venue_id = v.venue_id
         WHERE p.user_id = #{userId}
           AND p.deleted_yn = 'N'
         ORDER BY p.approved_at DESC
@@ -59,12 +61,14 @@
                s.seat_colume    AS seatColume,
                s.grade,
                perf.p_title     AS pTitle,
+               v.venue_name     AS venueName,
                pr.round_time    AS roundTime
         FROM PAYMENTS p
                  JOIN RESERVATIONS r ON p.reservation_id = r.reservation_id
                  JOIN SEATS s ON r.seat_id = s.seat_id
                  JOIN PERFORMANCE_ROUND pr ON r.round_id = pr.round_id
                  JOIN PERFORMANCES perf ON pr.performance_id = perf.performance_id
+                 LEFT JOIN VENUE v ON perf.venue_id = v.venue_id
         WHERE p.payment_id = #{paymentId}
     </select>
 
@@ -83,5 +87,41 @@
             upt_ip     = #{uptIp}
         WHERE payment_id = #{paymentId}
     </update>
+
+    <!-- 관리자 결제 내역 조회: 사용자 소유와 무관하게 전체 조회, payStatus/키워드(아이디·이름·공연명)로 필터링.
+         사용자가 목록에서 지운(deleted_yn='Y') 건도 감사 목적상 그대로 노출함 -->
+    <select id="findAllForAdmin" resultType="PaymentDTO">
+        SELECT p.payment_id     AS paymentId,
+               p.reservation_id AS reservationId,
+               p.user_id        AS userId,
+               u.user_nm        AS userNm,
+               p.order_id       AS orderId,
+               p.payment_key    AS paymentKey,
+               p.amount,
+               p.pay_status     AS payStatus,
+               p.approved_at    AS approvedAt,
+               s.seat_row       AS seatRow,
+               s.seat_colume    AS seatColume,
+               s.grade,
+               perf.p_title     AS pTitle,
+               v.venue_name     AS venueName,
+               pr.round_time    AS roundTime
+        FROM PAYMENTS p
+                 JOIN USERS u ON p.user_id = u.user_id
+                 JOIN RESERVATIONS r ON p.reservation_id = r.reservation_id
+                 JOIN SEATS s ON r.seat_id = s.seat_id
+                 JOIN PERFORMANCE_ROUND pr ON r.round_id = pr.round_id
+                 JOIN PERFORMANCES perf ON pr.performance_id = perf.performance_id
+                 LEFT JOIN VENUE v ON perf.venue_id = v.venue_id
+        <where>
+            <if test="payStatus != null and payStatus != ''">AND p.pay_status = #{payStatus}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.user_id LIKE CONCAT('%', #{keyword}, '%')
+                     OR u.user_nm LIKE CONCAT('%', #{keyword}, '%')
+                     OR perf.p_title LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY p.approved_at DESC
+    </select>
 
 </mapper>

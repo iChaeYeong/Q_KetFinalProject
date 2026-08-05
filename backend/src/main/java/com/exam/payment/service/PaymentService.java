@@ -10,4 +10,5 @@ public interface PaymentService {
     List<PaymentDTO> getMyPayments(String userId);
     PaymentDTO cancelPayment(Long paymentId, String userId, String clientIp);
     void deletePayment(Long paymentId, String userId, String clientIp);
+    PaymentDTO adminCancelPayment(Long paymentId, String actorId, String clientIp);
 }
