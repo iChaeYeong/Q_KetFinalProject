@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS PERFORMANCE_CAST (
     cast_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     performance_id BIGINT NOT NULL,
     round_id BIGINT NULL COMMENT 'NULL이면 전체 회차 공통, 값이 있으면 해당 회차 전용',
-    actor_name VARCHAR(100) NOT NULL COMMENT '배우 이름',
+    actor_nm VARCHAR(100) NOT NULL COMMENT '배우 이름',
     casting_nm VARCHAR(100) NULL COMMENT '배역명 (ERD 기준 컬럼명)',
     sort_order INT NOT NULL DEFAULT 0,
 
@@ -143,6 +143,26 @@ CREATE TABLE IF NOT EXISTS PERFORMANCE_CAST (
     FOREIGN KEY (performance_id) REFERENCES PERFORMANCES (performance_id),
     FOREIGN KEY (round_id) REFERENCES PERFORMANCE_ROUND (round_id),
     KEY idx_cast_performance (performance_id, sort_order)
+);
+
+-- PERFORMANCE_PRICE: 공연별 좌석 등급 가격표. SEATS.grade(VIP/R/S)는 좌석 등급만 나타내고
+-- 가격은 없음 — 같은 좌석(같은 venue)이라도 공연마다 가격이 다를 수 있어서 별도 테이블로 관리.
+-- 좌석 선택 화면에서 좌석의 grade로 이 테이블을 조회해 가격을 붙여서 보여줌
+CREATE TABLE IF NOT EXISTS PERFORMANCE_PRICE (
+    price_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    performance_id BIGINT NOT NULL,
+    grade VARCHAR(255) NOT NULL,
+    price INT NOT NULL,
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (performance_id) REFERENCES PERFORMANCES (performance_id),
+    UNIQUE KEY uk_performance_price_grade (performance_id, grade)
 );
 
 -- SEATS: round_id, status 제거. 공연장(venue) 소속으로 변경 (회차 구분 없이 좌석 자체는 공연장에 귀속)
@@ -178,6 +198,7 @@ CREATE TABLE IF NOT EXISTS RESERVATIONS (
     reserved_status VARCHAR(255) NOT NULL DEFAULT 'AVAILABLE',
     created_reserved DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '슬롯이 생성된 시각 (회차 등록 시점)',
     reserved_at DATETIME NULL COMMENT '실제 예매(버튼 클릭) 시각, 예매 전까지 NULL',
+    held_at DATETIME NULL COMMENT '결제대기(좌석 선점) 만료 시각 — 이 시각이 지나면 슬롯을 다시 AVAILABLE로 되돌려야 함',
 
     ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
     ins_ip VARCHAR(45) NULL,
