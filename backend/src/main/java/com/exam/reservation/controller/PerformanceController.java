@@ -2,6 +2,7 @@ package com.exam.reservation.controller;
 
 import com.exam.common.dto.PageResponse;
 import com.exam.reservation.dto.PerformanceDTO;
+import com.exam.reservation.dto.PerformanceRoundDTO;
 import com.exam.reservation.dto.RoundDTO;
 import com.exam.reservation.service.PerformanceService;
 import org.springframework.web.bind.annotation.*;
@@ -101,8 +102,16 @@ public class PerformanceController {
 //        return Map.of("performance", performance, "rounds", rounds);
 //    }
 
-//    @GetMapping("/rounds/{roundId}")
-//    public PerformanceRoundDTO round(@PathVariable Long roundId) {
-//        return performanceService.getRound(roundId);
-//    }
+    /***********************************
+     *  URL      :  "/events/rounds/{roundId}"
+     *  이름      :   round
+     *  기능      :   회차 단건 조회 (공연명/장소/시간) — 결제 체크아웃 화면 예매 정보 표시용
+     *  method   :   GET
+     *  param    :   Long
+     *  result   :   PerformanceRoundDTO
+     ************************************/
+    @GetMapping("/rounds/{roundId}")
+    public PerformanceRoundDTO round(@PathVariable Long roundId) {
+        return performanceService.getRound(roundId);
+    }
 }

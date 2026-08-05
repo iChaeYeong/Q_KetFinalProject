@@ -1,6 +1,7 @@
 package com.exam.reservation.mapper;
 
 import com.exam.reservation.dto.PerformanceDTO;
+import com.exam.reservation.dto.PerformanceRoundDTO;
 import com.exam.reservation.dto.RoundDTO;
 import com.exam.reservation.dto.VenueDTO;
 import com.exam.reservation.dto.CastDTO;
@@ -32,6 +33,7 @@ public interface PerformanceMapper {
     int deleteReservationsByRoundId(Long roundId);
     int deleteRound(Long roundId);
     int updateRound(RoundDTO roundDTO);
+    PerformanceRoundDTO findRoundById(Long roundId);
 
     //공연 상세
     PerformanceDTO findById(Long performanceId);

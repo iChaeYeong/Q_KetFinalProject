@@ -3,8 +3,7 @@
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/ui/Button";
-import PageHeader from "@/components/ui/PageHeader";
-import StatusMessage from "@/components/ui/StatusMessage";
+import { PAYMENT_WRAP_STYLE } from "@/lib/paymentStyles";
 
 function FailContent() {
   const router = useRouter();
@@ -42,32 +41,39 @@ function FailContent() {
   };
 
   return (
-    <PageHeader title="결제 실패" subtitle="결제가 완료되지 않았습니다.">
-      <StatusMessage variant="error">
-        {message ?? "결제 처리 중 문제가 발생했습니다."}
-      </StatusMessage>
+    <div style={PAYMENT_WRAP_STYLE}>
+      <div className="paymentBox">
+        <div className="paymentIcon paymentIconError">✕</div>
+        <p className="paymentTitle">결제가 완료되지 않았습니다</p>
+        <p className="paymentDesc">{message ?? "결제 처리 중 문제가 발생했습니다."}</p>
 
-      {code && <p className="pageSubtitle">오류 코드: {code}</p>}
-
-      <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-4)" }}>
-        {canRetry && (
-          <Button variant="primary" onClick={handleRetry}>
-            다시 시도
-          </Button>
+        {code && (
+          <div className="paymentSummary">
+            <div className="seatPanelRow">
+              <span className="seatPanelLabel">오류 코드</span>
+              <span className="seatPanelValue">{code}</span>
+            </div>
+          </div>
         )}
-        <Button variant="secondary" onClick={() => router.push("/")}>
-          공연 목록으로
-        </Button>
+
+        <div className="paymentActions">
+          {canRetry && (
+            <Button variant="primary" onClick={handleRetry}>
+              다시 시도
+            </Button>
+          )}
+          <Button variant="secondary" onClick={() => router.push("/")}>
+            공연 목록으로
+          </Button>
+        </div>
       </div>
-    </PageHeader>
+    </div>
   );
 }
 
 export default function PaymentFailPage() {
   return (
-    <Suspense
-      fallback={<p className="loadingMsg">불러오는 중...</p>}
-    >
+    <Suspense fallback={<div className="paymentWrap"><p className="loadingMsg">불러오는 중...</p></div>}>
       <FailContent />
     </Suspense>
   );

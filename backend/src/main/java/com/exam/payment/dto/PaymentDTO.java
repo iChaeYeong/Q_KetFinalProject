@@ -25,7 +25,9 @@ public class PaymentDTO {
     private String grade;
     @JsonProperty("pTitle")
     private String pTitle;
+    private String venueName;
     private LocalDateTime roundTime;
+    private String userNm;
 
     private String insId;
     private String insIp;

@@ -16,4 +16,7 @@ public interface PaymentMapper {
                       @Param("uptId") String uptId, @Param("uptIp") String uptIp);
     int markDeleted(@Param("paymentId") Long paymentId,
                      @Param("uptId") String uptId, @Param("uptIp") String uptIp);
+
+    // 관리자 결제 내역 필터 조회
+    List<PaymentDTO> findAllForAdmin(@Param("payStatus") String payStatus, @Param("keyword") String keyword);
 }
