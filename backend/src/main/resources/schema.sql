@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS ROLES (
 CREATE TABLE IF NOT EXISTS VENUE (
     venue_id BIGINT NOT NULL AUTO_INCREMENT,
     venue_name VARCHAR(255) NOT NULL,
+    use_yn CHAR(1) NOT NULL DEFAULT 'Y' COMMENT '삭제 플래그(소프트 삭제) - N이면 목록/선택에서 숨김',
 
     ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
     ins_ip VARCHAR(45) NULL,
@@ -62,6 +63,7 @@ CREATE TABLE IF NOT EXISTS PERFORMANCES (
     category_id BIGINT NOT NULL,
     poster_url VARCHAR(500),
     created_per DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    use_yn CHAR(1) NOT NULL DEFAULT 'Y' COMMENT '삭제 플래그(소프트 삭제) - N이면 목록/상세에서 숨김. 예매/리뷰 이력은 FK로 계속 참조 가능해야 하므로 하드 삭제 대신 이 컬럼 사용',
 
     ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
     ins_ip VARCHAR(45) NULL,
@@ -333,7 +335,7 @@ CREATE TABLE IF NOT EXISTS PAYMENTS (
     amount BIGINT NOT NULL,
     pay_status VARCHAR(50) NOT NULL,
     approved_at DATETIME NULL,
-    deleted_yn CHAR(1) NOT NULL DEFAULT 'N' COMMENT '결제내역 목록에서 사용자가 지운 건 Y — 회계 기록 보존을 위해 실제 행은 안 지우고 숨기기만 함',
+    deleted_yn CHAR(1) NOT NULL DEFAULT 'Y' COMMENT '목록 노출 여부(다른 use_yn 컬럼과 동일하게 Y=노출/N=숨김) — 사용자가 지우면 N, 회계 기록 보존을 위해 실제 행은 안 지우고 숨기기만 함',
 
     ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
     ins_ip VARCHAR(45) NULL,

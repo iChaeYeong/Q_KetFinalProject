@@ -120,11 +120,12 @@ public class AdminPerformanceController {
 
     /***********************************
      *  URL      :   "/events/{performanceId}"
-     *  이름      :   공연 삭제
-     *  기능      :   공연 삭제 — 오픈된 회차 있으면 거부
+     *  이름      :   공연 삭제(소프트)
+     *  기능      :   공연 삭제 — 오픈된 회차 있으면 거부. use_yn='N' 처리만 하고
+     *               예매/회차/이력은 그대로 보존 (환불/리뷰 등에서 계속 참조되므로)
      *  method   :   Delete
      ************************************/
-    // 공연 삭제 — 오픈된 회차 있으면 거부 — 매니저(2) 이상
+    // 공연 삭제(소프트) — 오픈된 회차 있으면 거부 — 매니저(2) 이상
     @Transactional
     @DeleteMapping("/events/{performanceId}")
     public Map<String, Object> deletePerformance(@PathVariable Long performanceId, HttpSession session) {
@@ -132,9 +133,6 @@ public class AdminPerformanceController {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         if (performanceMapper.hasPassedRound(performanceId))
             throw new BusinessException(ErrorCode.ROUND_ALREADY_OPEN, "예매 오픈된 회차가 있어 삭제할 수 없습니다.");
-        performanceMapper.deleteReservationHistoryByPerformanceId(performanceId);
-        performanceMapper.deleteReservationsByPerformanceId(performanceId);
-        performanceMapper.deleteRoundsByPerformanceId(performanceId);
         performanceMapper.deletePerformance(performanceId);
         return Map.of("success", true);
     }

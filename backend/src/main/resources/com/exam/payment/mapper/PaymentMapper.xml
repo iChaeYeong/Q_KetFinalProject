@@ -44,7 +44,7 @@
                  JOIN PERFORMANCES perf ON pr.performance_id = perf.performance_id
                  LEFT JOIN VENUE v ON perf.venue_id = v.venue_id
         WHERE p.user_id = #{userId}
-          AND p.deleted_yn = 'N'
+          AND p.deleted_yn = 'Y'
         ORDER BY p.approved_at DESC
     </select>
 
@@ -82,14 +82,14 @@
 
     <update id="markDeleted">
         UPDATE PAYMENTS
-        SET deleted_yn = 'Y',
+        SET deleted_yn = 'N',
             upt_id     = #{uptId},
             upt_ip     = #{uptIp}
         WHERE payment_id = #{paymentId}
     </update>
 
     <!-- 관리자 결제 내역 조회: 사용자 소유와 무관하게 전체 조회, payStatus/키워드(아이디·이름·공연명)로 필터링.
-         사용자가 목록에서 지운(deleted_yn='Y') 건도 감사 목적상 그대로 노출함 -->
+         사용자가 목록에서 지운(deleted_yn='N') 건도 감사 목적상 그대로 노출함 -->
     <select id="findAllForAdmin" resultType="PaymentDTO">
         SELECT p.payment_id     AS paymentId,
                p.reservation_id AS reservationId,

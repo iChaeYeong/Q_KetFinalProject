@@ -21,7 +21,7 @@
     </resultMap>
 
     <select id="findAllVenues" resultType="VenueDTO">
-        SELECT venue_id AS venueId, venue_name AS venueName FROM VENUE ORDER BY venue_id
+        SELECT venue_id AS venueId, venue_name AS venueName FROM VENUE WHERE use_yn = 'Y' ORDER BY venue_id
     </select>
 
     <insert id="insert" parameterType="PerformanceDTO" useGeneratedKeys="true" keyProperty="performanceId">
@@ -60,6 +60,7 @@
         LEFT OUTER JOIN CATEGORIES C ON A.category_id = C.category_id
         LEFT OUTER JOIN PERFORMANCE_ROUND B ON A.performance_id = B.performance_id
         <where>
+            A.use_yn = 'Y'
             <if test="categoryId != null">AND A.category_id = #{categoryId}</if>
             <if test="keyword != null and keyword != ''">
                 AND (A.p_title LIKE CONCAT('%', #{keyword}, '%') OR V.venue_name LIKE CONCAT('%', #{keyword}, '%'))
@@ -89,6 +90,7 @@
         LEFT OUTER JOIN VENUE V ON A.venue_id = V.venue_id
         LEFT OUTER JOIN PERFORMANCE_ROUND B ON A.performance_id = B.performance_id
         WHERE A.performance_id = #{performanceId}
+          AND A.use_yn = 'Y'
         ORDER BY B.round_time
     </select>
 
@@ -150,6 +152,7 @@
             FROM PERFORMANCES P
             LEFT OUTER JOIN VENUE V ON P.venue_id = V.venue_id
             <where>
+                P.use_yn = 'Y'
                 <if test="categoryId != null">AND P.category_id = #{categoryId}</if>
                 <if test="keyword != null and keyword != ''">
                     AND (P.p_title LIKE CONCAT('%', #{keyword}, '%') OR V.venue_name LIKE CONCAT('%', #{keyword}, '%'))
@@ -169,6 +172,7 @@
         FROM PERFORMANCES P
         LEFT OUTER JOIN VENUE V ON P.venue_id = V.venue_id
         <where>
+            P.use_yn = 'Y'
             <if test="categoryId != null">AND P.category_id = #{categoryId}</if>
             <if test="keyword != null and keyword != ''">
                 AND (P.p_title LIKE CONCAT('%', #{keyword}, '%') OR V.venue_name LIKE CONCAT('%', #{keyword}, '%'))
@@ -210,9 +214,19 @@
         DELETE FROM PERFORMANCE_ROUND WHERE performance_id = #{performanceId}
     </delete>
 
-    <delete id="deletePerformance">
+    <!-- 하드 삭제 — use_yn 소프트 삭제로 전환하면서 더 이상 컨트롤러에서 호출하지 않음.
+         나중에 관리자 "완전 삭제" 기능이 별도로 필요해지면 그때 다시 사용
+    <delete id="deletePerformanceHard">
         DELETE FROM PERFORMANCES WHERE performance_id = #{performanceId}
     </delete>
+    -->
+
+    <!-- 소프트 삭제 — 예매/회차/리뷰 이력은 그대로 두고 목록/상세에서만 숨김 -->
+    <update id="deletePerformance">
+        UPDATE PERFORMANCES
+        SET use_yn = 'N'
+        WHERE performance_id = #{performanceId}
+    </update>
 
     <delete id="deleteReservationHistoryByRoundId">
         DELETE FROM RESERVATION_HISTORY WHERE round_id = #{roundId}
