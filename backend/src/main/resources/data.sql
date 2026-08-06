@@ -114,6 +114,20 @@ INSERT INTO PERFORMANCES (p_title, venue_id, category_id, poster_url, ins_id, in
   ('뮤지컬 오페라의 유령',                5, 2, 'https://example.com/poster/phantom.jpg',    'admin01', '127.0.0.1'),
   ('태연 - My Voice Concert',            6, 1, 'https://example.com/poster/taeyeon.jpg',    'admin01', '127.0.0.1');
 
+-- PERFORMANCE_PRICE: 공연별 좌석 등급 가격표. performance_id는 위 PERFORMANCES INSERT 순서 그대로 1~10
+-- (콘서트/팬미팅/뮤지컬 등 유형별로 값을 다르게 넣어 "공연별 가격 차별화"가 실제로 보이게 함)
+INSERT INTO PERFORMANCE_PRICE (performance_id, grade, price, ins_id, ins_ip) VALUES
+  (1, 'VIP', 220000, 'admin01', '127.0.0.1'), (1, 'R', 154000, 'admin01', '127.0.0.1'), (1, 'S', 99000,  'admin01', '127.0.0.1'),
+  (2, 'VIP', 264000, 'admin01', '127.0.0.1'), (2, 'R', 187000, 'admin01', '127.0.0.1'), (2, 'S', 121000, 'admin01', '127.0.0.1'),
+  (3, 'VIP', 250000, 'admin01', '127.0.0.1'), (3, 'R', 176000, 'admin01', '127.0.0.1'), (3, 'S', 110000, 'admin01', '127.0.0.1'),
+  (4, 'VIP', 198000, 'admin01', '127.0.0.1'), (4, 'R', 143000, 'admin01', '127.0.0.1'), (4, 'S', 88000,  'admin01', '127.0.0.1'),
+  (5, 'VIP', 180000, 'admin01', '127.0.0.1'), (5, 'R', 130000, 'admin01', '127.0.0.1'), (5, 'S', 80000,  'admin01', '127.0.0.1'),
+  (6, 'VIP', 209000, 'admin01', '127.0.0.1'), (6, 'R', 154000, 'admin01', '127.0.0.1'), (6, 'S', 99000,  'admin01', '127.0.0.1'),
+  (7, 'VIP', 165000, 'admin01', '127.0.0.1'), (7, 'R', 121000, 'admin01', '127.0.0.1'), (7, 'S', 77000,  'admin01', '127.0.0.1'),
+  (8, 'VIP', 176000, 'admin01', '127.0.0.1'), (8, 'R', 132000, 'admin01', '127.0.0.1'), (8, 'S', 88000,  'admin01', '127.0.0.1'),
+  (9, 'VIP', 190000, 'admin01', '127.0.0.1'), (9, 'R', 140000, 'admin01', '127.0.0.1'), (9, 'S', 90000,  'admin01', '127.0.0.1'),
+  (10,'VIP', 198000, 'admin01', '127.0.0.1'), (10,'R', 143000, 'admin01', '127.0.0.1'), (10,'S', 88000,  'admin01', '127.0.0.1');
+
 -- USERS (password: test1234)
 INSERT INTO USERS (user_id, user_nm, pwd, user_email, role_id, user_status) VALUES
   ('admin01',    '관리자01',    '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'admin01@qket.com',    3, 'ACTIVE'),

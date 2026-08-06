@@ -28,15 +28,6 @@ import java.util.Map;
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
-    // 프론트(app/payments/checkout/page.tsx GRADE_PRICE)와 동일한 값.
-    // 결제 금액을 클라이언트가 보낸 그대로 믿지 않고 좌석 등급 기준으로 서버에서 다시 계산해 대조하기 위함
-    // (좌석 등급별 가격을 관리하는 DB 테이블이 따로 없어 부득이 하드코딩 — 프론트 값 바뀌면 같이 고쳐야 함)
-    private static final Map<String, Long> GRADE_PRICE = Map.of(
-            "VIP", 220000L,
-            "R", 154000L,
-            "S", 99000L
-    );
-
     private static final String TOSS_API_BASE = "https://api.tosspayments.com/v1/payments";
 
     private final SeatMapper seatMapper;
@@ -71,7 +62,7 @@ public class PaymentServiceImpl implements PaymentService {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "존재하지 않는 좌석입니다.");
         }
 
-        Long expectedAmount = GRADE_PRICE.get(seat.getGrade());
+        Long expectedAmount = seatMapper.findPriceByRoundIdAndGrade(request.getRoundId(), seat.getGrade());
         if (expectedAmount == null || !expectedAmount.equals(request.getAmount())) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "결제 금액이 올바르지 않습니다.");
         }

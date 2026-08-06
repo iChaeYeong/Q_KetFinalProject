@@ -14,4 +14,5 @@ public class SeatDTO {
     private String seatColume;
     private String grade;
     private String status;
+    private Long price;
 }

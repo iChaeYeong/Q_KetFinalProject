@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
@@ -10,11 +11,21 @@
                 s.seat_row       AS seatRow,
                 s.seat_colume    AS seatColume,
                 s.grade,
-                r.reserved_status AS status
+                r.reserved_status AS status,
+                pp.price
         FROM RESERVATIONS r
         JOIN SEATS s ON r.seat_id = s.seat_id
+        JOIN PERFORMANCE_ROUND pr ON r.round_id = pr.round_id
+        JOIN PERFORMANCE_PRICE pp ON pp.performance_id = pr.performance_id AND pp.grade = s.grade
         WHERE r.round_id = #{roundId}
         ORDER BY s.seat_row, s.seat_colume
+    </select>
+
+    <select id="findPriceByRoundIdAndGrade" resultType="Long">
+        SELECT pp.price
+        FROM PERFORMANCE_ROUND pr
+        JOIN PERFORMANCE_PRICE pp ON pp.performance_id = pr.performance_id
+        WHERE pr.round_id = #{roundId} AND pp.grade = #{grade}
     </select>
 
     <select id="findById" resultType="SeatDTO" parameterType="Long">
@@ -25,6 +36,7 @@
         FROM SEATS
         WHERE seat_id = #{seatId}
     </select>
+
 
     <update id="updateStatus">
         UPDATE SEATS

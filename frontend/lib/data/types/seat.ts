@@ -4,6 +4,7 @@ export type Seat = {
   roundId: number;
   seatRow: string;
   seatColume: string;
+  price: number;
   grade: "VIP" | "R" | "S";
   status: "AVAILABLE" | "LOCKED" | "RESERVED";
 };

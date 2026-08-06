@@ -12,12 +12,6 @@ import {
   loadTossPayments,
 } from "@tosspayments/tosspayments-sdk";
 
-const GRADE_PRICE: Record<string, number> = {
-  VIP: 220000,
-  R: 154000,
-  S: 99000,
-};
-
 function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,7 +28,7 @@ function CheckoutContent() {
   const seatRow = searchParams.get("seatRow");
   const seatColume = searchParams.get("seatColume");
   const grade = searchParams.get("grade") ?? "";
-  const amount = GRADE_PRICE[grade] ?? 0;
+  const amount = Number(searchParams.get("price") ?? 0);
 
   // 좌석 선택 화면까지 QueueModal → seats page를 거쳐 그대로 실려온 공연 정보.
   // 직접 URL을 조작해 들어오는 등 없는 경우도 있으니 있으면만 보여준다 (필수 값 아님 — isValid 판정엔 안 씀)

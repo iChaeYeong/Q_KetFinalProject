@@ -24,9 +24,6 @@ import StatusMessage from "@/components/ui/StatusMessage";
 // 등급 표시 라벨
 const GRADE_LABEL: Record<string, string> = { VIP: "VIP석", R: "R석", S: "S석" };
 
-// 등급별 가격 (백엔드에서 받아올 수도 있음)
-const GRADE_PRICE: Record<string, string> = { VIP: "220,000원", R: "154,000원", S: "99,000원" };
-
 export default function SeatsPage() {
   //동적라우팅 값 가져오기
   const { scheduleId } = useParams<{ scheduleId: string }>();
@@ -95,6 +92,7 @@ export default function SeatsPage() {
       seatRow: selected.seatRow,
       seatColume: selected.seatColume,
       grade: selected.grade,
+      price: String(selected.price),
     });
 
     if (queueToken) {
@@ -278,7 +276,7 @@ export default function SeatsPage() {
                   </div>
                   <div className="seatPanelRow">
                     <span className="seatPanelLabel">가격</span>
-                    <span className="seatPanelValue">{GRADE_PRICE[selected.grade]}</span>
+                    <span className="seatPanelValue">{selected.price.toLocaleString()}원</span>
                   </div>
                   <hr className="seatPanelDivider" />
 
