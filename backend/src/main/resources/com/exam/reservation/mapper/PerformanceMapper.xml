@@ -116,7 +116,7 @@
         JOIN PERFORMANCE_ROUND pr ON c.round_id = pr.round_id
         WHERE pr.performance_id = #{performanceId}
 
-        ORDER BY sort_order, cast_id
+        ORDER BY sortOrder, castId
     </select>
 
     <select id="findRoundsByMonth" resultType="RoundDTO">
