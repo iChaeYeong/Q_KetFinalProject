@@ -95,25 +95,27 @@
     </select>
 
     <select id="findCastsByPerformanceId" parameterType="Long" resultType="CastDTO">
-        SELECT cast_id AS castId,
-               performance_id AS performanceId,
+        SELECT cc.cast_id AS castId,
+               cc.performance_id AS performanceId,
                NULL AS roundId,
-               actor_nm AS actorName,
-               casting_nm AS castingNm,
-               sort_order AS sortOrder
-        FROM PERFORMANCE_CAST_COMMON
-        WHERE performance_id = #{performanceId}
+               a.actor_nm AS actorName,
+               cc.casting_nm AS castingNm,
+               cc.sort_order AS sortOrder
+        FROM PERFORMANCE_CAST_COMMON cc
+        JOIN ACTOR a ON cc.actor_id = a.actor_id
+        WHERE cc.performance_id = #{performanceId}
 
         UNION ALL
 
         SELECT c.cast_id AS castId,
                pr.performance_id AS performanceId,
                c.round_id AS roundId,
-               c.actor_nm AS actorName,
+               a.actor_nm AS actorName,
                c.casting_nm AS castingNm,
                c.sort_order AS sortOrder
         FROM PERFORMANCE_CAST_ROUND c
         JOIN PERFORMANCE_ROUND pr ON c.round_id = pr.round_id
+        JOIN ACTOR a ON c.actor_id = a.actor_id
         WHERE pr.performance_id = #{performanceId}
 
         ORDER BY sortOrder, castId

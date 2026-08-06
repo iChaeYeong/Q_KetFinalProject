@@ -141,10 +141,29 @@ FROM PERFORMANCE_ROUND;
 --   PERFORMANCE_CAST_ROUND : 해당 회차 전용 캐스팅, 더블/트리플 캐스팅 대응 (round_id만 가짐,
 --                            performance_id는 PERFORMANCE_ROUND 조인으로 조회)
 -- 캐스팅표 엑셀 업로드는 이 두 테이블에 각각 bulk insert 하는 API로 처리 예정
+-- ACTOR: 배우 마스터. 예전엔 PERFORMANCE_CAST_COMMON/ROUND에 actor_nm을 텍스트로 직접 저장해서,
+-- 같은 배우가 여러 캐스팅 행에 나올 때마다 이름이 중복 저장되고(김민석: 10회차/12회차 등),
+-- 이름이 바뀌면 그 배우가 나온 모든 행을 찾아 고쳐야 하는 갱신 이상(update anomaly)이 있었음.
+-- 배우 정보를 이 테이블로 빼고 캐스팅 테이블은 actor_id로 참조하도록 정규화.
+CREATE TABLE IF NOT EXISTS ACTOR (
+    actor_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    actor_nm VARCHAR(100) NOT NULL COMMENT '배우 이름',
+    birth_date DATE NULL COMMENT '동명이인 구분용. 모르면 NULL 허용 — NULL끼리는 uk_actor_nm_birth로 안 걸러짐(중복 가능)에 유의',
+
+    ins_id VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    ins_ip VARCHAR(45) NULL,
+    ins_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upt_id VARCHAR(50) NULL,
+    upt_ip VARCHAR(45) NULL,
+    upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_actor_nm_birth (actor_nm, birth_date)
+);
+
 CREATE TABLE IF NOT EXISTS PERFORMANCE_CAST_COMMON (
     cast_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     performance_id BIGINT NOT NULL,
-    actor_nm VARCHAR(100) NOT NULL COMMENT '배우 이름',
+    actor_id BIGINT NOT NULL,
     casting_nm VARCHAR(100) NULL COMMENT '배역명',
     sort_order INT NOT NULL DEFAULT 0,
 
@@ -156,13 +175,14 @@ CREATE TABLE IF NOT EXISTS PERFORMANCE_CAST_COMMON (
     upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (performance_id) REFERENCES PERFORMANCES (performance_id),
+    FOREIGN KEY (actor_id) REFERENCES ACTOR (actor_id),
     KEY idx_cast_performance (performance_id, sort_order)
 );
 
 CREATE TABLE IF NOT EXISTS PERFORMANCE_CAST_ROUND (
     cast_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     round_id BIGINT NOT NULL,
-    actor_nm VARCHAR(100) NOT NULL COMMENT '배우 이름',
+    actor_id BIGINT NOT NULL,
     casting_nm VARCHAR(100) NULL COMMENT '배역명',
     sort_order INT NOT NULL DEFAULT 0,
 
@@ -174,6 +194,7 @@ CREATE TABLE IF NOT EXISTS PERFORMANCE_CAST_ROUND (
     upt_de DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (round_id) REFERENCES PERFORMANCE_ROUND (round_id),
+    FOREIGN KEY (actor_id) REFERENCES ACTOR (actor_id),
     KEY idx_cast_performance (round_id, sort_order)
     );
 

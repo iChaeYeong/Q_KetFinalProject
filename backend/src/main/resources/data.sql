@@ -218,34 +218,52 @@ INSERT INTO PERFORMANCE_ROUND (performance_id, round_time, open_time, round_stat
 -- =========================
 
 -- 회차 전용 캐스팅 (더블/트리플 캐스팅)
-INSERT INTO PERFORMANCE_CAST_ROUND (round_id, actor_nm, casting_nm, sort_order, ins_id, ins_ip) VALUES
+-- ACTOR: 캐스팅에 쓰이는 배우 마스터. 김민석처럼 여러 회차/캐스팅 행에 걸쳐 나오는 배우도
+-- 여기 한 행으로만 존재하고, 아래 CAST 테이블들은 actor_id로 참조함
+INSERT INTO ACTOR (actor_nm, ins_id, ins_ip) VALUES
+  ('김민석', 'admin01', '127.0.0.1'),
+  ('이서준', 'admin01', '127.0.0.1'),
+  ('박도현', 'admin01', '127.0.0.1'),
+  ('강태영', 'admin01', '127.0.0.1'),
+  ('이하은', 'admin01', '127.0.0.1'),
+  ('한지우', 'admin01', '127.0.0.1'),
+  ('윤소희', 'admin01', '127.0.0.1'),
+  ('최현우', 'admin01', '127.0.0.1'),
+  ('오세영', 'admin01', '127.0.0.1'),
+  ('서지훈', 'admin01', '127.0.0.1'),
+  ('임하늘', 'admin01', '127.0.0.1'),
+  ('정우진', 'admin01', '127.0.0.1'),
+  ('문가영', 'admin01', '127.0.0.1'),
+  ('아이유', 'admin01', '127.0.0.1');
+
+INSERT INTO PERFORMANCE_CAST_ROUND (round_id, actor_id, casting_nm, sort_order, ins_id, ins_ip) VALUES
   -- 뮤지컬 레미제라블 (공연 5) — 장발장/자베르는 회차별 캐스팅
-  (10, '김민석', '장발장', 0, 'admin01', '127.0.0.1'),
-  (11, '이서준', '장발장', 0, 'admin01', '127.0.0.1'),
-  (12, '김민석', '장발장', 0, 'admin01', '127.0.0.1'),
-  (10, '박도현', '자베르', 1, 'admin01', '127.0.0.1'),
-  (11, '박도현', '자베르', 1, 'admin01', '127.0.0.1'),
-  (12, '강태영', '자베르', 1, 'admin01', '127.0.0.1'),
+  (10, (SELECT actor_id FROM ACTOR WHERE actor_nm = '김민석'), '장발장', 0, 'admin01', '127.0.0.1'),
+  (11, (SELECT actor_id FROM ACTOR WHERE actor_nm = '이서준'), '장발장', 0, 'admin01', '127.0.0.1'),
+  (12, (SELECT actor_id FROM ACTOR WHERE actor_nm = '김민석'), '장발장', 0, 'admin01', '127.0.0.1'),
+  (10, (SELECT actor_id FROM ACTOR WHERE actor_nm = '박도현'), '자베르', 1, 'admin01', '127.0.0.1'),
+  (11, (SELECT actor_id FROM ACTOR WHERE actor_nm = '박도현'), '자베르', 1, 'admin01', '127.0.0.1'),
+  (12, (SELECT actor_id FROM ACTOR WHERE actor_nm = '강태영'), '자베르', 1, 'admin01', '127.0.0.1'),
 
   -- 아이유 콘서트 (공연 1) — 2회차에만 게스트 출연 (배역명 없음)
-  (2, '이하은', NULL, 1, 'admin01', '127.0.0.1');
+  (2, (SELECT actor_id FROM ACTOR WHERE actor_nm = '이하은'), NULL, 1, 'admin01', '127.0.0.1');
 
 -- 전체 회차 공통 캐스팅
-INSERT INTO PERFORMANCE_CAST_COMMON (performance_id, actor_nm, casting_nm, sort_order, ins_id, ins_ip) VALUES
+INSERT INTO PERFORMANCE_CAST_COMMON (performance_id, actor_id, casting_nm, sort_order, ins_id, ins_ip) VALUES
   -- 뮤지컬 레미제라블 (공연 5) — 나머지 배역은 전체 공통
-  (5, '한지우', '판틴',       2, 'admin01', '127.0.0.1'),
-  (5, '윤소희', '코제트',     3, 'admin01', '127.0.0.1'),
-  (5, '최현우', '마리우스',   4, 'admin01', '127.0.0.1'),
-  (5, '오세영', '테나르디에', 5, 'admin01', '127.0.0.1'),
+  (5, (SELECT actor_id FROM ACTOR WHERE actor_nm = '한지우'), '판틴',       2, 'admin01', '127.0.0.1'),
+  (5, (SELECT actor_id FROM ACTOR WHERE actor_nm = '윤소희'), '코제트',     3, 'admin01', '127.0.0.1'),
+  (5, (SELECT actor_id FROM ACTOR WHERE actor_nm = '최현우'), '마리우스',   4, 'admin01', '127.0.0.1'),
+  (5, (SELECT actor_id FROM ACTOR WHERE actor_nm = '오세영'), '테나르디에', 5, 'admin01', '127.0.0.1'),
 
   -- 뮤지컬 오페라의 유령 (공연 9) — 전체 회차 공통 캐스팅만
-  (9, '서지훈', '팬텀',     0, 'admin01', '127.0.0.1'),
-  (9, '임하늘', '크리스틴', 1, 'admin01', '127.0.0.1'),
-  (9, '정우진', '라울',     2, 'admin01', '127.0.0.1'),
-  (9, '문가영', '칼롯타',   3, 'admin01', '127.0.0.1'),
+  (9, (SELECT actor_id FROM ACTOR WHERE actor_nm = '서지훈'), '팬텀',     0, 'admin01', '127.0.0.1'),
+  (9, (SELECT actor_id FROM ACTOR WHERE actor_nm = '임하늘'), '크리스틴', 1, 'admin01', '127.0.0.1'),
+  (9, (SELECT actor_id FROM ACTOR WHERE actor_nm = '정우진'), '라울',     2, 'admin01', '127.0.0.1'),
+  (9, (SELECT actor_id FROM ACTOR WHERE actor_nm = '문가영'), '칼롯타',   3, 'admin01', '127.0.0.1'),
 
   -- 아이유 콘서트 (공연 1) — 배역명 없음(NULL)
-  (1, '아이유', NULL, 0, 'admin01', '127.0.0.1');
+  (1, (SELECT actor_id FROM ACTOR WHERE actor_nm = '아이유'), NULL, 0, 'admin01', '127.0.0.1');
 
 -- =========================
 -- SEATS
